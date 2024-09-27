@@ -1,0 +1,119 @@
+/* Set the html background */
+html {
+    height: 100%;
+    background-color: #e6e9eb;
+    background-attachment: fixed; /* Background fixed, not with scrolling */
+}
+/* Set the background to gradient */
+body {
+    flex-direction: column;
+    font-family: Arial, sans-serif;
+    text-align: center;
+    padding: 50px;
+    margin: 0;
+    height: 100vh;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    color: #000000; /* Sets the global text color */
+}
+/* The page content is displayed in the center */
+.content {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    height: 100vh;
+    color: white;
+    font-family: Arial, sans-serif;
+    text-align: center;
+}
+/* Set the title font and color */
+h1 {
+    font-family: "Georgia", serif; /* Use Georgia font */
+    color: #c41e3a;
+    font-size: 48px; /* Set font size */
+    font-weight: bold; /* Bold font */
+    text-shadow: 2px 2px 5px rgba(0, 0, 0, 0.3);
+}
+
+/* Set the paragraph font and color */
+p {
+    font-family: "Arial", sans-serif; /* Set font */
+    font-size: 26px; /* Set font size */
+    color: #000000; /* Set text color */
+}
+
+/* Link style */
+a {
+    font-family: "Verdana", sans-serif; /* Set the font of the link */
+    color: #c41e3a;
+    text-decoration: none; /* Remove underline */
+}
+
+a:hover {
+    color: #000000; /* The link color changes when you hover over it */
+    text-decoration: underline; /* Underline when you hover */
+}
+
+/* Hidden menu on the left */
+.side-menu {
+    position: fixed;
+    left: -200px; /* Initial hidden menu */
+    top: 0;
+    width: 200px;
+    height: 100%;
+    background-color: #333;
+    box-shadow: 2px 0 5px rgba(0, 0, 0, 0.5);
+    color: white;
+    overflow: hidden;
+    transition: left 0.5s ease; /* Sliding effect */
+    padding-top: 20px;
+}
+
+/* Displays the menu when the mouse hovers over the area */
+.menu-container:hover .side-menu {
+    left: 0;
+}
+
+/* Menu item style */
+.menu-item {
+    padding: 10px 20px;
+    text-decoration: none;
+    color: white;
+    display: block;
+    font-size: 18px;
+    transition: background-color 0.3s ease;
+}
+
+.menu-item:hover {
+    background-color: #575757;
+}
+
+/* Tip TAB on the left */
+.menu-label {
+    position: fixed;
+    left: -40px; /* Let the label stick out a little */
+    top: 50%;
+    width: 40px;
+    height: 100px;
+    background-color: #c41e3a; /* Label color */
+    color: white;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    transform: rotate(-90deg); /* Rotating label */
+    font-size: 16px;
+    font-weight: bold;
+    box-shadow: 2px 0 5px rgba(0, 0, 0, 0.5);
+}
+
+/* Fix the menu icon on the left side, with 1/6 of the screen width as the trigger area */
+.menu-trigger {
+    position: fixed;
+    left: 0;
+    top: 0;
+    width: 16.67vw;
+    height: 100%;
+    background-color: transparent;
+    cursor: pointer;
+}

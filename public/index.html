@@ -1,0 +1,50 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>RPI Dorm Room Helper</title>
+    <link rel="icon" href="../src/assets/favicon.ico" type="image/x-icon">
+    <link rel="stylesheet" href="../src/styles/style.css">
+</head>
+<body>
+    <div class="menu-container">
+        <div class="menu-label">menu</div>
+        <div class="menu-trigger"></div>
+        <div class="side-menu">
+            <a href="#" class="menu-item" onclick="handleMenuClick('subkey 1')">subkey 1</a>
+            <a href="#" class="menu-item" onclick="handleMenuClick('subkey 2')">subkey 2</a>
+            <a href="#" class="menu-item" onclick="handleMenuClick('subkey 3')">subkey 3</a>
+            <a href="#" class="menu-item" onclick="handleMenuClick('Favorites')">Favorites</a>
+            <a href="#" class="menu-item" onclick="handleMenuClick('Record')">Record</a>
+            <a href="#" class="menu-item" onclick="handleMenuClick('Settings')">Settings</a>
+            <a href="#" class="menu-item" onclick="handleMenuClick('About us')">About us</a>
+        </div>
+    </div>
+    <h1>Welcome to RPI Dorm Room Helper</h1>
+    <p>This is a useful tool for finding and learning about RPI dorm life.</p>
+    <!-- Interface 1: Insert an external link -->
+    <div class="links-section">
+        <p>Useful Links</p>
+        <a href="https://example.com" target="_blank">External Resource Link</a>
+    </div>
+
+    <!-- Interface 2: Insert a picture -->
+    <div class="image-section">
+        <h2>Dorm Room Setup Example</h2>
+        <img src="../src/assets/images/OIP.jpg" alt="Dorm room setup" width="500"><br>
+    </div>
+
+    <!-- Interface 3: Insert subclass links -->
+    <div class="sub-links-section">
+        <h2>Explore More</h2>
+        <ul>
+            <li><a href="page1.html">link 1</a></li>
+            <li><a href="page2.html">link 2</a></li>
+            <li><a href="page3.html">link 3</a></li>
+        </ul>
+    </div>
+    
+    <script src="../src/scripts/script.js"></script>
+</body>
+</html>
