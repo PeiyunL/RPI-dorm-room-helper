@@ -1,7 +1,7 @@
 /* Set the html background */
 html {
     height: 100%;
-    background-color: #e6e9eb;
+    background: linear-gradient(to left, #ffb2b2, #f4f4f4);
     background-attachment: fixed; /* Background fixed, not with scrolling */
 }
 /* Set the background to gradient */
