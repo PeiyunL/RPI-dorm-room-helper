@@ -1,7 +1,7 @@
 // The handler function after the menu item is clicked
 function handleMenuClick(menuItem) {
-    if (menuItem === 'subkey 1') {
-        window.location.href = '../src/pages/subkey_1.html';
+    if (menuItem === 'Dorm') {
+        window.location.href = '../src/pages/Dorm.html';
     } else if (menuItem === 'subkey 2') {
         window.location.href = '../src/pages/subkey_2.html';
     } else if (menuItem === 'subkey 3') {
