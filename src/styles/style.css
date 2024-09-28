@@ -1,58 +1,97 @@
-/* Set the html background */
-html {
-    height: 100%;
-    background: linear-gradient(to left, #ffb2b2, #f4f4f4);
-    background-attachment: fixed; /* Background fixed, not with scrolling */
-}
-/* Set the background to gradient */
 body {
-    flex-direction: column;
     font-family: Arial, sans-serif;
-    text-align: center;
-    padding: 50px;
     margin: 0;
-    height: 100vh;
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    color: #000000; /* Sets the global text color */
+    padding: 20px;
+    background-color: #f4f4f4;
 }
-/* The page content is displayed in the center */
-.content {
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    height: 100vh;
+
+header {
+    text-align: left;
+}
+
+header h1 {
+    color: #c21818;
+    text-align: right;
+    font-style: italic;
+    font-size: 32px;
+}
+
+header p {
+    font-size: 18px;
+    margin: 5px 0;
+}
+
+header a {
+    text-decoration: none;
+    font-weight: bold;
+    color: black;
+}
+
+header img {
+    margin-top: 10px;
+    width: 150px;
+}
+
+.housing-services {
+    text-align: right;
+    background-color: #800000;
+    padding: 20px;
     color: white;
-    font-family: Arial, sans-serif;
-    text-align: center;
-}
-/* Set the title font and color */
-h1 {
-    font-family: "Georgia", serif; /* Use Georgia font */
-    color: #c41e3a;
-    font-size: 48px; /* Set font size */
-    font-weight: bold; /* Bold font */
-    text-shadow: 2px 2px 5px rgba(0, 0, 0, 0.3);
 }
 
-/* Set the paragraph font and color */
-p {
-    font-family: "Arial", sans-serif; /* Set font */
-    font-size: 26px; /* Set font size */
-    color: #000000; /* Set text color */
+.housing-services h2 {
+    font-size: 24px;
 }
 
-/* Link style */
-a {
-    font-family: "Verdana", sans-serif; /* Set the font of the link */
-    color: #c41e3a;
-    text-decoration: none; /* Remove underline */
+.housing-services nav ul {
+    list-style-type: none;
+    padding: 0;
 }
 
-a:hover {
-    color: #000000; /* The link color changes when you hover over it */
-    text-decoration: underline; /* Underline when you hover */
+.housing-services nav ul li {
+    display: inline;
+    margin-right: 20px;
+    font-size: 18px;
+}
+
+.housing-options {
+    display: flex;
+    justify-content: space-between;
+    margin-top: 20px;
+}
+
+.housing-options .option {
+    background-color: white;
+    padding: 10px;
+    border-radius: 5px;
+    width: 30%;
+    box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+    color: black;
+}
+
+.housing-options h3 {
+    margin-top: 0;
+}
+
+.housing-options p {
+    font-size: 14px;
+    line-height: 1.5;
+}
+
+.housing-options a {
+    text-decoration: none;
+    color: #800000;
+    font-weight: bold;
+}
+
+.information h3 {
+    font-size: 20px;
+    margin-top: 20px;
+}
+
+.information ul {
+    list-style-type: disc;
+    margin-left: 20px;
 }
 
 /* Hidden menu on the left */
@@ -77,6 +116,7 @@ a:hover {
 
 /* Menu item style */
 .menu-item {
+    margin-left: 10px;
     padding: 10px 20px;
     text-decoration: none;
     color: white;
@@ -116,4 +156,61 @@ a:hover {
     height: 100%;
     background-color: transparent;
     cursor: pointer;
+}
+
+.login {
+    position: absolute;
+    top: 20px;
+    right: 20px;
+    padding: 10px;
+}
+
+.login a {
+    text-decoration: none;
+    color: #ffffff;
+    font-weight: bold;
+    font-size: 16px;
+    background-color: #800000;
+    padding: 10px 20px;
+    border-radius: 6px;
+    border: 1px solid #800000;
+}
+
+#logoutButton {
+    background-color: #800000;
+    color: white;
+    border: none;
+    padding: 10px 20px;
+    border-radius: 20px;
+    font-size: 18px;
+    cursor: pointer;
+    margin-left: 10px;
+}
+
+#logoutButton:hover {
+    background-color: #a33d3d; /* 鼠标悬停时颜色变化 */
+}
+
+#userAvatar {
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    border: 2px solid #800000;
+    cursor: pointer;
+}
+
+.content {
+    text-align: right;
+    background-color: #800000;
+    padding: 20px;
+    color: #800000;
+}
+
+.content .subcontent{
+    background-color: #ffffff;
+    padding: 20px;
+    padding: 10px;
+    border-radius: 5px;
+    width: 30%;
+    box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
 }

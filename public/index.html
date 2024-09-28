@@ -4,10 +4,19 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>RPI Dorm Room Helper</title>
-    <link rel="icon" href="../src/assets/favicon.ico" type="image/x-icon">
+    <link rel="ico" href="../src/assets/favicon.ico">
     <link rel="stylesheet" href="../src/styles/style.css">
 </head>
 <body>
+
+    <header>
+        <img src="../src/assets/images/RPI Small Logo RGB-TwoColor.png" alt="RPI">
+        <h1><i>Welcome to RPI dorm room helper</i></h1>
+        <div class="login">
+            <a href="#" id="loginButton">Login</a>
+            <img id="userAvatar" src="../src/assets/images/avatar.jpg" alt="User Avatar" style="display: none;" />
+        </div>
+    </header>
     <div class="menu-container">
         <div class="menu-label">menu</div>
         <div class="menu-trigger"></div>
@@ -19,32 +28,58 @@
             <a href="#" class="menu-item" onclick="handleMenuClick('Record')">Record</a>
             <a href="#" class="menu-item" onclick="handleMenuClick('Settings')">Settings</a>
             <a href="#" class="menu-item" onclick="handleMenuClick('About us')">About us</a>
+            <button id="logoutButton">Log Out</button>
         </div>
     </div>
-    <h1>Welcome to RPI Dorm Room Helper</h1>
-    <p>This is a useful tool for finding and learning about RPI dorm life.</p>
-    <!-- Interface 1: Insert an external link -->
-    <div class="links-section">
-        <p>Useful Links</p>
-        <a href="https://example.com" target="_blank">External Resource Link</a>
-    </div>
+    <section class="housing-services">
+        <h2>Housing & Residential Services</h2>
+        <nav>
+            <ul>
+                <li href="#" class="menu-item" onclick="handleMenuClick('subkey 4')">subkey 4</li>
+                <li href="#" class="menu-item" onclick="handleMenuClick('subkey 5')">subkey 5</li>
+                <li href="#" class="menu-item" onclick="handleMenuClick('subkey 6')">subkey 6</li>
+                <li href="#" class="menu-item" onclick="handleMenuClick('subkey 7')">subkey 7</li>
+                <li href="#" class="menu-item" onclick="handleMenuClick('subkey 8')">subkey 8</li>
+                <li href="#" class="menu-item" onclick="handleMenuClick('subkey 9')">subkey 9</li>
+            </ul>
+        </nav>
+        <div class="housing-options">
+            <div class="option">
+                <h3>Something A</h3>
+                <p>This is the text <br>This is the text This is the text <br>This is the text This is the text <br>This is the text This is the text </p>
+                <a href="#">Find out more</a>
+            </div>
+            <div class="option">
+                <h3>Something B</h3>
+                <p>This is the text <br>This is the text This is the text <br>This is the text This is the text <br>This is the text This is the text </p>
+                <a href="#">Find out more</a>
+            </div>
+            <div class="option">
+                <h3>Something C</h3>
+                <p>This is the text <br>This is the text This is the text <br>This is the text This is the text <br>This is the text This is the text </p>
+                <a href="#">Find out more</a>
+            </div>
+        </div>
+    </section>
 
-    <!-- Interface 2: Insert a picture -->
-    <div class="image-section">
-        <h2>Dorm Room Setup Example</h2>
-        <img src="../src/assets/images/OIP.jpg" alt="Dorm room setup" width="500"><br>
-    </div>
-
-    <!-- Interface 3: Insert subclass links -->
-    <div class="sub-links-section">
-        <h2>Explore More</h2>
+    <section class="information">
+        <h3>Some Content</h3>
         <ul>
-            <li><a href="page1.html">link 1</a></li>
-            <li><a href="page2.html">link 2</a></li>
-            <li><a href="page3.html">link 3</a></li>
+            <li>This is the text This is the text This is the text This is the text This is the text This is the text This is the text This is the text </ul>
+        <h3>Some other Content</h3>
+        <ul>
+            <li>This is the text This is the text This is the text This is the text This is the text This is the text </li>
         </ul>
-    </div>
-    
+    </section>
+
+    <section class="content" id="restrictedContent" style="display: none;">
+        <h1>Exclusive Content</h1>
+        <p class = "subcontent">
+            This content is only available for logged-in users.
+            <img src="../src/assets/images/OIP.jpg" alt="restricted picture">
+        </p>      
+    </section>
+
     <script src="../src/scripts/script.js"></script>
 </body>
 </html>
