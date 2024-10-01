@@ -4,11 +4,99 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>RPI Dorm Room Helper</title>
-    <link rel="icon" href="../src/assets/favicon.ico" type="image/x-icon">
-    <link rel="stylesheet" href="../src/styles/style.css">
+    <link rel="icon" href="../assets/favicon.ico" type="image/x-icon">
+    <link rel="stylesheet" href="../styles/style.css">
 </head>
 <body>
+
     <h1>This is the page for subkey 1</h1>
-    <script src="../src/scripts/script.js"></script>
+
+    <!-- Filter Section -->
+    <div class="filter">
+        <label for="dormType">Filter by Dorm Type:</label>
+        <select id="dormType">
+            <option value="all">All</option>
+            <option value="single">Single</option>
+            <option value="double">Double</option>
+            <option value="suite">Suite</option>
+        </select>
+
+        <label for="priceRange">Filter by Price Range:</label>
+        <select id="priceRange">
+            <option value="all">All</option>
+            <option value="low">Below $5000</option>
+            <option value="mid">Between $5000 - $7000</option>
+            <option value="high">Above $7000</option>
+        </select>
+    </div>
+
+    <!-- Placeholder for Dorm List -->
+    <div id="dormList">
+        <p>List of available dorms will go here...</p>
+    </div>
+
+    <!-- Inline JavaScript -->
+    <script>
+    document.addEventListener("DOMContentLoaded", function() {
+        // Dorm data array
+        const dorms = [
+            { name: 'Dorm A', rooms: [{ type: 'single', price: 4500 }, { type: 'double', price: 6000 }, { type: 'triple', price: 7500 }] },
+            { name: 'Dorm B', rooms: [{ type: 'double', price: 6000 }] },
+            { name: 'Dorm C', rooms: [{ type: 'suite', price: 8000 }] },
+            { name: 'Dorm D', rooms: [{ type: 'single', price: 5000 }, { type: 'double', price: 7000 }] },
+            { name: 'Dorm E', rooms: [{ type: 'double', price: 7000 }, { type: 'suite', price: 9000 }] }
+        ];
+
+        const dormTypeSelect = document.getElementById('dormType');
+        const priceRangeSelect = document.getElementById('priceRange');
+
+        // Attach event listeners to call filterDorms when selection changes
+        if (dormTypeSelect && priceRangeSelect) {
+            dormTypeSelect.addEventListener('change', filterDorms);
+            priceRangeSelect.addEventListener('change', filterDorms);
+
+            // Call filterDorms on page load to show all dorms by default
+            filterDorms();
+        } else {
+            console.error("One or both dropdowns are not found in the DOM.");
+        }
+
+        function filterDorms() {
+            const dormType = dormTypeSelect.value;
+            const priceRange = priceRangeSelect.value;
+            const dormList = document.getElementById('dormList');
+
+            // Clear previous list
+            dormList.innerHTML = '';
+
+            // Filtering logic based on selected dorm type and price range
+            dorms.forEach(dorm => {
+                let matchingRooms = dorm.rooms.filter(room => {
+                    let matchesType = dormType === 'all' || room.type === dormType;
+                    let matchesPrice = true;
+
+                    if (priceRange === 'low') {
+                        matchesPrice = room.price < 5000;
+                    } else if (priceRange === 'mid') {
+                        matchesPrice = room.price >= 5000 && room.price <= 7000;
+                    } else if (priceRange === 'high') {
+                        matchesPrice = room.price > 7000;
+                    }
+
+                    return matchesType && matchesPrice;
+                });
+
+                if (matchingRooms.length > 0) {
+                    dormList.innerHTML += `<h3>${dorm.name}</h3>`;
+                    matchingRooms.forEach(room => {
+                        dormList.innerHTML += `<p>Room type: ${room.type}, Price: $${room.price}</p>`;
+                    });
+                }
+            });
+        }
+    });
+    </script>
+
 </body>
 </html>
+
