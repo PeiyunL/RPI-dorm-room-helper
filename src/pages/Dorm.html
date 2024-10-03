@@ -20,13 +20,22 @@
             <option value="double">Double</option>
             <option value="suite">Suite</option>
         </select>
-
+    
         <label for="priceRange">Filter by Price Range:</label>
         <select id="priceRange">
             <option value="all">All</option>
             <option value="low">Below $5000</option>
             <option value="mid">Between $5000 - $7000</option>
             <option value="high">Above $7000</option>
+        </select>
+
+      <!-- placeholder for distance to main campus-->
+        <label for="distance">Filter by Distance to main campus:</label>
+        <select id="distance">
+            <option value="all">All</option>
+            <option value="low">Below 2 km</option>
+            <option value="mid">Between 2 to 5 km</option>
+            <option value="high">Above 5 km</option>
         </select>
     </div>
 
@@ -40,30 +49,35 @@
     document.addEventListener("DOMContentLoaded", function() {
         // Dorm data array
         const dorms = [
-            { name: 'Dorm A', rooms: [{ type: 'single', price: 4500 }, { type: 'double', price: 6000 }, { type: 'triple', price: 7500 }] },
-            { name: 'Dorm B', rooms: [{ type: 'double', price: 6000 }] },
-            { name: 'Dorm C', rooms: [{ type: 'suite', price: 8000 }] },
-            { name: 'Dorm D', rooms: [{ type: 'single', price: 5000 }, { type: 'double', price: 7000 }] },
-            { name: 'Dorm E', rooms: [{ type: 'double', price: 7000 }, { type: 'suite', price: 9000 }] }
-        ];
+        { name: 'Dorm A', rooms: [{ type: 'single', price: 4500, distance: 2 }, { type: 'double', price: 6000, distance: 2 }, { type: 'triple', price: 7500, distance: 2 }] },
+        { name: 'Dorm B', rooms: [{ type: 'double', price: 6000, distance: 4 }] },
+        { name: 'Dorm C', rooms: [{ type: 'suite', price: 8000, distance: 5 }] },
+        { name: 'Dorm D', rooms: [{ type: 'single', price: 5000, distance: 12 }, { type: 'double', price: 7000, distance: 12 }] },
+        { name: 'Dorm E', rooms: [{ type: 'double', price: 7000, distance: 13 }, { type: 'suite', price: 9000, distance: 13 }] }
+    ];
 
         const dormTypeSelect = document.getElementById('dormType');
         const priceRangeSelect = document.getElementById('priceRange');
+        const distanceSelect = document.getElementById('distance');
+        //do not delete the comments, it will be useful once I fix the bug and move it back to script.
 
         // Attach event listeners to call filterDorms when selection changes
         if (dormTypeSelect && priceRangeSelect) {
             dormTypeSelect.addEventListener('change', filterDorms);
             priceRangeSelect.addEventListener('change', filterDorms);
+            distanceSelect.addEventListener('change', filterDorms);
 
             // Call filterDorms on page load to show all dorms by default
             filterDorms();
         } else {
+            //do not delete this line, using it to fix bug when moving this part of the code to script.js under event listeners.
             console.error("One or both dropdowns are not found in the DOM.");
         }
 
         function filterDorms() {
             const dormType = dormTypeSelect.value;
             const priceRange = priceRangeSelect.value;
+            const distance = distanceSelect.value;
             const dormList = document.getElementById('dormList');
 
             // Clear previous list
@@ -71,25 +85,34 @@
 
             // Filtering logic based on selected dorm type and price range
             dorms.forEach(dorm => {
-                let matchingRooms = dorm.rooms.filter(room => {
-                    let matchesType = dormType === 'all' || room.type === dormType;
-                    let matchesPrice = true;
+            let matchingRooms = dorm.rooms.filter(room => {
+                let matchesType = dormType === 'all' || room.type === dormType;
+                let matchesPrice = true;
+                let matchesDistance = true;
 
-                    if (priceRange === 'low') {
-                        matchesPrice = room.price < 5000;
-                    } else if (priceRange === 'mid') {
-                        matchesPrice = room.price >= 5000 && room.price <= 7000;
-                    } else if (priceRange === 'high') {
-                        matchesPrice = room.price > 7000;
-                    }
+                if (priceRange === 'low') {
+                    matchesPrice = room.price < 5000;
+                } else if (priceRange === 'mid') {
+                    matchesPrice = room.price >= 5000 && room.price <= 7000;
+                } else if (priceRange === 'high') {
+                    matchesPrice = room.price > 7000;
+                }
 
-                    return matchesType && matchesPrice;
-                });
+                if (distance === 'low') {
+                    matchesDistance = room.distance < 2;
+                } else if (distance === 'mid') {
+                    matchesDistance = room.distance >= 2 && room.distance <= 5;
+                } else if (distance === 'high') {
+                    matchesDistance = room.distance > 5;
+                }
+
+                return matchesType && matchesPrice && matchesDistance;
+            });
 
                 if (matchingRooms.length > 0) {
                     dormList.innerHTML += `<h3>${dorm.name}</h3>`;
                     matchingRooms.forEach(room => {
-                        dormList.innerHTML += `<p>Room type: ${room.type}, Price: $${room.price}</p>`;
+                        dormList.innerHTML += `<p>Room type: ${room.type}, Price: $${room.price}, Distance to main campus: ${room.distance}km</p>`;
                     });
                 }
             });
