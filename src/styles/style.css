@@ -214,3 +214,30 @@ header img {
     width: 30%;
     box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
 }
+
+.filter {
+    background-color: #f5f5f5;
+    color: #333333;
+    padding: 10px;
+    border: 1px solid #d9534f;
+    border-radius: 5px;
+}
+
+.filter label {
+    margin-right: 10px;
+}
+
+.filter select {
+    margin-left: 5px;
+    padding: 5px;
+    border: 1px solid #d9534f;
+    border-radius: 3px;
+    background-color: #ffffff; 
+    transition: background-color 0.3s ease; 
+}
+
+/* When a filter dropdown is clicked or focused */
+.filter select:focus {
+    background-color: #d9534f; 
+    color: white; 
+}
