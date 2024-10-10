@@ -6,12 +6,41 @@
     <title>RPI Dorm Room Helper</title>
     <link rel="icon" href="../assets/favicon.ico" type="image/x-icon">
     <link rel="stylesheet" href="../styles/style.css">
+    <!-- <img src="../assets/images/RPI.jpg" width="1200" height="500"/> -->
+    <style>
+        /* Container to hold the image and the text */
+        .image-container {
+            position: relative;
+            width: 1200px; /* Set the width of the container */
+            height: 400px; /* Set hight for the container */
+        }
+
+        /* The image */
+        .image-container img {
+            width: 100%;
+            height: auto;
+        }
+
+        /* The overlay text */
+        .text-overlay {
+            position: absolute;
+            top:14%; /* Center vertically */
+            left: 30%; /* Center horizontally */
+            transform: translate(-50%, -60%); /* Move it to the exact center */
+            color: rgb(218, 26, 26); /* Text color */
+            font-size: 100px; /* Text size */
+            /*background-color: rgba(250, 0, 0, 0.5); /* Optional: Semi-transparent background for readability */
+            padding: 10px;
+        }
+    </style>
 </head>
 <body>
-
-    <h1>This is the page for subkey 1</h1>
-
+    <div class="image-container">
+        <img src="../assets/images/RPI.jpg" alt="RPI Image">
+        <div class="text-overlay">Brower Housing</div>
+    </div>
     <!-- Filter Section -->
+    <p><br></p>
     <div class="filter">
         <label for="dormType">Filter by Dorm Type:</label>
         <select id="dormType">
@@ -49,7 +78,7 @@
     document.addEventListener("DOMContentLoaded", function() {
         // Dorm data array
         const dorms = [
-        { name: 'Dorm A', rooms: [{ type: 'single', price: 4500, distance: 2 }, { type: 'double', price: 6000, distance: 2 }, { type: 'triple', price: 7500, distance: 2 }] },
+        { name: 'Cary', rooms: [{ type: 'single', price: 4500, distance: 2 }, { type: 'double', price: 6000, distance: 2 }, { type: 'triple', price: 7500, distance: 2 }] },
         { name: 'Dorm B', rooms: [{ type: 'double', price: 6000, distance: 4 }] },
         { name: 'Dorm C', rooms: [{ type: 'suite', price: 8000, distance: 5 }] },
         { name: 'Dorm D', rooms: [{ type: 'single', price: 5000, distance: 12 }, { type: 'double', price: 7000, distance: 12 }] },
@@ -82,6 +111,8 @@
 
             // Clear previous list
             dormList.innerHTML = '';
+            let matchingDormsCount = 0; 
+
 
             // Filtering logic based on selected dorm type and price range
             dorms.forEach(dorm => {
@@ -109,14 +140,36 @@
                 return matchesType && matchesPrice && matchesDistance;
             });
 
-                if (matchingRooms.length > 0) {
-                    dormList.innerHTML += `<h3>${dorm.name}</h3>`;
-                    matchingRooms.forEach(room => {
-                        dormList.innerHTML += `<p>Room type: ${room.type}, Price: $${room.price}, Distance to main campus: ${room.distance}km</p>`;
-                    });
-                }
+            if (matchingRooms.length > 0) {
+                // Create a new div for each dorm
+                matchingDormsCount++;
+                const dormDiv = document.createElement('div');
+                dormDiv.classList.add('dorm');
+
+                // Create a link for the dorm name
+                const dormLink = document.createElement('a');
+                dormLink.href = dorm.name.toLowerCase() + '.html'; // Assuming the dorm page is named dorm_name.html
+                dormLink.textContent = dorm.name;
+
+                // Append the dorm link (as the title)
+                dormDiv.appendChild(dormLink);
+
+                // Add room details below the dorm name for matching rooms
+                matchingRooms.forEach(room => {
+                    const roomInfo = document.createElement('p');
+                    roomInfo.textContent = `Room type: ${room.type}, Price: $${room.price}, Distance to main campus: ${room.distance}km`;
+                    dormDiv.appendChild(roomInfo);
+                });
+
+                // Append the entire dorm div to the dorm list
+                dormList.appendChild(dormDiv);
+            }            
             });
+            const dormCountInfo = document.createElement('p');
+        dormCountInfo.textContent = `${matchingDormsCount} dorms match your filter.`;
+        dormList.prepend(dormCountInfo);
         }
+
     });
     </script>
 
