@@ -1,0 +1,123 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Display GeoJSON with Leaflet</title>
+    <!-- Leaflet CSS -->
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.3/dist/leaflet.css" />
+    <style>
+        #map {
+            height: 1000px;
+            width: 1000px;
+        }
+    </style>
+</head>
+<body>
+    <div id="map"></div>
+
+    <!-- Leaflet JavaScript -->
+    <script src="https://unpkg.com/leaflet@1.9.3/dist/leaflet.js"></script>
+
+    <!-- Load GeoJSON from external file -->
+    <script>
+        // Initialize the map (view will be updated with fitBounds)
+        const map = L.map('map', {
+            maxZoom: 19, // Set maximum zoom level
+            minZoom: 13  // Optional: Set minimum zoom level for better control
+        }).setView([42.730171, -73.678800], 16); // Example coordinates
+
+        // Add a tile layer to the map (OpenStreetMap tiles)
+        L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+            maxZoom: 19,
+        }).addTo(map);
+
+        // Define a custom style based on building type
+        function style(feature) {
+            if (feature.properties.name === 'Rensselaer Polytechnic Institute') {
+                return {
+                    color: '#ff7800', // Red for dormitory
+                    weight: 2,
+                    opacity: 1,
+                    fillOpacity: 0.1,
+                    fillColor: '#ff7800'
+                };
+            } else if (feature.properties.building === 'dormitory') {
+                return {
+                    color: '#800000', // Red for dormitory
+                    weight: 0.5,
+                    opacity: 1,
+                    fillOpacity: 0.5,
+                    fillColor: '#800000'
+                };
+            } else {
+                return {
+                    color: '#000000', // Default black for other types
+                    weight: 0,
+                    opacity: 0,
+                    fillOpacity: 0,
+                    fillColor: '#cccccc'
+                };
+            }
+        }
+
+        // Global variable to store the geojsonLayer
+        let geojsonLayer;
+
+        // Handle interactions for dormitory buildings
+        function onEachFeature(feature, layer) {
+            // Check if the feature is a dormitory
+            if (feature.properties.building === 'dormitory') {
+                // Add a popup with the dormitory name
+                layer.bindPopup(feature.properties.name);
+
+                // Add event listeners for interactivity
+                layer.on({
+                    mouseover: function (e) {
+                        // Highlight the building on hover
+                        e.target.setStyle({
+                            weight: 5,
+                            color: '#800000',
+                            fillOpacity: 0.7
+                        });
+                    },
+                    mouseout: function (e) {
+                        // Reset the style when hover ends
+                        geojsonLayer.resetStyle(e.target); // Ensure style resets on mouseout
+                    },
+                    click: function (e) {
+                        // Zoom to the dormitory when clicked
+                        map.fitBounds(e.target.getBounds());
+                    }
+                });
+            }
+        }
+
+        // Load GeoJSON from external file
+        fetch('../assets/map.geojson')
+            .then(response => response.json())
+            .then(data => {
+                // Add the GeoJSON layer to the map with a filter, custom style, and interactivity
+                geojsonLayer = L.geoJSON(data, {
+                    filter: function (feature) {
+                        // Only include 'Polygon' or 'MultiPolygon' features
+                        return feature.geometry.type === 'Polygon' || feature.geometry.type === 'MultiPolygon';
+                    },
+                    style: style, // Apply custom style
+                    onEachFeature: onEachFeature // Apply interactivity for each feature
+                }).addTo(map);
+                
+                // Fit the map view to the GeoJSON layer bounds
+                const bounds = geojsonLayer.getBounds();
+                map.fitBounds(bounds);
+
+                // Set max bounds so users cannot pan or zoom outside of the university area
+                map.setMaxBounds(bounds);
+                map.on('drag', function() {
+                    map.panInsideBounds(bounds, { animate: false });
+                });
+            })
+            .catch(error => console.error('Error loading the GeoJSON file:', error));
+    </script>
+</body>
+</html>
