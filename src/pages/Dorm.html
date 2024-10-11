@@ -11,35 +11,112 @@
         /* Container to hold the image and the text */
         .image-container {
             position: relative;
-            width: 1200px; /* Set the width of the container */
-            height: 400px; /* Set hight for the container */
+            width: 1300px; /* place holders */
+            height: 500px; /* place holders*/
         }
 
-        /* The image */
+        /* The background image */
         .image-container img {
             width: 100%;
-            height: auto;
+            height: 100%;
+            object-fit: cover; /* Ensures the image covers the container */
+            position: absolute;
+            z-index: 1; /* Background image is behind everything */
         }
 
-        /* The overlay text */
-        .text-overlay {
+        /* Header overlaying the image */
+        header {
             position: absolute;
-            top:14%; /* Center vertically */
-            left: 30%; /* Center horizontally */
-            transform: translate(-50%, -60%); /* Move it to the exact center */
-            color: rgb(218, 26, 26); /* Text color */
-            font-size: 100px; /* Text size */
-            /*background-color: rgba(250, 0, 0, 0.5); /* Optional: Semi-transparent background for readability */
+            top: 0;
+            left: 0;
+            width: 100%;
+            z-index: 2; /* Higher z-index to ensure it is over the image */
+            color: white;
+            text-align: center;
+            padding: 20px;
+            font-size: 24px;
+        }
+
+        /* Header content styling */
+        header img {
+            max-height: 100px;
+            margin-right: 10px;
+        }
+
+        header h1 {
+            display: inline;
+            font-size: 2rem;
+            font-weight: bold;
+            text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.6); /* Optional text shadow for readability */
+        }
+
+        .login {
+            position: absolute;
+            top: 20px;
+            right: 20px;
+        }
+
+        .menu-container {
+            position: absolute;
+            bottom: 20px;
+            left: 20px;
+            z-index: 3; /* On top of the image */
+            background-color: rgba(0, 0, 0, 0.5); /* Semi-transparent background */
             padding: 10px;
+            border-radius: 10px;
+            color: white;
+        }
+
+        .menu-item {
+            display: block;
+            color: white;
+            margin: 5px 0;
+            text-decoration: none;
+            font-size: 18px;
+        }
+
+        .menu-item:hover {
+            text-decoration: underline;
         }
     </style>
 </head>
 <body>
+
     <div class="image-container">
-        <img src="../assets/images/RPI.jpg" alt="RPI Image">
-        <div class="text-overlay">Brower Housing</div>
+        <!-- Background Image -->
+        <img src="../assets/images/RPI.jpg" alt="RPI Background Image">
+
+        <!-- Header Section -->
+        <header>
+            <!-- <img src="../assets/images/RPI Small Logo RGB-TwoColor.png" alt="RPI Logo">-->
+            <h1><i>Welcome to RPI Dorm Room Helper</i></h1>
+            <div class="login">
+                <a href="#" id="loginButton">Login</a>
+                <img id="userAvatar" src="../assets/images/avatar.jpg" alt="User Avatar" style="display: none;">
+            </div>
+        </header>
+
+        <!-- Menu Container -->
+        <div class="menu-container">
+            <!--<div class="menu-label">Menu</div>-->
+            <div class="menu-trigger"></div>
+            <div class="side-menu">
+                <a href="#" class="menu-item" onclick="handleMenuClick('Dorm')">Dorm</a>
+                <a href="#" class="menu-item" onclick="handleMenuClick('subkey 2')">subkey 2</a>
+                <a href="#" class="menu-item" onclick="handleMenuClick('subkey 3')">subkey 3</a>
+                <a href="#" class="menu-item" onclick="handleMenuClick('Favorites')">Favorites</a>
+                <a href="#" class="menu-item" onclick="handleMenuClick('Record')">Record</a>
+                <a href="#" class="menu-item" onclick="handleMenuClick('Settings')">Settings</a>
+                <a href="#" class="menu-item" onclick="handleMenuClick('About us')">About us</a>
+                <button id="logoutButton">Log Out</button>
+            </div>
+        </div>
     </div>
+</head>
+<body>
     <!-- Filter Section -->
+    <p><br></p>
+    <p><br></p>
     <p><br></p>
     <div class="filter">
         <label for="dormType">Filter by Dorm Type:</label>
