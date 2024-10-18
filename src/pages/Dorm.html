@@ -6,8 +6,32 @@
     <title>RPI Dorm Room Helper</title>
     <link rel="icon" href="../assets/favicon.ico" type="image/x-icon">
     <link rel="stylesheet" href="../styles/style.css">
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.7.1/dist/leaflet.css" />
+    <script src="https://unpkg.com/leaflet@1.7.1/dist/leaflet.js"></script>
+
+
     <!-- <img src="../assets/images/RPI.jpg" width="1200" height="500"/> -->
     <style>
+        /* Flexbox container to hold dorm list and map */
+        .container {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            margin: 20px;
+        }
+
+        /* Dorm list styling */
+        .dorm-list {
+            width: 45%; /* Adjust to your preference */
+            margin-right: 20px;
+        }
+
+        /* Map container */
+        #map {
+            width: 45%; /* Adjust to your preference */
+            height: 500px; /* Adjust height as needed */
+        }
+
         /* Container to hold the image and the text */
         .image-container {
             position: relative;
@@ -80,6 +104,7 @@
         }
     </style>
 </head>
+
 <body>
 
     <div class="image-container">
@@ -145,13 +170,120 @@
         </select>
     </div>
 
-    <!-- Placeholder for Dorm List -->
-    <div id="dormList">
-        <p>List of available dorms will go here...</p>
+    <div class="container">
+        <!-- Dorm list on the left -->
+        <div class="dorm-list" id="dormList">
+            <p>List of available dorms will go here...</p>
+        </div>
+
+        <!-- Map on the right -->
+        <div id="map"></div>
     </div>
 
     <!-- Inline JavaScript -->
     <script>
+
+    var map = L.map('map').setView([42.7302, -73.6788], 16); // RPI campus coordinates and a zoom level of 10
+
+    // Add a base map layer (OpenStreetMap)
+    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+    attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
+    }).addTo(map);
+
+    // Define a style for normal map features
+    var defaultStyle = {
+        color: '#3388ff',  // Default blue color
+        weight: 2,
+        opacity: 1
+    };
+
+    // Define a style for when a feature is clicked
+    var clickedStyle = {
+        color: '#ff0000',  // Red color when clicked
+        weight: 3,
+        opacity: 1
+    };
+
+    var dormitoryStyle = {
+    color: '#ff0000',  // Red outline color
+    weight: 2,
+    opacity: 1,
+    fillColor: '#ff0000',  // Red fill color
+    fillOpacity: 0.5
+    };
+
+// Load the GeoJSON and add it to the map
+fetch('../assets/map.geojson')
+    .then(response => {
+        if (!response.ok) {
+            throw new Error('Network response was not ok');
+        }
+        return response.json();
+    })
+    .then(geojsonData => {
+        console.log('GeoJSON data:', geojsonData);  // Log the data to see if it loads correctly
+        L.geoJSON(geojsonData, {
+            style: function(feature) {
+                console.log('Feature properties:', feature.properties);  // Log feature properties
+                if (feature.properties.building === 'dormitory') {
+                    return dormitoryStyle;
+                } else {
+                    return defaultStyle;
+                }
+            },
+            onEachFeature: function(feature, layer) {
+                if (feature.properties.building === 'dormitory') {
+                    layer.bindPopup(feature.properties.name || "Dormitory");
+                }
+            }
+        }).addTo(map);
+    })
+    .catch(error => console.error('Error loading GeoJSON:', error));
+
+
+
+//     var testGeoJSON = {
+//     "type": "FeatureCollection",
+//     "features": [
+//         {
+//             "type": "Feature",
+//             "properties": {
+//                 "building": "dormitory",
+//                 "name": "Test Dorm"
+//             },
+//             "geometry": {
+//                 "type": "Polygon",
+//                 "coordinates": [
+//                     [
+//                         [-73.6859323, 42.7316014],
+//                         [-73.6859884, 42.7313315],
+//                         [-73.6861024, 42.7307834],
+//                         [-73.6855949, 42.7307265],
+//                         [-73.6859323, 42.7316014]
+//                     ]
+//                 ]
+//             }
+//         }
+//     ]
+// };
+
+// L.geoJSON(testGeoJSON, {
+//     style: function(feature) {
+//         if (feature.properties.building === 'dormitory') {
+//             return dormitoryStyle;
+//         } else {
+//             return defaultStyle;
+//         }
+//     },
+//     onEachFeature: function(feature, layer) {
+//         if (feature.properties.building === 'dormitory') {
+//             layer.bindPopup(feature.properties.name || "Dormitory");
+//         }
+//     }
+// }).addTo(map);
+
+
+
     document.addEventListener("DOMContentLoaded", function() {
         // Dorm data array
         const dorms = [
