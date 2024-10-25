@@ -22,21 +22,21 @@ document.addEventListener('click', function(event) {
 // The handler function after the menu item is clicked
 function handleMenuClick(menuItem) {
     if (menuItem === 'Home page') {
-        window.location.href = '../../public/index.html';
+        window.location.href = '/public/index.html';
     } else if (menuItem === 'Dorm room') {
-        window.location.href = '../src/pages/Dorm.html';
+        window.location.href = '/src/pages/test.html';
     } else if (menuItem === 'subkey 3') {
-        window.location.href = '../src/pages/subkey_3.html';
+        window.location.href = '/src/pages/subkey_3.html';
     } else if (menuItem === 'Favorites') {
-        window.location.href = '../src/pages/favorites.html';
+        window.location.href = '/src/pages/favorites.html';
     } else if (menuItem === 'Record') {
-        window.location.href = '../src/pages/record.html';
+        window.location.href = '/src/pages/record.html';
     } else if (menuItem === 'Settings') {
-        window.location.href = '../src/pages/settings.html';
+        window.location.href = '/src/pages/settings.html';
     } else if (menuItem === 'About us') {
-        window.location.href = '../src/pages/about_us.html';
+        window.location.href = '/src/pages/about_us.html';
     } else if (menuItem === 'Log out') {
-        window.location.href = '../src/pages/about_us.html';
+        window.location.href = '/src/pages/about_us.html';
     } else {
         alert(menuItem + " page not found");
     }
