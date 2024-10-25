@@ -1,0 +1,225 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Filter Dormitories</title>
+    <link rel="ico" href="../assets/favicon.ico">
+    <link rel="stylesheet" href="../styles/style.css">
+    <style>
+        body {
+            display: flex;
+            height: 100vh;
+            margin: 0;
+            background-color: #2e2e2e;
+            color: white;
+        }
+        .filter-container {
+            width: 30%;
+            padding: 20px;
+            background-color: #2e2e2e;
+            box-shadow: 2px 0 5px rgba(0, 0, 0, 0.1);
+            font-family: Arial, sans-serif;
+        }
+        .filter-group {
+            margin-bottom: 20px;
+        }
+        .filter-group label {
+            font-weight: bold;
+            display: block;
+            margin-bottom: 5px;
+        }
+        .filter-options {
+            display: flex;
+            flex-wrap: wrap;
+        }
+        .filter-option {
+            padding: 10px;
+            margin: 5px;
+            background-color: #1e1e1e;
+            color: white;
+            border: 1px solid #555;
+            cursor: pointer;
+            user-select: none;
+        }
+        .filter-option.selected {
+            background-color: #4CAF50;
+        }
+        .price-range-container {
+            display: flex;
+            justify-content: space-between;
+        }
+        .price-range-container input[type="number"] {
+            width: 48%;
+        }
+        .map-container {
+            width: 70%;
+            position: relative;
+        }
+        iframe {
+            width: 100%;
+            height: 100%;
+            border: 2px solid #ccc;
+        }
+    </style>
+</head>
+<body>
+    <header>
+        <div class="login">
+            <a href="#" id="loginButton">Login</a>
+            <img id="userAvatar" src="../src/assets/images/avatar.jpg" alt="User Avatar" style="display: none;" />
+        </div>
+    </header>
+    <div class="menu-container">
+        <div class="menu-label">menu</div>
+        <div class="side-menu">
+            <a href="#" class="menu-item" onclick="handleMenuClick('Home page')">Home page</a>
+            <a href="#" class="menu-item" onclick="handleMenuClick('Dorm room')">Dorm room</a>
+            <a href="#" class="menu-item" onclick="handleMenuClick('subkey 3')">subkey 3</a>
+            <a href="#" class="menu-item" onclick="handleMenuClick('Favorites')">Favorites</a>
+            <a href="#" class="menu-item" onclick="handleMenuClick('Record')">Record</a>
+            <a href="#" class="menu-item" onclick="handleMenuClick('Settings')">Settings</a>
+            <a href="#" class="menu-item" onclick="handleMenuClick('About us')">About us</a>
+            <button id="logoutButton">Log Out</button>
+        </div>
+    </div>
+    <div class="filter-container">
+        <h1>Filter Dormitories</h1>
+
+        <div class="filter-group">
+            <label for="dormSearch">Search Dormitory Name</label>
+            <input type="text" id="dormSearch" placeholder="Enter dormitory name" oninput="applyFilters()">
+        </div>
+
+        <!-- Class Year Multiple choice -->
+        <div class="filter-group">
+            <label for="classYear">Class Year</label>
+            <div id="classYearOptions" class="filter-options">
+                <div class="filter-option" data-value="Freshman">Freshman</div>
+                <div class="filter-option" data-value="Sophomore">Sophomore</div>
+                <div class="filter-option" data-value="Junior/Senior/Co-term">Junior/Senior/Co-term</div>
+                <div class="filter-option" data-value="The Arch">The Arch</div>
+            </div>
+        </div>
+
+        <!-- Room Types Multiple choice -->
+        <div class="filter-group">
+            <label for="roomTypes">Room Types</label>
+            <div id="roomTypesOptions" class="filter-options">
+                <div class="filter-option" data-value="Single">Single</div>
+                <div class="filter-option" data-value="Double">Double</div>
+                <div class="filter-option" data-value="Triple">Triple</div>
+            </div>
+        </div>
+
+        <!-- Building Type Multiple choice -->
+        <div class="filter-group">
+            <label for="buildingType">Building Type</label>
+            <div id="buildingTypeOptions" class="filter-options">
+                <div class="filter-option" data-value="Traditional">Traditional</div>
+                <div class="filter-option" data-value="Suite">Suite</div>
+            </div>
+        </div>
+
+        <!-- Nearest Dining Hall single-choice -->
+        <div class="filter-group">
+            <label for="diningHall">Nearest Dining Hall</label>
+            <div id="diningHallTypeOptions" class="filter-options">
+                <div class="filter-option" data-value="The Commons Dining Hall">The Commons Dining Hall</div>
+                <div class="filter-option" data-value="Russell Sage Dining Hall">Russell Sage Dining Hall</div>
+                <div class="filter-option" data-value="BARH Dining Hall">BARH Dining Hall</div>
+                <div class="filter-option" data-value="Blitman Dining Hall">Blitman Dining Hall</div>
+            </div>
+        </div>
+
+        <!-- Price Range (two frames) -->
+        <div class="filter-group">
+            <label for="priceRange">Price Range</label>
+            <div class="price-range-container">
+                <input type="number" id="priceRangeMin" placeholder="ex:1000" value=""> <!-- min -->
+                <input type="number" id="priceRangeMax" placeholder="ex:5000" value=""> <!-- max -->
+            </div>
+        </div>
+
+            
+    </div>
+
+    <div class="map-container">
+        <!-- Map embedding -->
+        <iframe id="mapIframe" src="map.html" title="Map"></iframe>
+    </div>
+
+    <script>
+        // Stores the selected options
+        let selectedClassYear = [];
+        let selectedRoomTypes = [];
+        let selectedBuildingType = [];
+        let selectedDiningHall = "";
+
+        document.querySelectorAll('.filter-option').forEach(option => {
+            option.addEventListener('click', function() {
+                const value = this.getAttribute('data-value');
+
+                if (this.parentElement.id === 'diningHallTypeOptions') {
+                    if (this.classList.contains('selected')) {
+                        this.classList.remove('selected');
+                        selectedDiningHall = "";
+                    } else {
+                        document.querySelectorAll('#diningHallTypeOptions .filter-option').forEach(opt => opt.classList.remove('selected'));
+                        this.classList.add('selected');
+                        selectedDiningHall = value;
+                    }
+                } else {
+                    if (this.classList.contains('selected')) {
+                        this.classList.remove('selected');
+                        removeFromSelected(value, this.parentElement.id);
+                    } else {
+                        this.classList.add('selected');
+                        addToSelected(value, this.parentElement.id);
+                    }
+                }
+
+                applyFilters(); // Apply the filter each time you select or unfilter
+            });
+        });
+
+        function addToSelected(value, group) {
+            if (group === 'classYearOptions') selectedClassYear.push(value);
+            else if (group === 'roomTypesOptions') selectedRoomTypes.push(value);
+            else if (group === 'buildingTypeOptions') selectedBuildingType.push(value);
+        }
+
+        function removeFromSelected(value, group) {
+            if (group === 'classYearOptions') selectedClassYear = selectedClassYear.filter(item => item !== value);
+            else if (group === 'roomTypesOptions') selectedRoomTypes = selectedRoomTypes.filter(item => item !== value);
+            else if (group === 'buildingTypeOptions') selectedBuildingType = selectedBuildingType.filter(item => item !== value);
+        }
+
+        function applyFilters() {
+            const priceRangeMin = document.getElementById('priceRangeMin').value;
+            const priceRangeMax = document.getElementById('priceRangeMax').value;
+            const dormName = document.getElementById('dormSearch').value.toLowerCase(); // Get dormitory name and convert to lowercase
+
+            let priceRange = null;
+            if (priceRangeMin || priceRangeMax) {
+                priceRange = { min: priceRangeMin || 0, max: priceRangeMax || Infinity };
+            }
+
+            const filters = {
+                classYear: selectedClassYear,
+                roomTypes: selectedRoomTypes,
+                buildingType: selectedBuildingType,
+                nearestDiningHall: selectedDiningHall,
+                priceRange: priceRange,
+                dormName: dormName
+            };
+
+            const iframe = document.getElementById('mapIframe');
+            iframe.contentWindow.postMessage(filters, '*');
+        }
+
+    </script>
+    <script src="../scripts/script.js"></script>
+
+</body>
+</html>

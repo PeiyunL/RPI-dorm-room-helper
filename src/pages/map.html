@@ -4,12 +4,16 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Display GeoJSON with Leaflet</title>
-    <!-- Leaflet CSS -->
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.3/dist/leaflet.css" />
     <style>
+        html, body {
+            height: 100%;
+            margin: 0;
+            padding: 0;
+        }
         #map {
-            height: 1000px;
-            width: 1000px;
+            width: 125vh;
+            height: 100vh;
         }
     </style>
 </head>
@@ -21,103 +25,131 @@
 
     <!-- Load GeoJSON from external file -->
     <script>
-        // Initialize the map (view will be updated with fitBounds)
         const map = L.map('map', {
-            maxZoom: 19, // Set maximum zoom level
-            minZoom: 13  // Optional: Set minimum zoom level for better control
-        }).setView([42.730171, -73.678800], 16); // Example coordinates
+            maxZoom: 20,
+            minZoom: 15
+        }).setView([42.730171, -73.678800], 16);
 
-        // Add a tile layer to the map (OpenStreetMap tiles)
         L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-            maxZoom: 19,
+            maxZoom: 20,
         }).addTo(map);
 
-        // Define a custom style based on building type
+        // Define global variable for geojsonLayer and filter
+        let geojsonLayer;
+        let filters = {}; // Saves the received filter
+        // Define the style function
         function style(feature) {
+            // Highlight RPI campus
             if (feature.properties.name === 'Rensselaer Polytechnic Institute') {
                 return {
-                    color: '#ff7800', // Red for dormitory
+                    color: '#ff7800',
                     weight: 2,
                     opacity: 1,
-                    fillOpacity: 0.1,
+                    fillOpacity: 0.3,
                     fillColor: '#ff7800'
                 };
-            } else if (feature.properties.building === 'dormitory') {
-                return {
-                    color: '#800000', // Red for dormitory
-                    weight: 0.5,
-                    opacity: 1,
-                    fillOpacity: 0.5,
-                    fillColor: '#800000'
-                };
-            } else {
-                return {
-                    color: '#000000', // Default black for other types
-                    weight: 0,
-                    opacity: 0,
-                    fillOpacity: 0,
-                    fillColor: '#cccccc'
-                };
             }
+            if (feature.properties.building === 'dormitory') {
+                const { classYear, roomTypes, buildingType, nearestDiningHall, priceRange, dormName } = filters;
+
+                // Check that there are no filters
+                const noFilters = (!classYear || classYear.length === 0) &&
+                                (!roomTypes || roomTypes.length === 0) &&
+                                (!buildingType || buildingType.length === 0) &&
+                                (!nearestDiningHall) &&
+                                (!priceRange);
+
+                // If there are no filters, highlight all residence halls
+                if (noFilters && (!dormName || dormName.length === 0)) {
+                    return {
+                        color: '#800000',
+                        weight: 2,
+                        opacity: 1,
+                        fillOpacity: 0.7,
+                        fillColor: '#800000' 
+                    };
+                }
+
+                // Each condition matches the logic
+                const matchesDormName = !dormName || feature.properties.name.toLowerCase().includes(dormName);
+                const matchesClassYear = !classYear || classYear.includes(feature.properties.class_year);
+                const matchesRoomTypes = !roomTypes || roomTypes.includes(feature.properties.room_types);
+                const matchesBuildingType = !buildingType || buildingType === feature.properties.building_type;
+                const matchesDiningHall = !nearestDiningHall || feature.properties.nearest_dining_hall === nearestDiningHall;
+                const matchesPrice = !priceRange || (
+                    (priceRange.min === '' || feature.properties.price_min >= priceRange.min) &&
+                    (priceRange.max === '' || feature.properties.price_max <= priceRange.max)
+                );
+
+                if (!(!dormName || dormName.length === 0)) {
+                    if(matchesDormName) {
+                        return {
+                            color: '#800000',
+                            weight: 2,
+                            opacity: 1,
+                            fillOpacity: 0.7,
+                            fillColor: '#800000'
+                        };
+                    }
+                }
+
+                // If all conditions are met, return the highlighted style
+                if (matchesClassYear && matchesRoomTypes && matchesBuildingType && matchesDiningHall && matchesPrice) {
+                    return {
+                        color: '#800000',
+                        weight: 2,
+                        opacity: 1,
+                        fillOpacity: 0.7,
+                        fillColor: '#800000'
+                    };
+                }
+            }
+
+            // Default style
+            return {
+                color: '#cccccc',
+                weight: 1,
+                opacity: 0.3,
+                fillOpacity: 0.1,
+                fillColor: '#cccccc'
+            };
         }
 
-        // Global variable to store the geojsonLayer
-        let geojsonLayer;
-
-        // Handle interactions for dormitory buildings
         function onEachFeature(feature, layer) {
-            // Check if the feature is a dormitory
             if (feature.properties.building === 'dormitory') {
-                // Add a popup with the dormitory name
                 layer.bindPopup(feature.properties.name);
-
-                // Add event listeners for interactivity
                 layer.on({
                     mouseover: function (e) {
-                        // Highlight the building on hover
-                        e.target.setStyle({
-                            weight: 5,
-                            color: '#800000',
-                            fillOpacity: 0.7
-                        });
+                        e.target.setStyle({ weight: 5, color: '#800000', fillOpacity: 0.7 });
                     },
                     mouseout: function (e) {
-                        // Reset the style when hover ends
-                        geojsonLayer.resetStyle(e.target); // Ensure style resets on mouseout
+                        geojsonLayer.resetStyle(e.target);
                     },
                     click: function (e) {
-                        // Zoom to the dormitory when clicked
                         map.fitBounds(e.target.getBounds());
                     }
                 });
             }
         }
 
-        // Load GeoJSON from external file
+        // Load the GeoJSON data and initialize the layer
         fetch('../assets/map.geojson')
             .then(response => response.json())
             .then(data => {
-                // Add the GeoJSON layer to the map with a filter, custom style, and interactivity
                 geojsonLayer = L.geoJSON(data, {
-                    filter: function (feature) {
-                        // Only include 'Polygon' or 'MultiPolygon' features
-                        return feature.geometry.type === 'Polygon' || feature.geometry.type === 'MultiPolygon';
-                    },
-                    style: style, // Apply custom style
-                    onEachFeature: onEachFeature // Apply interactivity for each feature
+                    filter: feature => feature.geometry.type === 'Polygon' || feature.geometry.type === 'MultiPolygon',
+                    style: style,
+                    onEachFeature: onEachFeature
                 }).addTo(map);
-                
-                // Fit the map view to the GeoJSON layer bounds
-                const bounds = geojsonLayer.getBounds();
-                map.fitBounds(bounds);
+            });
 
-                // Set max bounds so users cannot pan or zoom outside of the university area
-                map.setMaxBounds(bounds);
-                map.on('drag', function() {
-                    map.panInsideBounds(bounds, { animate: false });
-                });
-            })
-            .catch(error => console.error('Error loading the GeoJSON file:', error));
+        // Receives the filter from test.html and updates the style
+        window.addEventListener('message', (event) => {
+            if (typeof event.data === 'object') {
+                filters = event.data;
+                geojsonLayer.setStyle(style);
+            }
+        });
     </script>
 </body>
 </html>
