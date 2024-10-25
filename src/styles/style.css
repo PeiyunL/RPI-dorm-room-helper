@@ -218,8 +218,8 @@ iframe {
 
 .iframe-container {
     position: relative;
-    width: 80%;  /* 宽度可以自定义 */
-    padding-bottom: 56.25%; /* 16:9 比例的高宽比，调整为你需要的比例 */
+    width: 80%;
+    padding-bottom: 56.25%; /* 16:9*/
     height: 0;
     overflow: hidden;
 }
@@ -232,5 +232,5 @@ iframe {
     height: 100%;
     border: none;
     transform-origin: 0 0;
-    transform: scale(0.5); /* 比例缩小，可以调整 */
+    transform: scale(0.5);
 }
