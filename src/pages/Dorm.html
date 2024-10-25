@@ -138,6 +138,8 @@
         </div>
     </div>
 </head>
+
+
 <body>
     <!-- Filter Section -->
     <p><br></p>
@@ -213,32 +215,32 @@
     };
 
 // Load the GeoJSON and add it to the map
-fetch('../assets/map.geojson')
-    .then(response => {
-        if (!response.ok) {
-            throw new Error('Network response was not ok');
-        }
-        return response.json();
-    })
-    .then(geojsonData => {
-        console.log('GeoJSON data:', geojsonData);  // Log the data to see if it loads correctly
-        L.geoJSON(geojsonData, {
-            style: function(feature) {
-                console.log('Feature properties:', feature.properties);  // Log feature properties
-                if (feature.properties.building === 'dormitory') {
-                    return dormitoryStyle;
-                } else {
-                    return defaultStyle;
-                }
-            },
-            onEachFeature: function(feature, layer) {
-                if (feature.properties.building === 'dormitory') {
-                    layer.bindPopup(feature.properties.name || "Dormitory");
-                }
+    fetch('../assets/map.geojson')
+        .then(response => {
+            if (!response.ok) {
+                throw new Error('Network response was not ok');
             }
-        }).addTo(map);
-    })
-    .catch(error => console.error('Error loading GeoJSON:', error));
+            return response.json();
+        })
+        .then(geojsonData => {
+            console.log('GeoJSON data:', geojsonData);  // Log the data to see if it loads correctly
+            L.geoJSON(geojsonData, {
+                style: function(feature) {
+                    console.log('Feature properties:', feature.properties);  // Log feature properties
+                    if (feature.properties.building === 'dormitory') {
+                        return dormitoryStyle;
+                    } else {
+                        return defaultStyle;
+                    }
+                },
+                onEachFeature: function(feature, layer) {
+                    if (feature.properties.building === 'dormitory') {
+                        layer.bindPopup(feature.properties.name || "Dormitory");
+                    }
+                }
+            }).addTo(map);
+        })
+        .catch(error => console.error('Error loading GeoJSON:', error));
 
 
 
