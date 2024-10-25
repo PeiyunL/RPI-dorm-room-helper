@@ -1,18 +1,30 @@
-const dorms = [
-    { name: 'Dorm A', rooms: [{ type: 'single', price: 4500 }, { type: 'double', price: 6000 }, { type: 'triple', price: 7500 }] },
-    { name: 'Dorm B', rooms: [{ type: 'double', price: 6000 }] },
-    { name: 'Dorm C', rooms: [{ type: 'suite', price: 8000 }] },
-    { name: 'Dorm D', rooms: [{ type: 'single', price: 5000 }, { type: 'double', price: 7000 }] },
-    { name: 'Dorm E', rooms: [{ type: 'double', price: 7000 }, { type: 'suite', price: 9000 }] }
-];
+// Gets elements for the side menu and menu labels
+const sideMenu = document.querySelector('.side-menu');
+const menuLabel = document.querySelector('.menu-label');
 
+// Add a click event listener
+menuLabel.addEventListener('click', function () {
+    // Toggle the show and hide state of the menu
+    sideMenu.classList.toggle('active');
+});
+
+// Add an event listener and close the menu when you click on an area outside the menu
+document.addEventListener('click', function(event) {
+    const isClickInsideMenu = sideMenu.contains(event.target);
+    const isClickOnLabel = menuLabel.contains(event.target);
+
+    if (!isClickInsideMenu && !isClickOnLabel) {
+        // If the click is not on the menu or menu TAB, close the menu
+        sideMenu.classList.remove('active');
+    }
+});
 
 // The handler function after the menu item is clicked
 function handleMenuClick(menuItem) {
-    if (menuItem === 'Dorm') {
+    if (menuItem === 'Home page') {
+        window.location.href = '../../public/index.html';
+    } else if (menuItem === 'Dorm room') {
         window.location.href = '../src/pages/Dorm.html';
-    } else if (menuItem === 'subkey 2') {
-        window.location.href = '../src/pages/subkey_2.html';
     } else if (menuItem === 'subkey 3') {
         window.location.href = '../src/pages/subkey_3.html';
     } else if (menuItem === 'Favorites') {
@@ -65,8 +77,4 @@ document.addEventListener("DOMContentLoaded", function() {
             window.location.reload(); // Refresh the page update status
         });
     }
-
-
-    
 });
-
