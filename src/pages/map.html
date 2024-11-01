@@ -50,17 +50,13 @@
                 };
             }
             if (feature.properties.building === 'dormitory') {
-                const { classYear, roomTypes, buildingType, nearestDiningHall, priceRange, dormName } = filters;
+                const { dormName } = filters;
 
                 // Check that there are no filters
-                const noFilters = (!classYear || classYear.length === 0) &&
-                                (!roomTypes || roomTypes.length === 0) &&
-                                (!buildingType || buildingType.length === 0) &&
-                                (!nearestDiningHall) &&
-                                (!priceRange);
+                const noFilters = !dormName;
 
                 // If there are no filters, highlight all residence halls
-                if (noFilters && (!dormName || dormName.length === 0)) {
+                if (noFilters) {
                     return {
                         color: '#800000',
                         weight: 2,
@@ -72,15 +68,6 @@
 
                 // Each condition matches the logic
                 const matchesDormName = !dormName || feature.properties.name.toLowerCase().includes(dormName);
-                const matchesClassYear = !classYear || classYear.includes(feature.properties.class_year);
-                const matchesRoomTypes = !roomTypes || roomTypes.includes(feature.properties.room_types);
-                const matchesBuildingType = !buildingType || buildingType === feature.properties.building_type;
-                const matchesDiningHall = !nearestDiningHall || feature.properties.nearest_dining_hall === nearestDiningHall;
-                const matchesPrice = !priceRange || (
-                    (priceRange.min === '' || feature.properties.price_min >= priceRange.min) &&
-                    (priceRange.max === '' || feature.properties.price_max <= priceRange.max)
-                );
-
                 if (!(!dormName || dormName.length === 0)) {
                     if(matchesDormName) {
                         return {
@@ -91,17 +78,6 @@
                             fillColor: '#800000'
                         };
                     }
-                }
-
-                // If all conditions are met, return the highlighted style
-                if (matchesClassYear && matchesRoomTypes && matchesBuildingType && matchesDiningHall && matchesPrice) {
-                    return {
-                        color: '#800000',
-                        weight: 2,
-                        opacity: 1,
-                        fillOpacity: 0.7,
-                        fillColor: '#800000'
-                    };
                 }
             }
 
@@ -125,8 +101,21 @@
                     mouseout: function (e) {
                         geojsonLayer.resetStyle(e.target);
                     },
-                    click: function (e) {
-                        map.fitBounds(e.target.getBounds());
+                    click: function () {
+                        
+                        const dormName = feature.properties.name;
+                        const folderPath = `/src/assets/dorm_Info/${encodeURIComponent(dormName)}`;
+
+                        // Send folder path to test.html
+                        window.parent.postMessage({
+                            type: 'dormFolderPath',
+                            path: folderPath
+                        }, '*');
+                        
+                        // Use the requestAnimationFrame to call the fitBounds while waiting for the rendering to finish
+                        requestAnimationFrame(() => {
+                            map.fitBounds(layer.getBounds());
+                        });
                     }
                 });
             }
