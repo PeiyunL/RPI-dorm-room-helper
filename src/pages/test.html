@@ -21,6 +21,13 @@
             box-shadow: 2px 0 5px rgba(0, 0, 0, 0.1);
             font-family: Arial, sans-serif;
         }
+        .filter-dormitory_Info {
+            margin-bottom: 20px;
+            width: 100%;
+            height: 87.5%;
+            background-color: #292828;
+            border-radius: 5px;
+        }
         .filter-group {
             margin-bottom: 20px;
         }
@@ -91,57 +98,12 @@
             <input type="text" id="dormSearch" placeholder="Enter dormitory name" oninput="applyFilters()">
         </div>
 
-        <!-- Class Year Multiple choice -->
-        <div class="filter-group">
-            <label for="classYear">Class Year</label>
-            <div id="classYearOptions" class="filter-options">
-                <div class="filter-option" data-value="Freshman">Freshman</div>
-                <div class="filter-option" data-value="Sophomore">Sophomore</div>
-                <div class="filter-option" data-value="Junior/Senior/Co-term">Junior/Senior/Co-term</div>
-                <div class="filter-option" data-value="The Arch">The Arch</div>
-            </div>
+        <!-- New section to display dormitory information -->
+        <div class="filter-dormitory_Info">
+            <h2>Selected Dormitory Info</h2>
+            <div id="dormInfoContent">Click on a dormitory to see details here.</div>
         </div>
-
-        <!-- Room Types Multiple choice -->
-        <div class="filter-group">
-            <label for="roomTypes">Room Types</label>
-            <div id="roomTypesOptions" class="filter-options">
-                <div class="filter-option" data-value="Single">Single</div>
-                <div class="filter-option" data-value="Double">Double</div>
-                <div class="filter-option" data-value="Triple">Triple</div>
-            </div>
-        </div>
-
-        <!-- Building Type Multiple choice -->
-        <div class="filter-group">
-            <label for="buildingType">Building Type</label>
-            <div id="buildingTypeOptions" class="filter-options">
-                <div class="filter-option" data-value="Traditional">Traditional</div>
-                <div class="filter-option" data-value="Suite">Suite</div>
-            </div>
-        </div>
-
-        <!-- Nearest Dining Hall single-choice -->
-        <div class="filter-group">
-            <label for="diningHall">Nearest Dining Hall</label>
-            <div id="diningHallTypeOptions" class="filter-options">
-                <div class="filter-option" data-value="The Commons Dining Hall">The Commons Dining Hall</div>
-                <div class="filter-option" data-value="Russell Sage Dining Hall">Russell Sage Dining Hall</div>
-                <div class="filter-option" data-value="BARH Dining Hall">BARH Dining Hall</div>
-                <div class="filter-option" data-value="Blitman Dining Hall">Blitman Dining Hall</div>
-            </div>
-        </div>
-
-        <!-- Price Range (two frames) -->
-        <div class="filter-group">
-            <label for="priceRange">Price Range</label>
-            <div class="price-range-container">
-                <input type="number" id="priceRangeMin" placeholder="ex:1000" value=""> <!-- min -->
-                <input type="number" id="priceRangeMax" placeholder="ex:5000" value=""> <!-- max -->
-            </div>
-        </div>
-
-            
+     
     </div>
 
     <div class="map-container">
@@ -150,74 +112,70 @@
     </div>
 
     <script>
-        // Stores the selected options
-        let selectedClassYear = [];
-        let selectedRoomTypes = [];
-        let selectedBuildingType = [];
-        let selectedDiningHall = "";
 
-        document.querySelectorAll('.filter-option').forEach(option => {
-            option.addEventListener('click', function() {
-                const value = this.getAttribute('data-value');
-
-                if (this.parentElement.id === 'diningHallTypeOptions') {
-                    if (this.classList.contains('selected')) {
-                        this.classList.remove('selected');
-                        selectedDiningHall = "";
-                    } else {
-                        document.querySelectorAll('#diningHallTypeOptions .filter-option').forEach(opt => opt.classList.remove('selected'));
-                        this.classList.add('selected');
-                        selectedDiningHall = value;
-                    }
-                } else {
-                    if (this.classList.contains('selected')) {
-                        this.classList.remove('selected');
-                        removeFromSelected(value, this.parentElement.id);
-                    } else {
-                        this.classList.add('selected');
-                        addToSelected(value, this.parentElement.id);
-                    }
-                }
-
-                applyFilters(); // Apply the filter each time you select or unfilter
-            });
-        });
-
-        function addToSelected(value, group) {
-            if (group === 'classYearOptions') selectedClassYear.push(value);
-            else if (group === 'roomTypesOptions') selectedRoomTypes.push(value);
-            else if (group === 'buildingTypeOptions') selectedBuildingType.push(value);
-        }
-
-        function removeFromSelected(value, group) {
-            if (group === 'classYearOptions') selectedClassYear = selectedClassYear.filter(item => item !== value);
-            else if (group === 'roomTypesOptions') selectedRoomTypes = selectedRoomTypes.filter(item => item !== value);
-            else if (group === 'buildingTypeOptions') selectedBuildingType = selectedBuildingType.filter(item => item !== value);
-        }
 
         function applyFilters() {
-            const priceRangeMin = document.getElementById('priceRangeMin').value;
-            const priceRangeMax = document.getElementById('priceRangeMax').value;
             const dormName = document.getElementById('dormSearch').value.toLowerCase(); // Get dormitory name and convert to lowercase
-
-            let priceRange = null;
-            if (priceRangeMin || priceRangeMax) {
-                priceRange = { min: priceRangeMin || 0, max: priceRangeMax || Infinity };
-            }
-
             const filters = {
-                classYear: selectedClassYear,
-                roomTypes: selectedRoomTypes,
-                buildingType: selectedBuildingType,
-                nearestDiningHall: selectedDiningHall,
-                priceRange: priceRange,
                 dormName: dormName
             };
 
             const iframe = document.getElementById('mapIframe');
             iframe.contentWindow.postMessage(filters, '*');
         }
+        // Listen for the folder path from map.html
+        window.addEventListener('message', (event) => {
+            if (event.data && event.data.type === 'dormFolderPath') {
+                const folderPath = event.data.path;
+                handleDormFolder(folderPath);
+            }
+        });
+        // Process the dormitory folder, load the image and text file contents
+        function handleDormFolder(folderPath) {
+            clearDormInfoContent();  // Clear the current display
+            loadImages(folderPath);  // Load picture
+            loadTextFiles(folderPath); // Load the text file contents
+        }
+        // Clear the dormitory information content
+        function clearDormInfoContent() {
+            document.getElementById('dormInfoContent').innerHTML = '';  // Make sure to empty every time new content is loaded
+        }
+        // Load picture file
+        function loadImages(folderPath) {
+            const imagesContainer = document.createElement('div');
+            imagesContainer.id = 'imagesContainer';
+            document.getElementById('dormInfoContent').appendChild(imagesContainer);
 
+            // Suppose the image naming convention is image1.jpg, image2.jpg, etc
+            for (let i = 1; i <= 5; i++) { // Suppose there are at most 5 images
+                const img = document.createElement('img');
+                img.src = `${folderPath}/image${i}.jpg`;
+                img.alt = `Dormitory Image ${i}`;
+                img.style = "width: 100px; margin: 5px;"; // Control picture display size
+
+                img.onerror = () => { img.style.display = 'none'; }; // Hide the picture if it does not exist
+                imagesContainer.appendChild(img);
+            }
+        }
+
+        // Load the text file contents
+        function loadTextFiles(folderPath) {
+            const textContainer = document.createElement('div');
+            textContainer.id = 'textContainer';
+            document.getElementById('dormInfoContent').appendChild(textContainer);
+
+            // Assume that the text file is named note1.txt, note2.txt, and so on
+            for (let i = 1; i <= 3; i++) { // Assume that you have a maximum of three text files
+                fetch(`${folderPath}/note${i}.txt`)
+                    .then(response => response.text())
+                    .then(textContent => {
+                        const para = document.createElement('p');
+                        para.textContent = textContent;
+                        textContainer.appendChild(para);
+                    })
+                    .catch(error => console.error(`Error loading note${i}.txt:`, error));
+            }
+        }
     </script>
     <script src="../scripts/script.js"></script>
 
