@@ -1,4 +1,4 @@
-Dorm: Cary Hall (Freshman)
+Dorm: Bray Hall (Freshman)
 ------------------------------------------------------------
 
 Room Types:
@@ -20,7 +20,7 @@ Furniture:
 Wardrobe                       does not have
 Built in Closet                has, 68" x 26" x 80"
 Loftable/Bunkable Bed          has, 
-Mattress Size                  Extra Long Twin - 36" x 80" x 6"
+Mattress Size                  
 Underbed Height(typical unlofted) 30
 Desk and Chair                 has, 48" x 24"
 Bookcase(above desk)           has, 34" x 9" x 26"
