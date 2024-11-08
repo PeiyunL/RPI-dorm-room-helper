@@ -1,4 +1,4 @@
-Dorm: Cary Hall (Freshman)
+Dorm: Crockett Hall (Freshman)
 ------------------------------------------------------------
 
 Room Types:
@@ -33,11 +33,11 @@ Building Lounge                does not have
 Cable TV                       has, 
 Card Access Required for Entry has, 
 Carpet                         has, Hallways, rooms, common spaces
-Classroom                      has, 
+Classroom                      does not have
 Elevator                       does not have
 Ethernet                       has, 
 Floor Lounge                   has, 
-Indoor Bicycle Storage         has, 
+Indoor Bicycle Storage         does not have
 Kitchen/Kitchenette            has, First floor
 Laundry                        has, Basement
 Printer in Building            has, Third floor study room

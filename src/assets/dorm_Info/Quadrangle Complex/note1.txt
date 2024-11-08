@@ -1,24 +1,24 @@
-Dorm: Cary Hall (Freshman)
+Dorm: Quadrangle (Sophomore, The Arch)
 ------------------------------------------------------------
 
 Room Types:
 Single
-                      (110 sqft) $10,930
+                      (88 sqft) $10,930
 Double
-                      (175 sqft) $9,650
+                      (160 sqft) $9,650
 Triple
-                      (260 sqft) $8,440
+                      (215 sqft) $8,440
 
 Restrooms:
 On Floor                       has, 
-In Room                        does not have
+In Room                        has, 
 Cleaning Available             has, 
-Cleaning Schedule              Monday-Friday
-All-Gender Restroom Available  does not have
+Cleaning Schedule              Once a week
+All-Gender Restroom Available  has, 
 
 Furniture:
-Wardrobe                       does not have
-Built in Closet                has, 68" x 26" x 80"
+Wardrobe                       has, 36" x 25" x 72"
+Built in Closet                does not have
 Loftable/Bunkable Bed          has, 
 Mattress Size                  Extra Long Twin - 36" x 80" x 6"
 Underbed Height(typical unlofted) 30
@@ -27,22 +27,22 @@ Bookcase(above desk)           has, 34" x 9" x 26"
 Dresser(Three Drawer)          does not have
 
 Amenities:
-Air Conditioning               does not have
+Air Conditioning               has, 
 Blinds                         has, 
 Building Lounge                does not have
 Cable TV                       has, 
 Card Access Required for Entry has, 
-Carpet                         has, Hallways, rooms, common spaces
-Classroom                      has, 
+Carpet                         does not have
+Classroom                      does not have
 Elevator                       does not have
 Ethernet                       has, 
 Floor Lounge                   has, 
 Indoor Bicycle Storage         has, 
-Kitchen/Kitchenette            has, First floor
-Laundry                        has, Basement
-Printer in Building            has, Third floor study room
-Study Room(s)                  has, 
+Kitchen/Kitchenette            has, First floor each building
+Laundry                        has, Hunt III basement
+Printer in Building            has, Hunt I lounge
+Study Room(s)                  does not have
 Wireless                       has, 
 
 Dining:
-Nearest Dining Hall            Commons Dining Hall
+Nearest Dining Hall            Russell Sage Dining Hall

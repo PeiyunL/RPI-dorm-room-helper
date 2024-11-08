@@ -1,4 +1,4 @@
-Dorm: Cary Hall (Freshman)
+Dorm: Hall Hall (Freshman)
 ------------------------------------------------------------
 
 Room Types:
@@ -12,7 +12,7 @@ Triple
 Restrooms:
 On Floor                       has, 
 In Room                        does not have
-Cleaning Available             has, 
+Cleaning Available             does not have
 Cleaning Schedule              Monday-Friday
 All-Gender Restroom Available  does not have
 
@@ -33,7 +33,7 @@ Building Lounge                does not have
 Cable TV                       has, 
 Card Access Required for Entry has, 
 Carpet                         has, Hallways, rooms, common spaces
-Classroom                      has, 
+Classroom                      does not have
 Elevator                       does not have
 Ethernet                       has, 
 Floor Lounge                   has, 
