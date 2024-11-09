@@ -94,6 +94,7 @@
         function onEachFeature(feature, layer) {
             if (feature.properties.building === 'dormitory') {
                 layer.bindPopup(feature.properties.name);
+                //layer.bindPopup(feature.properties.id);
                 layer.on({
                     mouseover: function (e) {
                         e.target.setStyle({ weight: 5, color: '#800000', fillOpacity: 0.7 });
