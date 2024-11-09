@@ -165,16 +165,14 @@
             document.getElementById('dormInfoContent').appendChild(textContainer);
 
             // Assume that the text file is named note1.txt, note2.txt, and so on
-            for (let i = 1; i <= 3; i++) { // Assume that you have a maximum of three text files
-                fetch(`${folderPath}/note${i}.txt`)
+            fetch(`${folderPath}/note${1}.txt`)
                     .then(response => response.text())
                     .then(textContent => {
                         const para = document.createElement('p');
                         para.textContent = textContent;
                         textContainer.appendChild(para);
                     })
-                    .catch(error => console.error(`Error loading note${i}.txt:`, error));
-            }
+                    .catch(error => console.error(`Error loading note${1}.txt:`, error));
         }
     </script>
     <script src="../scripts/script.js"></script>
