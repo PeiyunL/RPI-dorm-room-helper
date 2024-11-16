@@ -1,0 +1,47 @@
+Dorm: North Hall (Sophomore, The Arch)
+------------------------------------------------------------
+
+Room Types:
+Single
+                      (98 sqft) $10,930
+Double
+                      (140 sqft) $9,650
+Triple               -
+
+Restrooms:
+On Floor                       has, 
+In Room                        does not have
+Cleaning Available             does not have
+Cleaning Schedule              Monday-Friday
+All-Gender Restroom Available  has, 
+
+Furniture:
+Wardrobe                       has, 36" x 25" x 72"
+Built in Closet                has, 23" x 32" x 81"
+Loftable/Bunkable Bed          has, 
+Mattress Size                  Extra Long Twin - 36" x 80" x 6"
+Underbed Height(typical unlofted) 30
+Desk and Chair                 has, 48" x 24"
+Bookcase(above desk)           has, 34" x 9" x 26"
+Dresser(Three Drawer)          has, 32" x 19" x 30"
+
+Amenities:
+Air Conditioning               has, 
+Blinds                         has, 
+Building Lounge                has, 
+Cable TV                       has, 
+Card Access Required for Entry has, 
+Carpet                         does not have
+Classroom                      does not have
+Elevator                       does not have
+Ethernet                       has, 
+Floor Lounge                   has, 
+Indoor Bicycle Storage         does not have
+Kitchen/Kitchenette            has, First floor
+Laundry                        has, First floor
+Printer in Building            has, First floor
+Study Room(s)                  has, 
+Wireless                       has, 
+
+Dining:
+Nearest Dining Hall            Russell Sage Dining Hall

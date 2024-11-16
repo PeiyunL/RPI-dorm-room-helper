@@ -1,1 +1,48 @@
-This is cary hall
+Dorm: Cary Hall (Freshman)
+------------------------------------------------------------
+
+Room Types:
+Single
+                      (110 sqft) $10,930
+Double
+                      (175 sqft) $9,650
+Triple
+                      (260 sqft) $8,440
+
+Restrooms:
+On Floor                       has, 
+In Room                        does not have
+Cleaning Available             has, 
+Cleaning Schedule              Monday-Friday
+All-Gender Restroom Available  does not have
+
+Furniture:
+Wardrobe                       does not have
+Built in Closet                has, 68" x 26" x 80"
+Loftable/Bunkable Bed          has, 
+Mattress Size                  Extra Long Twin - 36" x 80" x 6"
+Underbed Height(typical unlofted) 30
+Desk and Chair                 has, 48" x 24"
+Bookcase(above desk)           has, 34" x 9" x 26"
+Dresser(Three Drawer)          does not have
+
+Amenities:
+Air Conditioning               does not have
+Blinds                         has, 
+Building Lounge                does not have
+Cable TV                       has, 
+Card Access Required for Entry has, 
+Carpet                         has, Hallways, rooms, common spaces
+Classroom                      has, 
+Elevator                       does not have
+Ethernet                       has, 
+Floor Lounge                   has, 
+Indoor Bicycle Storage         has, 
+Kitchen/Kitchenette            has, First floor
+Laundry                        has, Basement
+Printer in Building            has, Third floor study room
+Study Room(s)                  has, 
+Wireless                       has, 
+
+Dining:
+Nearest Dining Hall            Commons Dining Hall
