@@ -77,4 +77,48 @@ document.addEventListener("DOMContentLoaded", function() {
             window.location.reload(); // Refresh the page update status
         });
     }
+
+    // Carousel functionality
+    let currentImageIndex = 0;
+    const images = [
+        "path_to_image1.jpg",
+        "path_to_image2.jpg",
+        "path_to_image3.jpg"
+    ];
+
+    function updateCarousel() {
+        const mainImage = document.getElementById("mainImage");
+        const carouselCounter = document.getElementById("carouselCounter");
+        const thumbnails = document.querySelectorAll(".carousel-thumbnails img");
+
+        mainImage.src = images[currentImageIndex];
+        carouselCounter.textContent = `${currentImageIndex + 1}/${images.length}`;
+
+        thumbnails.forEach((thumbnail, index) => {
+            thumbnail.classList.toggle("active", index === currentImageIndex);
+        });
+    }
+
+    function nextImage() {
+        currentImageIndex = (currentImageIndex + 1) % images.length;
+        updateCarousel();
+    }
+
+    function prevImage() {
+        currentImageIndex = (currentImageIndex - 1 + images.length) % images.length;
+        updateCarousel();
+    }
+
+    function showImage(index) {
+        currentImageIndex = index;
+        updateCarousel();
+    }
+
+    // Attach carousel navigation to buttons
+    document.querySelector('.carousel-controls button:first-of-type').addEventListener('click', prevImage);
+    document.querySelector('.carousel-controls button:last-of-type').addEventListener('click', nextImage);
+
+    // Initialize the carousel
+    updateCarousel();
+
 });
