@@ -133,47 +133,45 @@
         // Process the dormitory folder, load the image and text file contents
         function handleDormFolder(folderPath) {
             clearDormInfoContent();  // Clear the current display
-            loadImages(folderPath);  // Load picture
-            loadTextFiles(folderPath); // Load the text file contents
+            loadContent(folderPath);  // Load picture and text
         }
         // Clear the dormitory information content
         function clearDormInfoContent() {
             document.getElementById('dormInfoContent').innerHTML = '';  // Make sure to empty every time new content is loaded
         }
-        // Load picture file
-        function loadImages(folderPath) {
-            const imagesContainer = document.createElement('div');
-            imagesContainer.id = 'imagesContainer';
-            document.getElementById('dormInfoContent').appendChild(imagesContainer);
+        
+        function loadContent(folderPath) {
+            const dormName = folderPath.split('/').pop(); // Get dorm name
+            const contentContainer = document.getElementById('dormInfoContent');
+            contentContainer.innerHTML = ''; // Clear current content
 
-            // Suppose the image naming convention is image1.jpg, image2.jpg, etc
-            for (let i = 1; i <= 5; i++) { // Suppose there are at most 5 images
-                const img = document.createElement('img');
-                img.src = `${folderPath}/image${i}.jpg`;
-                img.alt = `Dormitory Image ${i}`;
-                img.style = "width: 100px; margin: 5px;"; // Control picture display size
+            // Create an iframe to load the HTML file
+            const iframe = document.createElement('iframe');
+            iframe.src = `${folderPath}/${dormName}.html`; // Build the HTML file path using the dorm name
 
-                img.onerror = () => { img.style.display = 'none'; }; // Hide the picture if it does not exist
-                imagesContainer.appendChild(img);
-            }
+            // Set the size of the iframe
+            contentContainer.style.height = '700px'; // Adjust the height as needed
+            contentContainer.style.overflowY = 'auto'; // Enable vertical scrolling
+            contentContainer.style.border = '1px solid #ccc'; // Optional: add a border for better visibility
+            contentContainer.style.padding = '10px'; // Optional: add padding for better readability
+            contentContainer.style.display = 'flex'; // Use flexbox for content layout
+            contentContainer.style.flexDirection = 'column'; // Arrange text and images vertically
+            contentContainer.style.backgroundColor = '#464646'; // Change background color
+            iframe.style.width = '100%'; // Set the width to 100% of the parent container
+            iframe.style.height = '700px'; // Fixed height
+            iframe.style.border = '1px solid #ccc'; // Add border
+            iframe.style.margin = '0 auto'; // Center display
+
+            // Handling load error
+            iframe.onerror = () => {
+                contentContainer.innerHTML = `<p style="color: red;">无法加载 ${dormName}.html</p>`;
+            };
+
+            contentContainer.appendChild(iframe);
         }
 
-        // Load the text file contents
-        function loadTextFiles(folderPath) {
-            const textContainer = document.createElement('div');
-            textContainer.id = 'textContainer';
-            document.getElementById('dormInfoContent').appendChild(textContainer);
 
-            // Assume that the text file is named note1.txt, note2.txt, and so on
-            fetch(`${folderPath}/note${1}.txt`)
-                    .then(response => response.text())
-                    .then(textContent => {
-                        const para = document.createElement('p');
-                        para.textContent = textContent;
-                        textContainer.appendChild(para);
-                    })
-                    .catch(error => console.error(`Error loading note${1}.txt:`, error));
-        }
+
     </script>
     <script src="../scripts/script.js"></script>
 
