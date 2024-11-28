@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Cary Hall</title>
+    <title>Stacwyck Apartments</title>
     <style>
         .check, .cross {
         font-family: Arial, sans-serif;
@@ -46,7 +46,7 @@
             letter-spacing: 1px;
         }
 
-                /* Image Carousel */
+        /* Image Carousel */
         .carousel {
             position: relative;
             max-width: 800px;
@@ -246,25 +246,25 @@
     <div class="container">
         <div>
             <div class="title-section">Dorm</div>
-            <div class="main-title">Cary Hall</div>
-            <div class="address">Freshman Dorm</div>
+            <div class="main-title">Stacwyck Apartments</div>
+            <div class="address">Junior/Senior/Co-term Dorm</div>
         </div>
     </div>
 
-   <!-- Image Carousel -->
-<div class="carousel">
-    <img id="mainImage" src="path_to_image1.jpg" alt="Cary Hall Image">
-    <div class="carousel-controls">
-        <button class="prev-button">&#10094;</button>
-        <button class="next-button">&#10095;</button>
+    <!-- Image Carousel -->
+    <div class="carousel">
+        <img id="mainImage" src="path_to_image1.jpg" alt="Stacwyck Apartments Image">
+        <div class="carousel-controls">
+            <button class="prev-button">&#10094;</button>
+            <button class="next-button">&#10095;</button>
+        </div>
+        <div class="carousel-counter" id="carouselCounter">1/3</div>
+        <div class="carousel-thumbnails">
+            <img src="path_to_image1.jpg" alt="Thumbnail 1" data-index="0" class="thumbnail active">
+            <img src="path_to_image2.jpg" alt="Thumbnail 2" data-index="1" class="thumbnail">
+            <img src="path_to_image3.jpg" alt="Thumbnail 3" data-index="2" class="thumbnail">
+        </div>
     </div>
-    <div class="carousel-counter" id="carouselCounter">1/3</div>
-    <div class="carousel-thumbnails">
-        <img src="path_to_image1.jpg" alt="Thumbnail 1" data-index="0" class="thumbnail active">
-        <img src="path_to_image2.jpg" alt="Thumbnail 2" data-index="1" class="thumbnail">
-        <img src="path_to_image3.jpg" alt="Thumbnail 3" data-index="2" class="thumbnail">
-    </div>
-</div>
 
     <!-- Navigation Bar -->
     <div class="navigation-bar">
@@ -281,13 +281,14 @@
         <div class="content-box">
             <p><strong>Restrooms:</strong></p>
             <ul>
-                <li>On Floor: <span class="check">✔️</span></li>
-                <li>In Room: <span class="cross">✖️</span></li>
-                <li>Cleaning Available: <span class="check">✔️</span></li>
-                <li>Cleaning Schedule: Monday-Friday</li>
+                <li>On Floor: <span class="cross">✖️</span></li>
+                <li>In Room: <span class="check">✔️</span></li>
+                <li>Cleaning Available: <span class="cross">✖️</span></li>
+                <li>Cleaning Schedule: -</li>
                 <li>All-Gender Restroom Available: <span class="cross">✖️</span></li>
             </ul>
         </div>
+    </div>
 
     <!-- Pricing Section -->
     <div id="pricing" class="section">
@@ -301,18 +302,18 @@
             </tr>
             <tr>
                 <td>Single</td>
-                <td>110 sqft</td>
-                <td>$10,930</td>
+                <td>84 sqft</td>
+                <td>$10,500</td>
             </tr>
             <tr>
                 <td>Double</td>
-                <td>175 sqft</td>
-                <td>$9,650</td>
+                <td>-</td>
+                <td>-</td>
             </tr>
             <tr>
                 <td>Triple</td>
-                <td>260 sqft</td>
-                <td>$8,440</td>
+                <td>-</td>
+                <td>-</td>
             </tr>
         </table>
     </div>
@@ -327,23 +328,22 @@
                 <div class="accordion-header">Amenities</div>
                 <div class="accordion-content">
                     <ul>
-                        <li>Air Conditioning: <span class="cross">✖️</span></li>
-                        <li>Water fountain: <span class="check">&#10003;</span> (One per floor)</li> <!-- Trying a different style-->
+                        <li>Air Conditioning: <span class="check">✔️</span></li>
                         <li>Blinds: <span class="check">✔️</span></li>
-                        <li>Building Lounge: <span class="cross">✖️</span> </li>
-                        <li>Cable TV: <span class="check">✔️</span> </li>
-                        <li>Card Access Required for Entry: <span class="check">✔️</span> </li>
-                        <li>Carpet: <span class="check">✔️</span> (Hallways, rooms, common spaces)</li>
-                        <li>Classroom: <span class="check">✔️</span> </li>
-                        <li>Elevator: <span class="cross">✖️</span> </li>
+                        <li>Building Lounge: <span class="check">✔️</span></li>
+                        <li>Cable TV: <span class="check">✔️</span></li>
+                        <li>Card Access Required for Entry: <span class="check">✔️</span></li>
+                        <li>Carpet: <span class="check">✔️</span> (Hallways, apartments)</li>
+                        <li>Classroom: <span class="cross">✖️</span></li>
+                        <li>Elevator: <span class="cross">✖️</span></li>
                         <li>Ethernet: <span class="check">✔️</span></li>
-                        <li>Floor Lounge: <span class="check">✔️</span></li>
-                        <li>Indoor Bicycle Storage: <span class="check">✔️</span> </li>
-                        <li>Kitchen/Kitchenette: <span class="check">✔️</span> (First floor)</li>
-                        <li>Laundry: <span class="check">✔️</span> (Basement)</li>
-                        <li>Printer in Building: <span class="check">✔️</span> (Third floor study room)</li>
-                        <li>Study Room(s): <span class="check">✔️</span> </li>
-                        <li>Wireless: <span class="check">✔️</span> </li>
+                        <li>Floor Lounge: <span class="cross">✖️</span></li>
+                        <li>Indoor Bicycle Storage: <span class="cross">✖️</span></li>
+                        <li>Kitchen/Kitchenette: <span class="check">✔️</span> (In apartment)</li>
+                        <li>Laundry: <span class="check">✔️</span> (First floor each building)</li>
+                        <li>Printer in Building: <span class="cross">✖️</span></li>
+                        <li>Study Room(s): <span class="cross">✖️</span></li>
+                        <li>Wireless: <span class="check">✔️</span></li>
                     </ul>
                 </div>
             </div>
@@ -352,25 +352,25 @@
                 <div class="accordion-header">Furniture</div>
                 <div class="accordion-content">
                     <ul>
-                        <li>Wardrobe: <span class="cross">✖️</span></li>
-                        <li>Built-in Closet: <span class="check">✔️</span> (68" x 26" x 80")</li>
+                        <li>Wardrobe: <span class="check">✔️</span> (36" x 25" x 72")</li>
+                        <li>Built-in Closet: <span class="cross">✖️</span></li>
                         <li>Loftable/Bunkable Bed: <span class="check">✔️</span></li>
                         <li>Mattress Size: <span class="check">✔️</span> Extra Long Twin (36" x 80" x 6")</li>
                         <li>Underbed Height (typical unlofted): <span class="check">✔️</span> 30 inches</li>
                         <li>Desk and Chair: <span class="check">✔️</span> (48" x 24")</li>
                         <li>Bookcase (above desk): <span class="check">✔️</span> (34" x 9" x 26")</li>
-                        <li>Dresser (Three Drawer): <span class="cross">✖️</span></li>
+                        <li>Dresser (Three Drawer): <span class="check">✔️</span> (32" x 19" x 30")</li>
                     </ul>
                 </div>
-            </div>            
-    </div>
+            </div>
+        </div>
     </div>
 
     <!-- Dining Section -->
     <div id="dining" class="section">
         <h2>Dining</h2>
         <div class="content-box">
-        <p><strong>Nearest Dining Hall:</strong> Commons Dining Hall</p>
+        <p><strong>Nearest Dining Hall:</strong> BARH Dining Hall</p>
         </div>
     </div>
 </body>
