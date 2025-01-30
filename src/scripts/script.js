@@ -24,7 +24,7 @@ function handleMenuClick(menuItem) {
     if (menuItem === 'Home page') {
         window.location.href = '/public/index.html';
     } else if (menuItem === 'Dorm room') {
-        window.location.href = '/src/pages/test.html';
+        window.location.href = '../src/pages/test.html';
     } else if (menuItem === 'subkey 3') {
         window.location.href = '/src/pages/subkey_3.html';
     } else if (menuItem === 'Favorites') {
@@ -121,4 +121,25 @@ document.addEventListener("DOMContentLoaded", function() {
     // Initialize the carousel
     updateCarousel();
 
+    document.addEventListener("DOMContentLoaded", function () {
+        const toggleButton = document.getElementById("darkModeToggle");
+        const body = document.body;
+
+        // Check if user has a preference stored
+        if (localStorage.getItem("dark-mode") === "enabled") {
+            body.classList.add("dark-mode");
+        }
+
+        toggleButton.addEventListener("click", function () {
+            body.classList.toggle("dark-mode");
+
+            // Store the preference
+            if (body.classList.contains("dark-mode")) {
+                localStorage.setItem("dark-mode", "enabled");
+            } else {
+                localStorage.setItem("dark-mode", "disabled");
+            }
+        });
+    });
+    
 });
