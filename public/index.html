@@ -4,22 +4,22 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>RPI Dorm Room Helper</title>
-    <link rel="ico" href="../src/assets/favicon.ico">
+    <link rel="icon" href="../src/assets/favicon.ico">
     <link rel="stylesheet" href="../src/styles/style.css">
 </head>
 <body>
-
     <header>
-        <img src="../src/assets/images/RPI Small Logo RGB-TwoColor.png" alt="RPI">
-        <h1><i>Welcome to RPI dorm room helper</i></h1>
+        <img src="../src/assets/images/RPI Small Logo RGB-TwoColor.png" alt="RPI Logo">
+        <h1><em>Welcome to RPI Dorm Room Helper</em></h1>
         <div class="login">
             <a href="#" id="loginButton">Login</a>
-            <img id="userAvatar" src="../src/assets/images/avatar.jpg" alt="User Avatar" style="display: none;" />
+            <img id="userAvatar" src="../src/assets/images/avatar.jpg" alt="User Avatar" class="hidden">
         </div>
     </header>
+
     <div class="menu-container">
-        <div class="menu-label">menu</div>
-        <div class="side-menu">
+        <div class="menu-label">Menu</div>
+        <nav class="side-menu">
             <a href="#" class="menu-item" onclick="handleMenuClick('Home page')">Home page</a>
             <a href="#" class="menu-item" onclick="handleMenuClick('Dorm room')">Dorm room</a>
             <a href="#" class="menu-item" onclick="handleMenuClick('subkey 3')">subkey 3</a>
@@ -27,19 +27,20 @@
             <a href="#" class="menu-item" onclick="handleMenuClick('Record')">Record</a>
             <a href="#" class="menu-item" onclick="handleMenuClick('Settings')">Settings</a>
             <a href="#" class="menu-item" onclick="handleMenuClick('About us')">About us</a>
-            <button id="logoutButton">Log Out</button>
-        </div>
+            <button id="logoutButton" class="menu-item">Log Out</button>
+        </nav>
     </div>
+
     <section class="housing-services">
         <h2>Housing & Residential Services</h2>
         <nav>
             <ul>
-                <li href="#" class="menu-item" onclick="handleMenuClick('subkey 4')">subkey 4</li>
-                <li href="#" class="menu-item" onclick="handleMenuClick('subkey 5')">subkey 5</li>
-                <li href="#" class="menu-item" onclick="handleMenuClick('subkey 6')">subkey 6</li>
-                <li href="#" class="menu-item" onclick="handleMenuClick('subkey 7')">subkey 7</li>
-                <li href="#" class="menu-item" onclick="handleMenuClick('subkey 8')">subkey 8</li>
-                <li href="#" class="menu-item" onclick="handleMenuClick('subkey 9')">subkey 9</li>
+                <li><a href="#" class="menu-item" onclick="handleMenuClick('subkey 4')">subkey 4</a></li>
+                <li><a href="#" class="menu-item" onclick="handleMenuClick('subkey 5')">subkey 5</a></li>
+                <li><a href="#" class="menu-item" onclick="handleMenuClick('subkey 6')">subkey 6</a></li>
+                <li><a href="#" class="menu-item" onclick="handleMenuClick('subkey 7')">subkey 7</a></li>
+                <li><a href="#" class="menu-item" onclick="handleMenuClick('subkey 8')">subkey 8</a></li>
+                <li><a href="#" class="menu-item" onclick="handleMenuClick('subkey 9')">subkey 9</a></li>
             </ul>
         </nav>
         <div class="housing-options">
@@ -64,31 +65,32 @@
     <section class="information">
         <h3>Some Content</h3>
         <ul>
-            <li>This is the text This is the text This is the text This is the text This is the text This is the text This is the text This is the text </ul>
+            <li>This is the text This is the text This is the text This is the text This is the text This is the text This is the text This is the text</li>
+        </ul>
         <h3>Some other Content</h3>
         <ul>
-            <li>This is the text This is the text This is the text This is the text This is the text This is the text </li>
+            <li>This is the text This is the text This is the text This is the text This is the text This is the text</li>
         </ul>
     </section>
 
-    <section class="content" id="restrictedContent" style="display: none;">
+    <section class="content hidden" id="restrictedContent">
         <h1>Exclusive Content</h1>
-        <p class = "subcontent">
-            This content is only available for logged-in users.
-            <img src="../src/assets/images/OIP.jpg" alt="restricted picture">
-        </p>
-        <p class = "subcontent">
-            This content is only available for logged-in users.
-            <img src="../src/assets/images/OIP.jpg" alt="restricted picture">
-        </p> 
-        <p class = "subcontent">
-            This content is only available for logged-in users.
-            <img src="../src/assets/images/OIP.jpg" alt="restricted picture">
-        </p> 
-        <p class = "subcontent">
-            This content is only available for logged-in users.
-            <img src="../src/assets/images/OIP.jpg" alt="restricted picture">
-        </p> 
+        <div class="subcontent">
+            <p>This content is only available for logged-in users.</p>
+            <img src="../src/assets/images/OIP.jpg" alt="Restricted Picture">
+        </div>
+        <div class="subcontent">
+            <p>This content is only available for logged-in users.</p>
+            <img src="../src/assets/images/OIP.jpg" alt="Restricted Picture">
+        </div>
+        <div class="subcontent">
+            <p>This content is only available for logged-in users.</p>
+            <img src="../src/assets/images/OIP.jpg" alt="Restricted Picture">
+        </div>
+        <div class="subcontent">
+            <p>This content is only available for logged-in users.</p>
+            <img src="../src/assets/images/OIP.jpg" alt="Restricted Picture">
+        </div>
     </section>
 
     <script src="../src/scripts/script.js"></script>
