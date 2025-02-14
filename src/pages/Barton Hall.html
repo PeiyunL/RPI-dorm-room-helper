@@ -98,6 +98,7 @@
 
         th { background-color: #E0E0E0; }
 
+
         @media (prefers-color-scheme: dark) {
             body, .container, .navigation-bar, .content-box, .accordion-header {
                 background-color: #181818;
@@ -107,6 +108,27 @@
 
             .navigation-bar a { color: #E0E0E0; }
             .accordion-header:hover { background-color: #242424; }
+        }
+
+                /* Added image slider styles */
+        .image-slider {
+            width: 100%;
+            overflow: hidden;
+            position: relative;
+            height: 400px;
+        }
+
+        .slides {
+            display: flex;
+            transition: transform 0.5s ease-in-out;
+            height: 100%;
+        }
+
+        .slides img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            flex-shrink: 0;
         }
     </style>
     <script>
@@ -129,6 +151,26 @@
         </div>
     </div>
 
+        <!-- Added image slider section -->
+<div class="image-slider">
+    <div class="slides">
+        <img src="src/assets/images/OIP.jpg" alt="Barton Hall Exterior">
+        <img src="https://via.placeholder.com/1200x400" alt="Common Areas">
+        <img src="https://via.placeholder.com/1200x400" alt="Room Example">
+    </div>
+</div>
+
+<script>
+    // Added image slider script
+    let currentSlide = 0;
+    const slider = document.querySelector('.slides');
+    const slides = document.querySelectorAll('.slides img');
+    
+    setInterval(() => {
+        currentSlide = (currentSlide + 1) % slides.length;
+        slider.style.transform = `translateX(-${currentSlide * 100}%)`;
+    }, 5000);
+</script>
     <div class="navigation-bar">
         <a href="#property-details">Details</a>
         <a href="#pricing">Pricing</a>
