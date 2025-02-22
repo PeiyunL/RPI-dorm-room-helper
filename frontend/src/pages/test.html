@@ -1,0 +1,361 @@
+<<<<<<< HEAD:src/pages/test.html
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Filter Dormitories</title>
+    <link rel="ico" href="../assets/favicon.ico">
+    <link rel="stylesheet" href="../styles/style.css">
+    <style>
+        body {
+            display: flex;
+            height: 100vh;
+            margin: 0;
+            background-color: #2e2e2e;
+            color: white;
+        }
+        .filter-container {
+            width: 30%;
+            padding: 20px;
+            background-color: #2e2e2e;
+            box-shadow: 2px 0 5px rgba(0, 0, 0, 0.1);
+            font-family: Arial, sans-serif;
+        }
+        .filter-dormitory_Info {
+            margin-bottom: 20px;
+            width: 100%;
+            height: 87.5%;
+            background-color: #292828;
+            border-radius: 5px;
+        }
+        .filter-group {
+            margin-bottom: 20px;
+        }
+        .filter-group label {
+            font-weight: bold;
+            display: block;
+            margin-bottom: 5px;
+        }
+        .filter-options {
+            display: flex;
+            flex-wrap: wrap;
+        }
+        .filter-option {
+            padding: 10px;
+            margin: 5px;
+            background-color: #1e1e1e;
+            color: white;
+            border: 1px solid #555;
+            cursor: pointer;
+            user-select: none;
+        }
+        .filter-option.selected {
+            background-color: #4CAF50;
+        }
+        .price-range-container {
+            display: flex;
+            justify-content: space-between;
+        }
+        .price-range-container input[type="number"] {
+            width: 48%;
+        }
+        .map-container {
+            width: 70%;
+            position: relative;
+        }
+        iframe {
+            width: 100%;
+            height: 100%;
+            border: 2px solid #ccc;
+        }
+    </style>
+</head>
+<body>
+    <header>
+        <div class="login">
+            <a href="#" id="loginButton">Login</a>
+            <img id="userAvatar" src="../src/assets/images/avatar.jpg" alt="User Avatar" style="display: none;" />
+        </div>
+    </header>
+    <div class="menu-container">
+        <div class="menu-label">menu</div>
+        <div class="side-menu">
+            <a href="#" class="menu-item" onclick="handleMenuClick('Home page')">Home page</a>
+            <a href="#" class="menu-item" onclick="handleMenuClick('Dorm room')">Dorm room</a>
+            <a href="#" class="menu-item" onclick="handleMenuClick('subkey 3')">subkey 3</a>
+            <a href="#" class="menu-item" onclick="handleMenuClick('Favorites')">Favorites</a>
+            <a href="#" class="menu-item" onclick="handleMenuClick('Record')">Record</a>
+            <a href="#" class="menu-item" onclick="handleMenuClick('Settings')">Settings</a>
+            <a href="#" class="menu-item" onclick="handleMenuClick('About us')">About us</a>
+            <button id="logoutButton">Log Out</button>
+        </div>
+    </div>
+    <div class="filter-container">
+        <h1>Filter Dormitories</h1>
+
+        <div class="filter-group">
+            <label for="dormSearch">Search Dormitory Name</label>
+            <input type="text" id="dormSearch" placeholder="Enter dormitory name" oninput="applyFilters()">
+        </div>
+
+        <!-- New section to display dormitory information -->
+        <div class="filter-dormitory_Info">
+            <h2>Selected Dormitory Info</h2>
+            <div id="dormInfoContent">Click on a dormitory to see details here.</div>
+        </div>
+     
+    </div>
+
+    <div class="map-container">
+        <!-- Map embedding -->
+        <iframe id="mapIframe" src="map.html" title="Map"></iframe>
+    </div>
+
+    <script>
+
+
+        function applyFilters() {
+            const dormName = document.getElementById('dormSearch').value.toLowerCase(); // Get dormitory name and convert to lowercase
+            const filters = {
+                dormName: dormName
+            };
+
+            const iframe = document.getElementById('mapIframe');
+            iframe.contentWindow.postMessage(filters, '*');
+        }
+        // Listen for the folder path from map.html
+        window.addEventListener('message', (event) => {
+            if (event.data && event.data.type === 'dormFolderPath') {
+                const folderPath = event.data.path;
+                handleDormFolder(folderPath);
+            }
+        });
+        // Process the dormitory folder, load the image and text file contents
+        function handleDormFolder(folderPath) {
+            clearDormInfoContent();  // Clear the current display
+            loadContent(folderPath);  // Load picture and text
+        }
+        // Clear the dormitory information content
+        function clearDormInfoContent() {
+            document.getElementById('dormInfoContent').innerHTML = '';  // Make sure to empty every time new content is loaded
+        }
+        
+        function loadContent(folderPath) {
+            const dormName = folderPath.split('/').pop(); // Get dorm name
+            const contentContainer = document.getElementById('dormInfoContent');
+            contentContainer.innerHTML = ''; // Clear current content
+
+            // Create an iframe to load the HTML file
+            const iframe = document.createElement('iframe');
+            iframe.src = `${folderPath}/${dormName}.html`; // Build the HTML file path using the dorm name
+
+            // Set the size of the iframe
+            contentContainer.style.height = '700px'; // Adjust the height as needed
+            contentContainer.style.overflowY = 'auto'; // Enable vertical scrolling
+            contentContainer.style.border = '1px solid #ccc'; // Optional: add a border for better visibility
+            contentContainer.style.padding = '10px'; // Optional: add padding for better readability
+            contentContainer.style.display = 'flex'; // Use flexbox for content layout
+            contentContainer.style.flexDirection = 'column'; // Arrange text and images vertically
+            contentContainer.style.backgroundColor = '#464646'; // Change background color
+            iframe.style.width = '100%'; // Set the width to 100% of the parent container
+            iframe.style.height = '700px'; // Fixed height
+            iframe.style.border = '1px solid #ccc'; // Add border
+            iframe.style.margin = '0 auto'; // Center display
+
+            // Handling load error
+            iframe.onerror = () => {
+                contentContainer.innerHTML = `<p style="color: red;">无法加载 ${dormName}.html</p>`;
+            };
+
+            contentContainer.appendChild(iframe);
+        }
+
+
+
+    </script>
+    <script src="../scripts/script.js"></script>
+
+</body>
+</html>
+=======
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Filter Dormitories</title>
+    <link rel="ico" href="../assets/favicon.ico">
+    <link rel="stylesheet" href="../styles/style.css">
+    <style>
+        body {
+            display: flex;
+            height: 100vh;
+            margin: 0;
+            background-color: #2e2e2e;
+            color: white;
+        }
+        .filter-container {
+            width: 30%;
+            padding: 20px;
+            background-color: #2e2e2e;
+            box-shadow: 2px 0 5px rgba(0, 0, 0, 0.1);
+            font-family: Arial, sans-serif;
+        }
+        .filter-dormitory_Info {
+            margin-bottom: 20px;
+            width: 100%;
+            height: 87.5%;
+            background-color: #292828;
+            border-radius: 5px;
+        }
+        .filter-group {
+            margin-bottom: 20px;
+        }
+        .filter-group label {
+            font-weight: bold;
+            display: block;
+            margin-bottom: 5px;
+        }
+        .filter-options {
+            display: flex;
+            flex-wrap: wrap;
+        }
+        .filter-option {
+            padding: 10px;
+            margin: 5px;
+            background-color: #1e1e1e;
+            color: white;
+            border: 1px solid #555;
+            cursor: pointer;
+            user-select: none;
+        }
+        .filter-option.selected {
+            background-color: #4CAF50;
+        }
+        .price-range-container {
+            display: flex;
+            justify-content: space-between;
+        }
+        .price-range-container input[type="number"] {
+            width: 48%;
+        }
+        .map-container {
+            width: 70%;
+            position: relative;
+        }
+        iframe {
+            width: 100%;
+            height: 100%;
+            border: 2px solid #ccc;
+        }
+    </style>
+</head>
+<body>
+    <header>
+        <div class="login">
+            <a href="#" id="loginButton">Login</a>
+            <img id="userAvatar" src="../src/assets/images/avatar.jpg" alt="User Avatar" style="display: none;" />
+        </div>
+    </header>
+    <div class="menu-container">
+        <div class="menu-label">menu</div>
+        <div class="side-menu">
+            <a href="#" class="menu-item" onclick="handleMenuClick('Home page')">Home page</a>
+            <a href="#" class="menu-item" onclick="handleMenuClick('Dorm room')">Dorm room</a>
+            <a href="#" class="menu-item" onclick="handleMenuClick('subkey 3')">subkey 3</a>
+            <a href="#" class="menu-item" onclick="handleMenuClick('Favorites')">Favorites</a>
+            <a href="#" class="menu-item" onclick="handleMenuClick('Record')">Record</a>
+            <a href="#" class="menu-item" onclick="handleMenuClick('Settings')">Settings</a>
+            <a href="#" class="menu-item" onclick="handleMenuClick('About us')">About us</a>
+            <button id="logoutButton">Log Out</button>
+        </div>
+    </div>
+    <div class="filter-container">
+        <h1>Filter Dormitories</h1>
+
+        <div class="filter-group">
+            <label for="dormSearch">Search Dormitory Name</label>
+            <input type="text" id="dormSearch" placeholder="Enter dormitory name" oninput="applyFilters()">
+        </div>
+
+        <!-- New section to display dormitory information -->
+        <div class="filter-dormitory_Info">
+            <h2>Selected Dormitory Info</h2>
+            <div id="dormInfoContent">Click on a dormitory to see details here.</div>
+        </div>
+     
+    </div>
+
+    <div class="map-container">
+        <!-- Map embedding -->
+        <iframe id="mapIframe" src="map.html" title="Map"></iframe>
+    </div>
+
+    <script>
+
+
+        function applyFilters() {
+            const dormName = document.getElementById('dormSearch').value.toLowerCase(); // Get dormitory name and convert to lowercase
+            const filters = {
+                dormName: dormName
+            };
+
+            const iframe = document.getElementById('mapIframe');
+            iframe.contentWindow.postMessage(filters, '*');
+        }
+        // Listen for the folder path from map.html
+        window.addEventListener('message', (event) => {
+            if (event.data && event.data.type === 'dormFolderPath') {
+                const folderPath = event.data.path;
+                handleDormFolder(folderPath);
+            }
+        });
+        // Process the dormitory folder, load the image and text file contents
+        function handleDormFolder(folderPath) {
+            clearDormInfoContent();  // Clear the current display
+            loadContent(folderPath);  // Load picture and text
+        }
+        // Clear the dormitory information content
+        function clearDormInfoContent() {
+            document.getElementById('dormInfoContent').innerHTML = '';  // Make sure to empty every time new content is loaded
+        }
+        
+        function loadContent(folderPath) {
+            const dormName = folderPath.split('/').pop(); // Get dorm name
+            const contentContainer = document.getElementById('dormInfoContent');
+            contentContainer.innerHTML = ''; // Clear current content
+
+            // Create an iframe to load the HTML file
+            const iframe = document.createElement('iframe');
+            iframe.src = `${folderPath}/${dormName}.html`; // Build the HTML file path using the dorm name
+
+            // Set the size of the iframe
+            contentContainer.style.height = '700px'; // Adjust the height as needed
+            contentContainer.style.overflowY = 'auto'; // Enable vertical scrolling
+            contentContainer.style.border = '1px solid #ccc'; // Optional: add a border for better visibility
+            contentContainer.style.padding = '10px'; // Optional: add padding for better readability
+            contentContainer.style.display = 'flex'; // Use flexbox for content layout
+            contentContainer.style.flexDirection = 'column'; // Arrange text and images vertically
+            contentContainer.style.backgroundColor = '#464646'; // Change background color
+            iframe.style.width = '100%'; // Set the width to 100% of the parent container
+            iframe.style.height = '700px'; // Fixed height
+            iframe.style.border = '1px solid #ccc'; // Add border
+            iframe.style.margin = '0 auto'; // Center display
+
+            // Handling load error
+            iframe.onerror = () => {
+                contentContainer.innerHTML = `<p style="color: red;">无法加载 ${dormName}.html</p>`;
+            };
+
+            contentContainer.appendChild(iframe);
+        }
+
+
+
+    </script>
+    <script src="../scripts/script.js"></script>
+
+</body>
+</html>
+>>>>>>> 77cb9deda9a2d2f44e0c1387eda9de0aea6af23d:frontend/src/pages/test.html

@@ -1,0 +1,46 @@
+Dorm: Sharp Hall (Freshman, Sophomore)
+------------------------------------------------------------
+
+Room Types:
+Single
+                      (101 sqft) $10,930
+Double               -
+Triple               -
+
+Restrooms:
+On Floor                       does not have
+In Room                        has, 
+Cleaning Available             has, 
+Cleaning Schedule              Once a week
+All-Gender Restroom Available  does not have
+
+Furniture:
+Wardrobe                       has, 36" x 25" x 72"
+Built in Closet                does not have
+Loftable/Bunkable Bed          has, 
+Mattress Size                  Extra Long Twin - 36" x 80" x 6"
+Underbed Height(typical unlofted) 30
+Desk and Chair                 has, 48" x 24"
+Bookcase(above desk)           has, 34" x 9" x 26"
+Dresser(Three Drawer)          does not have
+
+Amenities:
+Air Conditioning               has, 
+Blinds                         has, 
+Building Lounge                does not have
+Cable TV                       has, 
+Card Access Required for Entry has, 
+Carpet                         does not have
+Classroom                      does not have
+Elevator                       does not have
+Ethernet                       has, 
+Floor Lounge                   does not have
+Indoor Bicycle Storage         does not have
+Kitchen/Kitchenette            has, Basement
+Laundry                        has, Basement
+Printer in Building            has, Basement
+Study Room(s)                  has, 
+Wireless                       has, 
+
+Dining:
+Nearest Dining Hall            Commons Dining Hall

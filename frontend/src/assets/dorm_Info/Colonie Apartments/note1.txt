@@ -1,0 +1,46 @@
+Dorm: Colonie Apartments (Sophomore)
+------------------------------------------------------------
+
+Room Types:
+Single               -
+Double
+                      (216 sqft) $9,650
+Triple               -
+
+Restrooms:
+On Floor                       does not have
+In Room                        has, 
+Cleaning Available             does not have
+Cleaning Schedule              
+All-Gender Restroom Available  does not have
+
+Furniture:
+Wardrobe                       does not have
+Built in Closet                has, 60" x 30" x 78"
+Loftable/Bunkable Bed          has, 
+Mattress Size                  Extra Long Twin - 36" x 80" x 6"
+Underbed Height(typical unlofted) 30
+Desk and Chair                 has, 48" x 24"
+Bookcase(above desk)           has, 34" x 9" x 26"
+Dresser(Three Drawer)          has, 32" x 19" x 30"
+
+Amenities:
+Air Conditioning               has, 
+Blinds                         has, 
+Building Lounge                does not have
+Cable TV                       has, 
+Card Access Required for Entry has, 
+Carpet                         does not have
+Classroom                      does not have
+Elevator                       does not have
+Ethernet                       has, 
+Floor Lounge                   has, 
+Indoor Bicycle Storage         does not have
+Kitchen/Kitchenette            has, One per floor
+Laundry                        has, First floor each building
+Printer in Building            has, Colonie B first floor lounge
+Study Room(s)                  has, 
+Wireless                       has, 
+
+Dining:
+Nearest Dining Hall            BARH Dining Hall
