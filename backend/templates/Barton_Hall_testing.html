@@ -1,0 +1,254 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Barton Hall</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #F5F4F0;
+            margin: 0;
+            padding: 0;
+            color: #3c3c3b;
+        }
+
+        .container, .navigation-bar, .section {
+            padding: 40px 20px;
+            border-bottom: 2px solid #E6E6E6;
+        }
+
+        .title-section, .avaiblity {
+            text-transform: uppercase;
+            font-size: 14px;
+            color: #737373;
+        }
+
+        .main-title {
+            font-size: 48px;
+            font-weight: 700;
+            margin: 10px 0;
+        }
+
+        .navigation-bar {
+            display: flex;
+            justify-content: center;
+            background-color: #fff;
+        }
+
+        .navigation-bar a {
+            margin: 0 15px;
+            font-size: 14px;
+            text-transform: uppercase;
+            color: #3c3c3b;
+            text-decoration: none;
+            font-weight: 600;
+            transition: color 0.3s;
+        }
+
+        .navigation-bar a:hover { color: #737373; }
+
+        .content-box {
+            background-color: #fff;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            border: 1px solid #E6E6E6;
+            margin: 20px 0;
+        }
+
+        .accordion-header {
+            background-color: #f4f4f4;
+            padding: 15px 20px;
+            cursor: pointer;
+            font-weight: bold;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            transition: background 0.3s;
+        }
+
+        .accordion-header:hover { background-color: #e0e0e0; }
+
+        .accordion-content {
+            display: none;
+            padding: 20px;
+            font-size: 16px;
+            line-height: 1.6;
+        }
+
+        .accordion-header::after {
+            content: '\25BC';
+            transition: transform 0.3s;
+        }
+
+        .accordion-header.active::after { transform: rotate(180deg); }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 20px 0;
+        }
+
+        th, td {
+            text-align: left;
+            padding: 10px;
+            border: 1px solid #E0E0E0;
+        }
+
+        th { background-color: #E0E0E0; }
+
+
+        @media (prefers-color-scheme: dark) {
+            body, .container, .navigation-bar, .content-box, .accordion-header {
+                background-color: #181818;
+                color: #ffffff;
+                border-color: #242424;
+            }
+
+            .navigation-bar a { color: #E0E0E0; }
+            .accordion-header:hover { background-color: #242424; }
+        }
+
+                /* Added image slider styles */
+        .image-slider {
+            width: 100%;
+            overflow: hidden;
+            position: relative;
+            height: 400px;
+        }
+
+        .slides {
+            display: flex;
+            transition: transform 0.5s ease-in-out;
+            height: 100%;
+        }
+
+        .slides img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            flex-shrink: 0;
+        }
+    </style>
+    <script>
+        document.addEventListener("DOMContentLoaded", function() {
+            document.querySelectorAll(".accordion-header").forEach(header => {
+                header.addEventListener("click", function() {
+                    this.classList.toggle("active");
+                    this.nextElementSibling.style.display = this.classList.contains("active") ? "block" : "none";
+                });
+            });
+        });
+    </script>
+</head>
+<body>
+    <div class="container">
+        <div>
+            <div class="title-section">Dorm</div>
+            <div class="main-title">Barton Hall</div>
+            <div class="address">Freshman Dorm, The Arch</div>
+        </div>
+    </div>
+
+        <!-- Added image slider section -->
+<div class="image-slider">
+    <div class="slides">
+        <img src="src/assets/images/OIP.jpg" alt="Barton Hall Exterior">
+        <img src="https://via.placeholder.com/1200x400" alt="Common Areas">
+        <img src="https://via.placeholder.com/1200x400" alt="Room Example">
+    </div>
+</div>
+
+<script>
+    // Added image slider script
+    let currentSlide = 0;
+    const slider = document.querySelector('.slides');
+    const slides = document.querySelectorAll('.slides img');
+    
+    setInterval(() => {
+        currentSlide = (currentSlide + 1) % slides.length;
+        slider.style.transform = `translateX(-${currentSlide * 100}%)`;
+    }, 5000);
+</script>
+    <div class="navigation-bar">
+        <a href="#property-details">Details</a>
+        <a href="#pricing">Pricing</a>
+        <a href="#amenities">Amenities</a>
+        <a href="#furniture">Furniture</a>
+        <a href="#dining">Dining</a>
+    </div>
+
+    <div id="property-details" class="section">
+        <h2>Property Details</h2>
+        <div class="content-box">
+            <ul>
+                <li>On Floor: ✔️</li>
+                <li>In Room: ✔️</li>
+                <li>Cleaning Available: ✔️</li>
+                <li>Cleaning Schedule: Once a week</li>
+                <li>All-Gender Restroom Available: ✔️</li>
+            </ul>
+        </div>
+    </div>
+
+    <div id="pricing" class="section">
+        <h2>Pricing and Floor Plans</h2>
+        <div class="content-box">
+            <table>
+                <tr>
+                    <th>Room Type</th>
+                    <th>Size</th>
+                    <th>Price</th>
+                </tr>
+                {% for room in pricing %}
+                <tr>
+                    <td>{{ room.room_type }}</td>
+                    <td>{{ room.size }}</td>
+                    <td>{{ room.price }}</td>
+                </tr>
+                {% endfor %}
+            </table>
+        </div>
+    </div>
+    
+
+    <div class="section">
+        <h2>Features</h2>
+        <div class="content-box">
+            <div class="accordion">
+                <div class="accordion-item">
+                    <div class="accordion-header">Amenities</div>
+                    <div class="accordion-content">
+                        <ul>
+                            <li>Air Conditioning: ✔️</li>
+                            <li>Blinds: ✔️</li>
+                            <li>Building Lounge: ✔️</li>
+                            <li>Card Access Required for Entry: ✔️</li>
+                            <li>Elevator: ✔️</li>
+                            <li>Kitchen/Kitchenette (Each floor): ✔️</li>
+                        </ul>
+                    </div>
+                </div>
+                <div class="accordion-item">
+                    <div class="accordion-header">Furniture</div>
+                    <div class="accordion-content">
+                        <ul>
+                            <li>Wardrobe: ✔️ (36" x 25" x 72")</li>
+                            <li>Loftable/Bunkable Bed: ✔️</li>
+                            <li>Desk and Chair: ✔️ (48" x 24")</li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div id="dining" class="section">
+        <h2>Dining</h2>
+        <div class="content-box">
+            <p><strong>Nearest Dining Hall:</strong> Commons Dining Hall</p>
+        </div>
+    </div>
+</body>
+</html>
