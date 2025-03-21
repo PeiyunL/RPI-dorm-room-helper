@@ -24,7 +24,7 @@ function handleMenuClick(menuItem) {
     if (menuItem === 'Home page') {
         window.location.href = '/public/index.html';
     } else if (menuItem === 'Dorm room') {
-        window.location.href = '../src/pages/test.html';
+        window.location.href = '../src/pages/Dorm.html';
     } else if (menuItem === 'subkey 3') {
         window.location.href = '/src/pages/subkey_3.html';
     } else if (menuItem === 'Favorites') {

@@ -1,372 +1,263 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>City Station West</title>
-    <style>
-        .check, .cross {
-        font-family: Arial, sans-serif;
-        }
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>City Station West</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      background-color: #F5F4F0;
+      margin: 0;
+      padding: 0;
+      color: #3c3c3b;
+    }
 
-        body {
-            font-family: 'Arial', sans-serif;
-            background-color:#F5F4F0;
-            margin: 0;
-            padding: 0;
-            color: #3c3c3b;
-        }
+    .container, .navigation-bar, .section {
+      padding: 40px 20px;
+      border-bottom: 2px solid #E6E6E6;
+    }
 
-        .container {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            padding: 40px 20px;
-            border-bottom: 2px solid #E6E6E6;
-        }
+    .title-section {
+      text-transform: uppercase;
+      font-size: 14px;
+      color: #737373;
+    }
 
-        .title-section {
-            text-transform: uppercase;
-            font-size: 14px;
-            color: #737373;
-        }
+    .main-title {
+      font-size: 48px;
+      font-weight: 700;
+      margin: 10px 0;
+    }
 
-        .main-title {
-            font-size: 48px;
-            font-weight: 700;
-            margin: 10px 0;
-            color: #3c3c3b;
-        }
+    .navigation-bar {
+      display: flex;
+      justify-content: center;
+      background-color: #fff;
+    }
 
-        .address {
-            font-size: 14px;
-            color: #3c3c3b;
-            text-transform: uppercase;
-            margin-bottom: 20px;
-            letter-spacing: 1px;
-        }
+    .navigation-bar a {
+      margin: 0 15px;
+      font-size: 14px;
+      text-transform: uppercase;
+      color: #3c3c3b;
+      text-decoration: none;
+      font-weight: 600;
+      transition: color 0.3s;
+    }
 
-                /* Image Carousel */
-        .carousel {
-            position: relative;
-            max-width: 800px;
-            margin: 20px auto;
-            text-align: center;
-        }
+    .navigation-bar a:hover { color: #737373; }
 
-        .carousel img {
-            width: 100%;
-            height: auto;
-            border-radius: 8px;
-        }
+    .content-box {
+      background-color: #fff;
+      padding: 20px;
+      border-radius: 8px;
+      box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+      border: 1px solid #E6E6E6;
+      margin: 20px 0;
+    }
 
-        .carousel-thumbnails {
-            display: flex;
-            justify-content: center;
-            gap: 10px;
-            margin-top: 10px;
-        }
+    .accordion-header {
+      background-color: #f4f4f4;
+      padding: 15px 20px;
+      cursor: pointer;
+      font-weight: bold;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      transition: background 0.3s;
+    }
 
-        .carousel-thumbnails img {
-            width: 100px;
-            height: auto;
-            cursor: pointer;
-            opacity: 0.6;
-            transition: opacity 0.3s;
-            border-radius: 5px;
-        }
+    .accordion-header:hover { background-color: #e0e0e0; }
 
-        .carousel-thumbnails img:hover, .carousel-thumbnails img.active {
-            opacity: 1;
-        }
+    .accordion-content {
+      display: none;
+      padding: 20px;
+      font-size: 16px;
+      line-height: 1.6;
+    }
 
-        .carousel-controls {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            position: absolute;
-            top: 50%;
-            width: 100%;
-            transform: translateY(-50%);
-        }
+    .accordion-header::after {
+      content: '\25BC';
+      transition: transform 0.3s;
+    }
 
-        .carousel-controls button {
-            background-color: rgba(0, 0, 0, 0.5);
-            color: #fff;
-            border: none;
-            padding: 10px;
-            cursor: pointer;
-            border-radius: 50%;
-        }
+    .accordion-header.active::after {
+      transform: rotate(180deg);
+    }
 
-        .carousel-counter {
-            margin-top: 10px;
-            font-size: 14px;
-            color: #737373;
-        }
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      margin: 20px 0;
+    }
 
-        /* Navigation Bar */
-        .navigation-bar {
-            display: flex;
-            justify-content: center;
-            padding: 10px 0;
-            border-bottom: 2px solid #E6E6E6;
-            background-color: #ffffff;
-        }
+    th, td {
+      text-align: left;
+      padding: 10px;
+      border: 1px solid #E0E0E0;
+    }
 
-        .navigation-bar a {
-            margin: 0 15px;
-            font-size: 14px;
-            text-transform: uppercase;
-            color: #3c3c3b;
-            text-decoration: none;
-            font-weight: 600;
-        }
+    th { background-color: #E0E0E0; }
 
-        .navigation-bar a:hover {
-            color: #737373;
-        }
+    @media (prefers-color-scheme: dark) {
+      body, .container, .navigation-bar, .content-box, .accordion-header {
+        background-color: #181818;
+        color: #ffffff;
+        border-color: #242424;
+      }
 
-        /* Section styling */
-        .section {
-            padding: 40px 20px;
-            font-size: 18px;
-            color: #3c3c3b;
-        }
+      .navigation-bar a { color: #E0E0E0; }
+      .accordion-header:hover { background-color: #242424; }
+    }
 
-        .section h3 {
-            margin-top: 20px;
-            font-size: 24px;
-        }
+    /* Image slider styles */
+    .image-slider {
+      width: 100%;
+      overflow: hidden;
+      position: relative;
+      height: 400px;
+    }
 
-        .accordion {
-            width: 100%;
-            background-color: #ffffff;
-            border: 1px solid #E6E6E6;
-            border-radius: 5px;
-            overflow: hidden;
-        }
+    .slides {
+      display: flex;
+      transition: transform 0.5s ease-in-out;
+      height: 100%;
+    }
 
-        .accordion-item {
-            border-top: 1px solid #E6E6E6;
-        }
-
-        .accordion-header {
-            background-color: #f4f4f4;
-            padding: 15px 20px;
-            cursor: pointer;
-            font-weight: bold;
-            color: #3c3c3b;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-        }
-
-        .accordion-content {
-            display: none;
-            padding: 20px;
-            font-size: 16px;
-            line-height: 1.6;
-        }
-
-        .accordion-content ul {
-            list-style: none;
-            padding: 0;
-        }
-
-        .accordion-content li {
-            margin: 10px 0;
-            font-size: 16px;
-            display: flex;
-            align-items: center;
-        }
-
-        /* Check and Cross symbols */
-        li .check {
-            color: green;
-            margin-right: 8px;
-        }
-
-        li .cross {
-            color: red;
-            margin-right: 8px;
-        }
-
-        /* Rotate icon */
-        .accordion-header::after {
-            content: '▼';
-            font-size: 14px;
-            color: #737373;
-            transition: transform 0.3s ease;
-        }
-
-        .accordion-header.active::after {
-            transform: rotate(180deg);
-        }
-
-        table {
-            width: 100%;
-            border-collapse: collapse;
-            margin: 20px 0;
-        }
-
-        table th, table td {
-            text-align: left;
-            padding: 10px;
-            border: 1px solid #e0e0e0;
-        }
-
-        table th {
-            background-color: #f4f4f4;
-        }
-
-        .content-box {
-            background-color: #ffffff; /* White background */
-            padding: 20px; /* Space inside the box */
-            border-radius: 8px; /* Rounded corners */
-            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1); /* Subtle shadow */
-            margin: 20px 0; /* Space between sections */
-            border: 1px solid #E6E6E6; /* Optional border */
-        }
-    </style>
-    <script>
-        document.addEventListener("DOMContentLoaded", function() {
-            const headers = document.querySelectorAll(".accordion-header");
-            headers.forEach(header => {
-                header.addEventListener("click", function() {
-                    const content = this.nextElementSibling;
-                    this.classList.toggle("active");
-                    content.style.display = content.style.display === "block" ? "none" : "block";
-                });
-            });
+    .slides img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      flex-shrink: 0;
+    }
+  </style>
+  <script>
+    document.addEventListener("DOMContentLoaded", function () {
+      document.querySelectorAll(".accordion-header").forEach(header => {
+        header.addEventListener("click", function () {
+          this.classList.toggle("active");
+          this.nextElementSibling.style.display = this.classList.contains("active") ? "block" : "none";
         });
-    </script>
+      });
+
+      // Image slider
+      let currentSlide = 0;
+      const slider = document.querySelector('.slides');
+      const slides = document.querySelectorAll('.slides img');
+      setInterval(() => {
+        currentSlide = (currentSlide + 1) % slides.length;
+        slider.style.transform = `translateX(-${currentSlide * 100}%)`;
+      }, 5000);
+    });
+  </script>
 </head>
 <body>
-    <div class="container">
-        <div>
-            <div class="title-section">Dorm</div>
-            <div class="main-title">City Station West</div>
-            <div class="address">Junior/Senior/Co-term Dorm</div>
-        </div>
+  <div class="container">
+    <div>
+      <div class="title-section">Dorm</div>
+      <div class="main-title">City Station West</div>
+      <div class="address">Junior/Senior/Co-term Dorm</div>
     </div>
+  </div>
 
-    <!-- Image Carousel -->
-    <div class="carousel">
-        <img id="mainImage" src="path_to_image1.jpg" alt="City Station West Image">
-        <div class="carousel-controls">
-            <button class="prev-button">&#10094;</button>
-            <button class="next-button">&#10095;</button>
-        </div>
-        <div class="carousel-counter" id="carouselCounter">1/3</div>
-        <div class="carousel-thumbnails">
-            <img src="path_to_image1.jpg" alt="Thumbnail 1" data-index="0" class="thumbnail active">
-            <img src="path_to_image2.jpg" alt="Thumbnail 2" data-index="1" class="thumbnail">
-            <img src="path_to_image3.jpg" alt="Thumbnail 3" data-index="2" class="thumbnail">
-        </div>
+  <!-- Image Slider -->
+  <div class="image-slider">
+    <div class="slides">
+      <img src="path_to_image1.jpg" alt="City Station West Exterior">
+      <img src="path_to_image2.jpg" alt="City Station West Lounge">
+      <img src="path_to_image3.jpg" alt="City Station West Room">
     </div>
+  </div>
 
-    <!-- Navigation Bar -->
-    <div class="navigation-bar">
-        <a href="#property-details">Details</a>
-        <a href="#pricing">Pricing</a>
-        <a href="#amenities">Amenities</a>
-        <a href="#furniture">Furniture</a>
-        <a href="#dining">Dining</a>
+  <!-- Navigation -->
+  <div class="navigation-bar">
+    <a href="#property-details">Details</a>
+    <a href="#pricing">Pricing</a>
+    <a href="#amenities">Amenities</a>
+    <a href="#furniture">Furniture</a>
+    <a href="#dining">Dining</a>
+  </div>
+
+  <!-- Property Details -->
+  <div id="property-details" class="section">
+    <h2>Property Details</h2>
+    <div class="content-box">
+      <ul>
+        <li>On Floor: ✖️</li>
+        <li>In Room: ✔️</li>
+        <li>Cleaning Available: ✖️</li>
+        <li>All-Gender Restroom Available: ✖️</li>
+      </ul>
     </div>
+  </div>
 
-    <!-- Property Details Section -->
-    <div id="property-details" class="section">
-        <h2>Property Details</h2>
-        <div class="content-box">
-            <p><strong>Restrooms:</strong></p>
+  <!-- Pricing -->
+  <div id="pricing" class="section">
+    <h2>Pricing and Floor Plans</h2>
+    <div class="content-box">
+      <table>
+        <tr><th>Room Type</th><th>Price</th></tr>
+        <tr><td>Single</td><td>$10,500</td></tr>
+        <tr><td>Double</td><td>-</td></tr>
+        <tr><td>Triple</td><td>-</td></tr>
+      </table>
+    </div>
+  </div>
+
+  <!-- Features -->
+  <div class="section">
+    <h2>Features</h2>
+    <div class="content-box">
+      <div class="accordion">
+        <div class="accordion-item">
+          <div class="accordion-header">Amenities</div>
+          <div class="accordion-content">
             <ul>
-                <li>On Floor: <span class="cross">✖️</span></li>
-                <li>In Room: <span class="check">✔️</span></li>
-                <li>Cleaning Available: <span class="cross">✖️</span></li>
-                <li>All-Gender Restroom Available: <span class="cross">✖️</span></li>
+              <li>Air Conditioning: ✔️</li>
+              <li>Blinds: ✔️</li>
+              <li>Building Lounge: ✔️</li>
+              <li>Cable TV: ✔️</li>
+              <li>Card Access Required: ✔️</li>
+              <li>Carpet: ✖️</li>
+              <li>Classroom: ✖️</li>
+              <li>Elevator: ✔️</li>
+              <li>Ethernet: ✔️</li>
+              <li>Floor Lounge: ✔️</li>
+              <li>Indoor Bicycle Storage: ✔️</li>
+              <li>Kitchen/Kitchenette: ✔️ (In Apartment)</li>
+              <li>Laundry: ✔️ (In Apartment)</li>
+              <li>Printer: ✔️ (Floor Lounge)</li>
+              <li>Study Room(s): ✖️</li>
+              <li>Wireless: ✔️</li>
             </ul>
+          </div>
         </div>
-    </div>
-
-    <!-- Pricing Section -->
-    <div id="pricing" class="section">
-        <h2>Pricing and Floor Plans</h2>
-        <div class="content-box">
-        <table>
-            <tr>
-                <th>Room Type</th>
-                <th>Price</th>
-            </tr>
-            <tr>
-                <td>Single</td>
-                <td>$10,500</td>
-            </tr>
-            <tr>
-                <td>Double</td>
-                <td>-</td>
-            </tr>
-            <tr>
-                <td>Triple</td>
-                <td>-</td>
-            </tr>
-        </table>
-    </div>
-    </div>
-
-    <!-- Amenities and Furniture Accordion Section -->
-    <div class="section">
-        <h2>Features</h2>
-        <div class="content-box">
-        <div class="accordion">
-            <div class="accordion-item">
-                <div class="accordion-header">Amenities</div>
-                <div class="accordion-content">
-                    <ul>
-                        <li>Air Conditioning: <span class="check">✔️</span></li>
-                        <li>Blinds: <span class="check">✔️</span></li>
-                        <li>Building Lounge: <span class="check">✔️</span></li>
-                        <li>Cable TV: <span class="check">✔️</span></li>
-                        <li>Card Access Required for Entry: <span class="check">✔️</span></li>
-                        <li>Carpet: <span class="cross">✖️</span></li>
-                        <li>Classroom: <span class="cross">✖️</span></li>
-                        <li>Elevator: <span class="check">✔️</span></li>
-                        <li>Ethernet: <span class="check">✔️</span></li>
-                        <li>Floor Lounge: <span class="check">✔️</span></li>
-                        <li>Indoor Bicycle Storage: <span class="check">✔️</span></li>
-                        <li>Kitchen/Kitchenette: <span class="check">✔️</span> (In Apartment)</li>
-                        <li>Laundry: <span class="check">✔️</span> (In Apartment)</li>
-                        <li>Printer in Building: <span class="check">✔️</span> (Floor Lounge)</li>
-                        <li>Study Room(s): <span class="cross">✖️</span></li>
-                        <li>Wireless: <span class="check">✔️</span></li>
-                    </ul>
-                </div>
-            </div>
-
-            <div class="accordion-item">
-                <div class="accordion-header">Furniture</div>
-                <div class="accordion-content">
-                    <ul>
-                        <li>Wardrobe: <span class="cross">✖️</span></li>
-                        <li>Built-in Closet: <span class="check">✔️</span> (Yes)</li>
-                        <li>Loftable/Bunkable Bed: <span class="cross">✖️</span></li>
-                        <li>Mattress Size: <span class="check">✔️</span> Full XL (53" x 80")</li>
-                        <li>Underbed Height (typical unlofted): <span class="check">✔️</span> 30 inches</li>
-                        <li>Desk and Chair: <span class="check">✔️</span> (48" x 24")</li>
-                        <li>Bookcase (above desk): <span class="cross">✖️</span></li>
-                        <li>Dresser (Three Drawer): <span class="check">✔️</span> (Yes)</li>
-                    </ul>
-                </div>
-            </div>
+        <div class="accordion-item">
+          <div class="accordion-header">Furniture</div>
+          <div class="accordion-content">
+            <ul>
+              <li>Wardrobe: ✖️</li>
+              <li>Built-in Closet: ✔️ (Yes)</li>
+              <li>Loftable/Bunkable Bed: ✖️</li>
+              <li>Mattress Size: ✔️ Full XL (53" x 80")</li>
+              <li>Underbed Height: ✔️ 30 inches</li>
+              <li>Desk and Chair: ✔️ (48" x 24")</li>
+              <li>Bookcase: ✖️</li>
+              <li>Dresser: ✔️ (Three Drawer)</li>
+            </ul>
+          </div>
         </div>
+      </div>
     </div>
+  </div>
 
-    <!-- Dining Section -->
-    <div id="dining" class="section">
-        <h2>Dining</h2>
-        <div class="content-box">
-        <p><strong>Nearest Dining Hall:</strong> Blitman Dining Hall</p>
-        </div>
+  <!-- Dining -->
+  <div id="dining" class="section">
+    <h2>Dining</h2>
+    <div class="content-box">
+      <p><strong>Nearest Dining Hall:</strong> Blitman Dining Hall</p>
     </div>
+  </div>
 </body>
 </html>
