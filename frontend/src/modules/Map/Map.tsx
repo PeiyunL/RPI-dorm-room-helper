@@ -114,7 +114,7 @@ export default function MapComponent() {
           setSelectedDorm(dormName);
           setInfoOpen(true);
 
-          const folderPath = `/src/assets/dorm_Info/${encodeURIComponent(dormName)}`;
+          const folderPath = `/assets/dorm_Info/${encodeURIComponent(dormName)}`;
           window.parent.postMessage({ type: "dormFolderPath", path: folderPath }, "*");
 
           requestAnimationFrame(() => {
@@ -139,15 +139,24 @@ export default function MapComponent() {
         <div id="map" style={{ width: "125vh", height: "100vh" }} />
       </Box>
 
-      <Dialog open={infoOpen} onClose={() => setInfoOpen(false)}>
-        <DialogTitle>Dorm Info</DialogTitle>
-        <DialogContent>
-          <p>{selectedDorm}</p>
+      <Dialog open={infoOpen} onClose={() => setInfoOpen(false)} maxWidth="md" fullWidth>
+        <DialogTitle>{selectedDorm}</DialogTitle>
+        <DialogContent dividers>
+          {selectedDorm && (
+            <iframe
+              src={`/assets/dorm_Info/${encodeURIComponent(selectedDorm)}/${encodeURIComponent(selectedDorm)}.html`}
+              width="100%"
+              height="500px"
+              style={{ border: "none" }}
+              title={selectedDorm}
+            />
+          )}
         </DialogContent>
         <DialogActions>
           <Button onClick={() => setInfoOpen(false)} color="primary">Close</Button>
         </DialogActions>
       </Dialog>
+
     </div>
   );
 }
