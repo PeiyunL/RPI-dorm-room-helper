@@ -34,6 +34,7 @@ function App() {
     <ThemeProvider theme={theme}>
       <CssBaseline />
         <Routes>
+          <Route path="/" element={<Login />} />
           <Route path="/" element={<Layout />}>
             <Route path="/homepage" index element={<HomePage />} />
             <Route path="/map" index element={<Map />} />
@@ -42,7 +43,7 @@ function App() {
             <Route path="/setting" index element={<Setting />} />
             <Route path="/about_us" index element={<AboutUs />} />
           </Route>
-          <Route path="/login" element={<Login />} />
+          
         </Routes>
     </ThemeProvider>
 
