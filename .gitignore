@@ -1,0 +1,12 @@
+# Ignore node_modules and build output
+node_modules/
+frontend/node_modules/
+frontend/dist/
+
+# Mac and Windows junk
+.DS_Store
+Thumbs.db
+
+# IDE and editor settings
+.vscode/
+*.log
