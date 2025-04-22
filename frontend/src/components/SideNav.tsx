@@ -12,47 +12,51 @@ import FavoriteIcon from '@mui/icons-material/Favorite';
 import HistoryIcon from '@mui/icons-material/History';
 import SettingsApplicationsIcon from '@mui/icons-material/SettingsApplications';
 import InfoIcon from '@mui/icons-material/Info';
-import { Link } from 'react-router';
+import { NavLink } from 'react-router-dom'; // ✅ correct import
 
 const drawerWidth = 240;
 
 const links = [
-  {label: 'Home page', path: '/homepage', icon: <HomeIcon />},
-  {label: 'Map', path: '/map', icon: <MapIcon />},
-  {label: 'Favorite', path: '/favorite', icon: <FavoriteIcon />},
-  {label: 'Record', path: '/record', icon: <HistoryIcon />},
-  {label: 'Setting', path: '/setting', icon: <SettingsApplicationsIcon />},
-  {label: 'About us', path: '/about_us', icon: <InfoIcon />}
+  { label: 'Home page', path: '/homepage', icon: <HomeIcon /> },
+  { label: 'Map', path: '/map', icon: <MapIcon /> },
+  { label: 'Favorite', path: '/favorite', icon: <FavoriteIcon /> },
+  { label: 'Record', path: '/record', icon: <HistoryIcon /> },
+  { label: 'Setting', path: '/setting', icon: <SettingsApplicationsIcon /> },
+  { label: 'About us', path: '/about_us', icon: <InfoIcon /> },
 ];
 
 export default function SideNav() {
   return (
-      <Drawer
-        variant="permanent"
-        sx={{
-          width: drawerWidth,
-          flexShrink: 0,
-          [`& .MuiDrawer-paper`]: { width: drawerWidth, boxSizing: 'border-box' },
-        }}
-      >
-        <Toolbar />
-        <Box sx={{ overflow: 'auto' }}>
-          <List>
-            {links.map((text) => (
-                <Link to={text.path} key={text.label} style={{ textDecoration: 'none', color: 'inherit' }}>
-                    <ListItem key={text.label} disablePadding>
-                        <ListItemButton>
-                        <ListItemIcon>
-                            {text.icon}
-                        </ListItemIcon>
-                        <ListItemText primary={text.label} />
-                        </ListItemButton>
-                    </ListItem>
-                </Link>
-
-            ))}
-          </List>
-        </Box>
-      </Drawer>
+    <Drawer
+      variant="permanent"
+      sx={{
+        width: drawerWidth,
+        flexShrink: 0,
+        [`& .MuiDrawer-paper`]: { width: drawerWidth, boxSizing: 'border-box' },
+      }}
+    >
+      <Toolbar />
+      <Box sx={{ overflow: 'auto' }}>
+        <List>
+          {links.map((item) => (
+            <NavLink
+              to={item.path}
+              key={item.label}
+              style={({ isActive }) => ({
+                textDecoration: 'none',
+                color: isActive ? '#c21818' : 'inherit', // primary red if active
+              })}
+            >
+              <ListItem disablePadding>
+                <ListItemButton>
+                  <ListItemIcon>{item.icon}</ListItemIcon>
+                  <ListItemText primary={item.label} />
+                </ListItemButton>
+              </ListItem>
+            </NavLink>
+          ))}
+        </List>
+      </Box>
+    </Drawer>
   );
 }

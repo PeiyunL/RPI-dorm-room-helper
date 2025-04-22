@@ -19,7 +19,7 @@ export default function TopNav() {
           <Typography variant="h6" component="div" sx={{ flexGrow: 1 }}>
             RPI Dorm Room Helper
           </Typography>
-          <Button color="inherit" onClick={() => navigate('/login')}>Login</Button>
+          <Button color="inherit" onClick={() => navigate('/')}>Login</Button>          
           {/* {user ? (
             <Box display="flex" alignItems="center" gap={2}>
               <Typography sx={{ mr: 2 }}>{user.name}</Typography>
