@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import pb from '../../lib/pocketbase';
 import {
   Container,
   Typography,
@@ -181,8 +182,8 @@ const SAVED_LOCATIONS = [
 export default function Favorite() {
   // State variables
   const [activeTab, setActiveTab] = useState(0);
-  const [favorites, setFavorites] = useState<Post[]>(MOCK_FAVORITES);
-  const [locations, setLocations] = useState(SAVED_LOCATIONS);
+  const [favorites, setFavorites] = useState<Post[]>([]);
+  const [locations, setLocations] = useState<any[]>([]); // update with correct interface if needed
   const [searchQuery, setSearchQuery] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
@@ -195,13 +196,50 @@ export default function Favorite() {
   });
 
   // Simulate loading data
+  // useEffect(() => {
+  //   setIsLoading(true);
+  //   // Simulate API call
+  //   setTimeout(() => {
+  //     setIsLoading(false);
+  //   }, 800);
+  // }, [activeTab]);
+
   useEffect(() => {
+  const fetchFavorites = async () => {
     setIsLoading(true);
-    // Simulate API call
-    setTimeout(() => {
+    try {
+      const records = await pb.collection('favorites').getFullList({
+        sort: '-created',
+        expand: 'author', // assuming "author" is a relation
+      });
+
+      // Map data into your Post format
+      const formatted = records.map((record: any) => ({
+        id: record.id,
+        title: record.title,
+        content: record.content,
+        authorId: record.author,
+        authorName: record.expand?.author?.name || 'Unknown',
+        category: record.category,
+        createdAt: record.created,
+        imageUrl: record.imageUrl,
+        likes: record.likes || 0,
+        comments: record.comments || 0,
+        liked: true,
+        bookmarked: true,
+      }));
+
+      setFavorites(formatted);
+    } catch (err) {
+      console.error('Error fetching favorites:', err);
+    } finally {
       setIsLoading(false);
-    }, 800);
-  }, [activeTab]);
+    }
+  };
+
+  fetchFavorites();
+}, [activeTab]);
+
 
   // Handle tab change
   const handleTabChange = (event: React.SyntheticEvent, newValue: number) => {

@@ -1,4 +1,7 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
+import { useNavigate } from 'react-router-dom';
+import pb from '../../lib/pocketbase';
+
 import {
   Container,
   Typography,
@@ -45,6 +48,8 @@ import {
   Logout as LogoutIcon
 } from '@mui/icons-material';
 
+
+
 // Interface for user profile
 interface UserProfile {
   name: string;
@@ -59,13 +64,17 @@ interface UserProfile {
 export default function Setting() {
   // Initial profile data
   const [profile, setProfile] = useState<UserProfile>({
-    name: 'Alex Johnson',
-    email: 'ajohnson@rpi.edu',
-    phone: '(555) 123-4567',
-    major: 'Computer Science',
-    year: 'Junior',
-    bio: 'Computer Science student at RPI interested in software development and AI.'
+    name: '',
+    email: '',
+    phone: '',
+    major: '',
+    year: '',
+    bio: '',
+    avatarUrl: '',
   });
+  const [loading, setLoading] = useState(true);
+  
+  const navigate = useNavigate();
 
   // Settings states
   const [darkMode, setDarkMode] = useState<boolean>(false);
@@ -231,6 +240,27 @@ export default function Setting() {
     showSnackbar('You have been logged out', 'info');
     // In a real app, you would clear auth tokens and redirect to login
   };
+
+  useEffect(() => {
+    const user = pb.authStore.model;
+
+    if (!user) {
+      navigate('/login');
+      return;
+    }
+
+    setProfile({
+      name: user.name || '',
+      email: user.email,
+      phone: '',
+      major: '',
+      year: '',
+      bio: '',
+      avatarUrl: '',
+    });
+
+    setLoading(false);
+  }, []);
 
   return (
     <div>

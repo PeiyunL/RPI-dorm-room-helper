@@ -11,6 +11,8 @@ import Favorite from './modules/Favorite/Favorite';
 import Record from './modules/Record/Record';
 import Setting from './modules/Setting/Setting';
 import AboutUs from './modules/AboutUs/AboutUs';
+import Register from './components/Register';
+
 
 const theme = createTheme({
   palette: {
@@ -26,10 +28,6 @@ const theme = createTheme({
     },
   },
 });
-
-const ProtectedRoute = () => {
-  return pb.authStore.isValid ? <Outlet /> : <Navigate to="/login" replace />;
-};
 
 function App() {
   const [isLoading, setIsLoading] = useState(true);
@@ -68,6 +66,7 @@ function App() {
           {/* Public routes */}
           <Route element={<PublicRoute />}>
             <Route path="/login" element={<Login />} />
+            <Route path="/register" element={<Register />} />
           </Route>
 
           {/* Protected routes */}

@@ -4,6 +4,8 @@ import { useNavigate } from "react-router";
 import { useEffect } from "react";
 import pb from '../lib/pocketbase.js';
 
+
+
 export default function Login() {
     const [email, setEmail] = useState('');
     const [password, setPassword] = useState('');
@@ -75,6 +77,14 @@ export default function Login() {
                     {loading ? 'Logging in...' : 'Login'}
                 </Button>
             </Box>
+
+            <Button 
+                variant="text" 
+                onClick={() => navigate('/register')}
+                sx={{ mt: 2, textTransform: 'none' }}
+                >
+                Don't have an account? Register
+            </Button>
         </Box>
     );
 }
