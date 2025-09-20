@@ -234,12 +234,21 @@ export default function Setting() {
     });
   };
 
-  // Logout function
-  const handleLogout = () => {
-    // Here you would handle logout logic
-    showSnackbar('You have been logged out', 'info');
-    // In a real app, you would clear auth tokens and redirect to login
-  };
+const handleLogout = () => {
+  // Remove auth tokens
+  localStorage.removeItem('authToken');
+  sessionStorage.removeItem('authToken');
+
+  // If you use a global state, clear it here
+  // dispatch({ type: 'LOGOUT' });
+
+  // Show message
+  showSnackbar('You have been logged out', 'info');
+
+  // Redirect to login
+  navigate('/login');
+};
+
 
   useEffect(() => {
     const user = pb.authStore.model;
