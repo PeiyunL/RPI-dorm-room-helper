@@ -19,7 +19,9 @@ import {
   DialogTitle,
   DialogContent,
   DialogActions,
-  TextField
+  TextField,
+  Alert,
+  Snackbar
 } from '@mui/material';
 import { 
   Delete as DeleteIcon, 
@@ -31,21 +33,42 @@ import {
   Favorite as LikedIcon,
   Comment as CommentIcon
 } from '@mui/icons-material';
+import pb from '../lib/pocketbase.js';
 
 // Interface definitions
 interface Post {
   id: string;
   title: string;
   content: string;
-  authorId: string;
-  authorName: string;
-  createdAt: string;
+  author: string;
+  created: string;
+  updated: string;
   category: string;
-  likes: number;
-  comments: number;
-  liked: boolean;
-  bookmarked: boolean;
-  imageUrl?: string;
+  likes_count: number;
+  comments_count: number;
+  image?: string;
+  expand?: {
+    author?: {
+      id: string;
+      username: string;
+      name: string;
+      avatar?: string;
+    };
+  };
+}
+
+interface Like {
+  id: string;
+  user: string;
+  post: string;
+  created: string;
+}
+
+interface Bookmark {
+  id: string;
+  user: string;
+  post: string;
+  created: string;
 }
 
 interface TabPanelProps {
@@ -75,100 +98,13 @@ function TabPanel(props: TabPanelProps) {
   );
 }
 
-// Mock data
-const MY_POSTS: Post[] = [
-  {
-    id: '1',
-    title: 'Looking for a roommate for Fall semester',
-    content: 'Hey everyone! I\'m looking for a roommate for the upcoming Fall semester...',
-    authorId: 'currentUser',
-    authorName: 'Current User',
-    createdAt: '2025-04-10T10:30:00Z',
-    category: 'Roommate Search',
-    likes: 5,
-    comments: 1,
-    liked: false,
-    bookmarked: false
-  },
-  {
-    id: '2',
-    title: 'Anyone know how to get housing priority?',
-    content: 'I\'m trying to figure out how to get priority for on-campus housing next semester...',
-    authorId: 'currentUser',
-    authorName: 'Current User',
-    createdAt: '2025-04-05T08:15:00Z',
-    category: 'Housing Questions',
-    likes: 3,
-    comments: 2,
-    liked: false,
-    bookmarked: false
-  }
-];
-
-const BOOKMARKED_POSTS: Post[] = [
-  {
-    id: '3',
-    title: 'Dorm hacks for maximizing small spaces',
-    content: 'After living in dorms for 3 years, I\'ve learned a lot about how to make the most of small spaces...',
-    authorId: 'user4',
-    authorName: 'Morgan Lee',
-    createdAt: '2025-04-08T09:20:00Z',
-    category: 'Dorm Tips',
-    likes: 12,
-    comments: 2,
-    liked: true,
-    bookmarked: true
-  },
-  {
-    id: '4',
-    title: 'Selling desk lamp and organizer',
-    content: 'I\'m graduating this semester and selling some of my dorm items...',
-    authorId: 'user3',
-    authorName: 'Taylor Wong',
-    createdAt: '2025-04-09T14:45:00Z',
-    category: 'Furniture Exchange',
-    likes: 3,
-    comments: 0,
-    liked: false,
-    bookmarked: true,
-    imageUrl: 'https://via.placeholder.com/150'
-  }
-];
-
-const LIKED_POSTS: Post[] = [
-  {
-    id: '3',
-    title: 'Dorm hacks for maximizing small spaces',
-    content: 'After living in dorms for 3 years, I\'ve learned a lot about how to make the most of small spaces...',
-    authorId: 'user4',
-    authorName: 'Morgan Lee',
-    createdAt: '2025-04-08T09:20:00Z',
-    category: 'Dorm Tips',
-    likes: 12,
-    comments: 2,
-    liked: true,
-    bookmarked: true
-  },
-  {
-    id: '5',
-    title: 'Preparing for move-in day',
-    content: 'Here are my top tips for a smooth move-in day experience...',
-    authorId: 'user7',
-    authorName: 'Jamie Rodriguez',
-    createdAt: '2025-04-01T11:10:00Z',
-    category: 'Dorm Tips',
-    likes: 8,
-    comments: 3,
-    liked: true,
-    bookmarked: false
-  }
-];
-
 export default function Record() {
   const [tabValue, setTabValue] = useState(0);
-  const [myPosts, setMyPosts] = useState<Post[]>(MY_POSTS);
-  const [bookmarkedPosts, setBookmarkedPosts] = useState<Post[]>(BOOKMARKED_POSTS);
-  const [likedPosts, setLikedPosts] = useState<Post[]>(LIKED_POSTS);
+  const [myPosts, setMyPosts] = useState<Post[]>([]);
+  const [bookmarkedPosts, setBookmarkedPosts] = useState<Post[]>([]);
+  const [likedPosts, setLikedPosts] = useState<Post[]>([]);
+  const [userLikes, setUserLikes] = useState<Map<string, Like>>(new Map());
+  const [userBookmarks, setUserBookmarks] = useState<Map<string, Bookmark>>(new Map());
   const [loading, setLoading] = useState(false);
   const [editDialogOpen, setEditDialogOpen] = useState(false);
   const [currentEditPost, setCurrentEditPost] = useState<Post | null>(null);
@@ -179,14 +115,148 @@ export default function Record() {
   });
   const [deleteConfirmOpen, setDeleteConfirmOpen] = useState(false);
   const [postToDelete, setPostToDelete] = useState<string | null>(null);
+  const [snackbar, setSnackbar] = useState({
+    open: false,
+    message: '',
+    severity: 'success' as 'success' | 'error' | 'info' | 'warning'
+  });
 
-  // Simulate loading data
+  const currentUser = pb.authStore.model;
+
+  // Fetch user's posts
+  const fetchMyPosts = async () => {
+    if (!currentUser) return;
+    
+    try {
+      const records = await pb.collection('posts').getList(1, 50, {
+        filter: `author = "${currentUser.id}"`,
+        sort: '-created',
+        expand: 'author'
+      });
+      setMyPosts(records.items);
+    } catch (error) {
+      console.error('Error fetching my posts:', error);
+      showSnackbar('Failed to load your posts', 'error');
+    }
+  };
+
+  // Fetch user's likes
+  const fetchUserLikes = async () => {
+    if (!currentUser) return;
+    
+    try {
+      const likes = await pb.collection('likes').getFullList({
+        filter: `user = "${currentUser.id}"`
+      });
+      
+      const likesMap = new Map<string, Like>();
+      likes.forEach(like => {
+        likesMap.set(like.post, like);
+      });
+      setUserLikes(likesMap);
+    } catch (error) {
+      console.error('Error fetching likes:', error);
+    }
+  };
+
+  // Fetch user's bookmarks
+  const fetchUserBookmarks = async () => {
+    if (!currentUser) return;
+    
+    try {
+      const bookmarks = await pb.collection('bookmarks').getFullList({
+        filter: `user = "${currentUser.id}"`
+      });
+      
+      const bookmarksMap = new Map<string, Bookmark>();
+      bookmarks.forEach(bookmark => {
+        bookmarksMap.set(bookmark.post, bookmark);
+      });
+      setUserBookmarks(bookmarksMap);
+    } catch (error) {
+      console.error('Error fetching bookmarks:', error);
+    }
+  };
+
+  // Fetch bookmarked posts
+  const fetchBookmarkedPosts = async () => {
+    if (!currentUser) return;
+    
+    try {
+      const bookmarks = await pb.collection('bookmarks').getFullList({
+        filter: `user = "${currentUser.id}"`,
+        expand: 'post.author',
+        sort: '-created'
+      });
+      
+      const posts = bookmarks
+        .map(bookmark => bookmark.expand?.post)
+        .filter(post => post !== undefined) as Post[];
+      
+      setBookmarkedPosts(posts);
+    } catch (error) {
+      console.error('Error fetching bookmarked posts:', error);
+      showSnackbar('Failed to load bookmarked posts', 'error');
+    }
+  };
+
+  // Fetch liked posts
+  const fetchLikedPosts = async () => {
+    if (!currentUser) return;
+    
+    try {
+      const likes = await pb.collection('likes').getFullList({
+        filter: `user = "${currentUser.id}"`,
+        expand: 'post.author',
+        sort: '-created'
+      });
+      
+      const posts = likes
+        .map(like => like.expand?.post)
+        .filter(post => post !== undefined) as Post[];
+      
+      setLikedPosts(posts);
+    } catch (error) {
+      console.error('Error fetching liked posts:', error);
+      showSnackbar('Failed to load liked posts', 'error');
+    }
+  };
+
+  // Load data based on current tab
   useEffect(() => {
-    setLoading(true);
-    setTimeout(() => {
-      setLoading(false);
-    }, 800);
-  }, [tabValue]);
+    const loadData = async () => {
+      setLoading(true);
+      
+      try {
+        // Always fetch user's likes and bookmarks status
+        await Promise.all([
+          fetchUserLikes(),
+          fetchUserBookmarks()
+        ]);
+        
+        // Fetch data based on current tab
+        switch (tabValue) {
+          case 0:
+            await fetchMyPosts();
+            break;
+          case 1:
+            await fetchBookmarkedPosts();
+            break;
+          case 2:
+            await fetchLikedPosts();
+            break;
+        }
+      } catch (error) {
+        console.error('Error loading data:', error);
+      } finally {
+        setLoading(false);
+      }
+    };
+    
+    if (currentUser) {
+      loadData();
+    }
+  }, [tabValue, currentUser]);
 
   const handleTabChange = (event: React.SyntheticEvent, newValue: number) => {
     setTabValue(newValue);
@@ -203,83 +273,115 @@ export default function Record() {
     });
   };
 
-  const handleToggleBookmark = (post: Post) => {
-    // Handle bookmarking/unbookmarking logic
-    if (post.bookmarked) {
-      // Remove from bookmarked posts
-      setBookmarkedPosts(bookmarkedPosts.filter(p => p.id !== post.id));
+  const showSnackbar = (message: string, severity: 'success' | 'error' | 'info' | 'warning' = 'success') => {
+    setSnackbar({ open: true, message, severity });
+  };
+
+  const handleToggleBookmark = async (post: Post) => {
+    if (!currentUser) {
+      showSnackbar('Please log in to bookmark posts', 'warning');
+      return;
+    }
+    
+    try {
+      const existingBookmark = userBookmarks.get(post.id);
       
-      // Update in other lists if present
-      if (post.authorId === 'currentUser') {
-        setMyPosts(myPosts.map(p => 
-          p.id === post.id ? { ...p, bookmarked: false } : p
-        ));
-      }
-      
-      if (post.liked) {
-        setLikedPosts(likedPosts.map(p => 
-          p.id === post.id ? { ...p, bookmarked: false } : p
-        ));
-      }
-    } else {
-      // Add to bookmarked posts if not already there
-      if (!bookmarkedPosts.some(p => p.id === post.id)) {
-        setBookmarkedPosts([...bookmarkedPosts, { ...post, bookmarked: true }]);
+      if (existingBookmark) {
+        // Remove bookmark
+        await pb.collection('bookmarks').delete(existingBookmark.id);
+        
+        const newBookmarks = new Map(userBookmarks);
+        newBookmarks.delete(post.id);
+        setUserBookmarks(newBookmarks);
+        
+        // Update bookmarked posts list if on bookmarks tab
+        if (tabValue === 1) {
+          setBookmarkedPosts(bookmarkedPosts.filter(p => p.id !== post.id));
+        }
+        
+        showSnackbar('Bookmark removed', 'success');
       } else {
-        setBookmarkedPosts(bookmarkedPosts.map(p => 
-          p.id === post.id ? { ...p, bookmarked: true } : p
-        ));
+        // Add bookmark
+        const bookmark = await pb.collection('bookmarks').create({
+          user: currentUser.id,
+          post: post.id
+        });
+        
+        const newBookmarks = new Map(userBookmarks);
+        newBookmarks.set(post.id, bookmark);
+        setUserBookmarks(newBookmarks);
+        
+        showSnackbar('Post bookmarked', 'success');
       }
-      
-      // Update in other lists if present
-      if (post.authorId === 'currentUser') {
-        setMyPosts(myPosts.map(p => 
-          p.id === post.id ? { ...p, bookmarked: true } : p
-        ));
-      }
-      
-      if (post.liked) {
-        setLikedPosts(likedPosts.map(p => 
-          p.id === post.id ? { ...p, bookmarked: true } : p
-        ));
-      }
+    } catch (error) {
+      console.error('Error toggling bookmark:', error);
+      showSnackbar('Failed to update bookmark', 'error');
     }
   };
 
-  const handleToggleLike = (post: Post) => {
-    // Handle liking/unliking logic
-    const newLikedStatus = !post.liked;
-    const updatedPost = {
-      ...post,
-      liked: newLikedStatus,
-      likes: newLikedStatus ? post.likes + 1 : post.likes - 1,
-    };
+  const handleToggleLike = async (post: Post) => {
+    if (!currentUser) {
+      showSnackbar('Please log in to like posts', 'warning');
+      return;
+    }
     
-    if (newLikedStatus) {
-      // Add to liked posts if not already there
-      if (!likedPosts.some(p => p.id === post.id)) {
-        setLikedPosts([...likedPosts, updatedPost]);
+    try {
+      const existingLike = userLikes.get(post.id);
+      
+      if (existingLike) {
+        // Remove like
+        await pb.collection('likes').delete(existingLike.id);
+        
+        const newLikes = new Map(userLikes);
+        newLikes.delete(post.id);
+        setUserLikes(newLikes);
+        
+        // Update post likes count
+        const updatedPost = await pb.collection('posts').update(post.id, {
+          likes_count: Math.max(0, post.likes_count - 1)
+        });
+        
+        // Update liked posts list if on likes tab
+        if (tabValue === 2) {
+          setLikedPosts(likedPosts.filter(p => p.id !== post.id));
+        }
+        
+        // Update post in my posts if present
+        if (tabValue === 0) {
+          setMyPosts(myPosts.map(p => 
+            p.id === post.id ? updatedPost : p
+          ));
+        }
+        
+        showSnackbar('Like removed', 'success');
       } else {
-        setLikedPosts(likedPosts.map(p => 
-          p.id === post.id ? updatedPost : p
-        ));
+        // Add like
+        const like = await pb.collection('likes').create({
+          user: currentUser.id,
+          post: post.id
+        });
+        
+        const newLikes = new Map(userLikes);
+        newLikes.set(post.id, like);
+        setUserLikes(newLikes);
+        
+        // Update post likes count
+        const updatedPost = await pb.collection('posts').update(post.id, {
+          likes_count: post.likes_count + 1
+        });
+        
+        // Update post in my posts if present
+        if (tabValue === 0) {
+          setMyPosts(myPosts.map(p => 
+            p.id === post.id ? updatedPost : p
+          ));
+        }
+        
+        showSnackbar('Post liked', 'success');
       }
-    } else {
-      // Remove from liked posts
-      setLikedPosts(likedPosts.filter(p => p.id !== post.id));
-    }
-    
-    // Update in other lists if present
-    if (post.authorId === 'currentUser') {
-      setMyPosts(myPosts.map(p => 
-        p.id === post.id ? updatedPost : p
-      ));
-    }
-    
-    if (post.bookmarked) {
-      setBookmarkedPosts(bookmarkedPosts.map(p => 
-        p.id === post.id ? updatedPost : p
-      ));
+    } catch (error) {
+      console.error('Error toggling like:', error);
+      showSnackbar('Failed to update like', 'error');
     }
   };
 
@@ -301,36 +403,36 @@ export default function Record() {
     });
   };
 
-  const handleSaveEdit = () => {
+  const handleSaveEdit = async () => {
     if (!currentEditPost) return;
     
-    const updatedPost = {
-      ...currentEditPost,
-      title: editFormData.title,
-      content: editFormData.content,
-      category: editFormData.category
-    };
-    
-    // Update in my posts
-    setMyPosts(myPosts.map(post => 
-      post.id === currentEditPost.id ? updatedPost : post
-    ));
-    
-    // Update in other lists if present
-    if (currentEditPost.bookmarked) {
+    try {
+      const updatedPost = await pb.collection('posts').update(currentEditPost.id, {
+        title: editFormData.title,
+        content: editFormData.content,
+        category: editFormData.category
+      });
+      
+      // Update post in all lists
+      setMyPosts(myPosts.map(post => 
+        post.id === currentEditPost.id ? { ...updatedPost, expand: post.expand } : post
+      ));
+      
       setBookmarkedPosts(bookmarkedPosts.map(post => 
-        post.id === currentEditPost.id ? updatedPost : post
+        post.id === currentEditPost.id ? { ...updatedPost, expand: post.expand } : post
       ));
-    }
-    
-    if (currentEditPost.liked) {
+      
       setLikedPosts(likedPosts.map(post => 
-        post.id === currentEditPost.id ? updatedPost : post
+        post.id === currentEditPost.id ? { ...updatedPost, expand: post.expand } : post
       ));
+      
+      setEditDialogOpen(false);
+      setCurrentEditPost(null);
+      showSnackbar('Post updated successfully', 'success');
+    } catch (error) {
+      console.error('Error updating post:', error);
+      showSnackbar('Failed to update post', 'error');
     }
-    
-    setEditDialogOpen(false);
-    setCurrentEditPost(null);
   };
 
   const handleDeleteClick = (postId: string) => {
@@ -338,111 +440,137 @@ export default function Record() {
     setDeleteConfirmOpen(true);
   };
 
-  const handleConfirmDelete = () => {
+  const handleConfirmDelete = async () => {
     if (!postToDelete) return;
     
-    // Remove from my posts
-    setMyPosts(myPosts.filter(post => post.id !== postToDelete));
-    
-    // Remove from other lists if present
-    setBookmarkedPosts(bookmarkedPosts.filter(post => post.id !== postToDelete));
-    setLikedPosts(likedPosts.filter(post => post.id !== postToDelete));
-    
-    setDeleteConfirmOpen(false);
-    setPostToDelete(null);
+    try {
+      await pb.collection('posts').delete(postToDelete);
+      
+      // Remove from all lists
+      setMyPosts(myPosts.filter(post => post.id !== postToDelete));
+      setBookmarkedPosts(bookmarkedPosts.filter(post => post.id !== postToDelete));
+      setLikedPosts(likedPosts.filter(post => post.id !== postToDelete));
+      
+      setDeleteConfirmOpen(false);
+      setPostToDelete(null);
+      showSnackbar('Post deleted successfully', 'success');
+    } catch (error) {
+      console.error('Error deleting post:', error);
+      showSnackbar('Failed to delete post', 'error');
+    }
   };
 
   // Post display component
-  const PostCard = ({ post, isMyPost = false }: { post: Post, isMyPost?: boolean }) => (
-    <Card elevation={2} sx={{ mb: 2, transition: 'transform 0.2s', '&:hover': { transform: 'translateY(-4px)', boxShadow: 4 } }}>
-      <CardContent>
-        <Box sx={{ display: 'flex', justifyContent: 'space-between', mb: 1 }}>
-          <Chip
-            label={post.category}
-            size="small"
-            color="primary"
-            variant="outlined"
-            sx={{ mb: 1 }}
-          />
-          <Typography variant="caption" color="text.secondary">
-            {formatDate(post.createdAt)}
-          </Typography>
-        </Box>
-        <Typography variant="h6" component="h2" gutterBottom>
-          {post.title}
-        </Typography>
-        <Box sx={{ display: 'flex', alignItems: 'center', mb: 2 }}>
-          <Avatar sx={{ width: 24, height: 24, mr: 1, bgcolor: 'primary.main' }}>
-            {post.authorName.charAt(0)}
-          </Avatar>
-          <Typography variant="body2" color="text.secondary">
-            {post.authorName}
-          </Typography>
-        </Box>
-        <Typography variant="body1" paragraph>
-          {post.content}
-        </Typography>
-        {post.imageUrl && (
-          <Box sx={{ mt: 2, mb: 2 }}>
-            <img
-              src={post.imageUrl}
-              alt={post.title}
-              style={{ maxWidth: '100%', maxHeight: '200px', borderRadius: '4px' }}
+  const PostCard = ({ post, isMyPost = false }: { post: Post, isMyPost?: boolean }) => {
+    const isLiked = userLikes.has(post.id);
+    const isBookmarked = userBookmarks.has(post.id);
+    const authorName = post.expand?.author?.name || post.expand?.author?.username || 'Unknown User';
+    const authorAvatar = post.expand?.author?.avatar;
+    
+    return (
+      <Card elevation={2} sx={{ mb: 2, transition: 'transform 0.2s', '&:hover': { transform: 'translateY(-4px)', boxShadow: 4 } }}>
+        <CardContent>
+          <Box sx={{ display: 'flex', justifyContent: 'space-between', mb: 1 }}>
+            <Chip
+              label={post.category || 'General'}
+              size="small"
+              color="primary"
+              variant="outlined"
+              sx={{ mb: 1 }}
             />
+            <Typography variant="caption" color="text.secondary">
+              {formatDate(post.created)}
+            </Typography>
           </Box>
-        )}
-      </CardContent>
-      <Divider />
-      <Box sx={{ display: 'flex', justifyContent: 'space-between', p: 1, alignItems: 'center' }}>
-        <Box>
-          <IconButton
-            onClick={() => handleToggleLike(post)}
-            color={post.liked ? 'error' : 'default'}
-            size="small"
-          >
-            {post.liked ? <LikedIcon /> : <LikeIcon />}
-          </IconButton>
-          <Typography variant="body2" component="span" sx={{ mr: 2 }}>
-            {post.likes}
+          <Typography variant="h6" component="h2" gutterBottom>
+            {post.title}
           </Typography>
-          
-          <IconButton size="small" sx={{ mr: 1 }}>
-            <CommentIcon />
-          </IconButton>
-          <Typography variant="body2" component="span" sx={{ mr: 2 }}>
-            {post.comments}
+          <Box sx={{ display: 'flex', alignItems: 'center', mb: 2 }}>
+            <Avatar 
+              sx={{ width: 24, height: 24, mr: 1, bgcolor: 'primary.main' }}
+              src={authorAvatar ? pb.files.getUrl(post.expand?.author!, authorAvatar) : undefined}
+            >
+              {!authorAvatar && authorName.charAt(0)}
+            </Avatar>
+            <Typography variant="body2" color="text.secondary">
+              {authorName}
+            </Typography>
+          </Box>
+          <Typography variant="body1" paragraph>
+            {post.content}
           </Typography>
-          
-          <IconButton
-            onClick={() => handleToggleBookmark(post)}
-            color={post.bookmarked ? 'primary' : 'default'}
-            size="small"
-          >
-            {post.bookmarked ? <BookmarkedIcon /> : <BookmarkIcon />}
-          </IconButton>
-        </Box>
-        
-        {isMyPost && (
+          {post.image && (
+            <Box sx={{ mt: 2, mb: 2 }}>
+              <img
+                src={pb.files.getUrl(post, post.image)}
+                alt={post.title}
+                style={{ maxWidth: '100%', maxHeight: '300px', borderRadius: '4px', objectFit: 'cover' }}
+              />
+            </Box>
+          )}
+        </CardContent>
+        <Divider />
+        <Box sx={{ display: 'flex', justifyContent: 'space-between', p: 1, alignItems: 'center' }}>
           <Box>
-            <IconButton 
-              color="primary" 
+            <IconButton
+              onClick={() => handleToggleLike(post)}
+              color={isLiked ? 'error' : 'default'}
               size="small"
-              onClick={() => handleEditPost(post)}
             >
-              <EditIcon />
+              {isLiked ? <LikedIcon /> : <LikeIcon />}
             </IconButton>
-            <IconButton 
-              color="error" 
+            <Typography variant="body2" component="span" sx={{ mr: 2 }}>
+              {post.likes_count || 0}
+            </Typography>
+            
+            <IconButton size="small" sx={{ mr: 1 }}>
+              <CommentIcon />
+            </IconButton>
+            <Typography variant="body2" component="span" sx={{ mr: 2 }}>
+              {post.comments_count || 0}
+            </Typography>
+            
+            <IconButton
+              onClick={() => handleToggleBookmark(post)}
+              color={isBookmarked ? 'primary' : 'default'}
               size="small"
-              onClick={() => handleDeleteClick(post.id)}
             >
-              <DeleteIcon />
+              {isBookmarked ? <BookmarkedIcon /> : <BookmarkIcon />}
             </IconButton>
           </Box>
-        )}
-      </Box>
-    </Card>
-  );
+          
+          {isMyPost && (
+            <Box>
+              <IconButton 
+                color="primary" 
+                size="small"
+                onClick={() => handleEditPost(post)}
+              >
+                <EditIcon />
+              </IconButton>
+              <IconButton 
+                color="error" 
+                size="small"
+                onClick={() => handleDeleteClick(post.id)}
+              >
+                <DeleteIcon />
+              </IconButton>
+            </Box>
+          )}
+        </Box>
+      </Card>
+    );
+  };
+
+  if (!currentUser) {
+    return (
+      <Container maxWidth="md" sx={{ py: 4 }}>
+        <Alert severity="warning">
+          Please log in to view your records.
+        </Alert>
+      </Container>
+    );
+  }
 
   return (
     <div>
@@ -512,7 +640,7 @@ export default function Record() {
                 <Grid container spacing={2}>
                   {bookmarkedPosts.map((post) => (
                     <Grid item xs={12} key={post.id}>
-                      <PostCard post={post} isMyPost={post.authorId === 'currentUser'} />
+                      <PostCard post={post} isMyPost={post.author === currentUser.id} />
                     </Grid>
                   ))}
                 </Grid>
@@ -534,7 +662,7 @@ export default function Record() {
                 <Grid container spacing={2}>
                   {likedPosts.map((post) => (
                     <Grid item xs={12} key={post.id}>
-                      <PostCard post={post} isMyPost={post.authorId === 'currentUser'} />
+                      <PostCard post={post} isMyPost={post.author === currentUser.id} />
                     </Grid>
                   ))}
                 </Grid>
@@ -615,6 +743,22 @@ export default function Record() {
             </Button>
           </DialogActions>
         </Dialog>
+
+        {/* Snackbar for notifications */}
+        <Snackbar
+          open={snackbar.open}
+          autoHideDuration={6000}
+          onClose={() => setSnackbar({ ...snackbar, open: false })}
+          anchorOrigin={{ vertical: 'bottom', horizontal: 'center' }}
+        >
+          <Alert 
+            onClose={() => setSnackbar({ ...snackbar, open: false })} 
+            severity={snackbar.severity}
+            sx={{ width: '100%' }}
+          >
+            {snackbar.message}
+          </Alert>
+        </Snackbar>
       </Container>
     </div>
   );
