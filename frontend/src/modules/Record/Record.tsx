@@ -21,7 +21,12 @@ import {
   DialogActions,
   TextField,
   Alert,
-  Snackbar
+  Snackbar,
+  Collapse,
+  List,
+  ListItem,
+  ListItemAvatar,
+  ListItemText
 } from '@mui/material';
 import { 
   Delete as DeleteIcon, 
@@ -31,11 +36,21 @@ import {
   Bookmark as BookmarkedIcon,
   FavoriteBorder as LikeIcon,
   Favorite as LikedIcon,
-  Comment as CommentIcon
+  Comment as CommentIcon,
+  Send as SendIcon,
+  ExpandMore as ExpandMoreIcon,
+  ExpandLess as ExpandLessIcon
 } from '@mui/icons-material';
 import pb from '../lib/pocketbase.js';
 
 // Interface definitions
+interface Author {
+  id: string;
+  username: string;
+  name: string;
+  avatar?: string;
+}
+
 interface Post {
   id: string;
   title: string;
@@ -48,12 +63,7 @@ interface Post {
   comments_count: number;
   image?: string;
   expand?: {
-    author?: {
-      id: string;
-      username: string;
-      name: string;
-      avatar?: string;
-    };
+    author?: Author;
   };
 }
 
@@ -69,6 +79,30 @@ interface Bookmark {
   user: string;
   post: string;
   created: string;
+}
+
+interface BookmarkExpanded extends Bookmark {
+  expand?: {
+    post?: Post;
+  };
+}
+
+interface LikeExpanded extends Like {
+  expand?: {
+    post?: Post;
+  };
+}
+
+interface Comment {
+  id: string;
+  user: string;
+  post: string;
+  content: string;
+  created: string;
+  updated: string;
+  expand?: {
+    user?: Author;
+  };
 }
 
 interface TabPanelProps {
@@ -120,6 +154,10 @@ export default function Record() {
     message: '',
     severity: 'success' as 'success' | 'error' | 'info' | 'warning'
   });
+  const [expandedComments, setExpandedComments] = useState<Set<string>>(new Set());
+  const [postComments, setPostComments] = useState<Map<string, Comment[]>>(new Map());
+  const [commentText, setCommentText] = useState<Map<string, string>>(new Map());
+  const [loadingComments, setLoadingComments] = useState<Set<string>>(new Set());
 
   const currentUser = pb.authStore.model;
 
@@ -133,7 +171,7 @@ export default function Record() {
         sort: '-created',
         expand: 'author'
       });
-      setMyPosts(records.items);
+      setMyPosts(records.items as Post[]);
     } catch (error) {
       console.error('Error fetching my posts:', error);
       showSnackbar('Failed to load your posts', 'error');
@@ -145,12 +183,12 @@ export default function Record() {
     if (!currentUser) return;
     
     try {
-      const likes = await pb.collection('likes').getFullList({
+      const likes = await pb.collection('likes').getFullList<Like>({
         filter: `user = "${currentUser.id}"`
       });
       
       const likesMap = new Map<string, Like>();
-      likes.forEach(like => {
+      likes.forEach((like: Like) => {
         likesMap.set(like.post, like);
       });
       setUserLikes(likesMap);
@@ -164,12 +202,12 @@ export default function Record() {
     if (!currentUser) return;
     
     try {
-      const bookmarks = await pb.collection('bookmarks').getFullList({
+      const bookmarks = await pb.collection('bookmarks').getFullList<Bookmark>({
         filter: `user = "${currentUser.id}"`
       });
       
       const bookmarksMap = new Map<string, Bookmark>();
-      bookmarks.forEach(bookmark => {
+      bookmarks.forEach((bookmark: Bookmark) => {
         bookmarksMap.set(bookmark.post, bookmark);
       });
       setUserBookmarks(bookmarksMap);
@@ -183,15 +221,15 @@ export default function Record() {
     if (!currentUser) return;
     
     try {
-      const bookmarks = await pb.collection('bookmarks').getFullList({
+      const bookmarks = await pb.collection('bookmarks').getFullList<BookmarkExpanded>({
         filter: `user = "${currentUser.id}"`,
         expand: 'post.author',
         sort: '-created'
       });
       
       const posts = bookmarks
-        .map(bookmark => bookmark.expand?.post)
-        .filter(post => post !== undefined) as Post[];
+        .map((bookmark: BookmarkExpanded) => bookmark.expand?.post)
+        .filter((post): post is Post => post !== undefined);
       
       setBookmarkedPosts(posts);
     } catch (error) {
@@ -205,21 +243,117 @@ export default function Record() {
     if (!currentUser) return;
     
     try {
-      const likes = await pb.collection('likes').getFullList({
+      const likes = await pb.collection('likes').getFullList<LikeExpanded>({
         filter: `user = "${currentUser.id}"`,
         expand: 'post.author',
         sort: '-created'
       });
       
       const posts = likes
-        .map(like => like.expand?.post)
-        .filter(post => post !== undefined) as Post[];
+        .map((like: LikeExpanded) => like.expand?.post)
+        .filter((post): post is Post => post !== undefined);
       
       setLikedPosts(posts);
     } catch (error) {
       console.error('Error fetching liked posts:', error);
       showSnackbar('Failed to load liked posts', 'error');
     }
+  };
+
+  // Fetch comments for a post
+  const fetchComments = async (postId: string) => {
+    setLoadingComments(prev => new Set(prev).add(postId));
+    
+    try {
+      const comments = await pb.collection('comments').getFullList<Comment>({
+        filter: `post = "${postId}"`,
+        sort: '-created',
+        expand: 'user'
+      });
+      
+      setPostComments(prev => new Map(prev).set(postId, comments));
+    } catch (error) {
+      console.error('Error fetching comments:', error);
+      showSnackbar('Failed to load comments', 'error');
+    } finally {
+      setLoadingComments(prev => {
+        const newSet = new Set(prev);
+        newSet.delete(postId);
+        return newSet;
+      });
+    }
+  };
+
+  // Toggle comments visibility
+  const handleToggleComments = async (postId: string) => {
+    const newExpanded = new Set(expandedComments);
+    
+    if (expandedComments.has(postId)) {
+      newExpanded.delete(postId);
+    } else {
+      newExpanded.add(postId);
+      // Fetch comments if not already loaded
+      if (!postComments.has(postId)) {
+        await fetchComments(postId);
+      }
+    }
+    
+    setExpandedComments(newExpanded);
+  };
+
+  // Add a comment
+  const handleAddComment = async (postId: string) => {
+    if (!currentUser) {
+      showSnackbar('Please log in to comment', 'warning');
+      return;
+    }
+    
+    const text = commentText.get(postId)?.trim();
+    if (!text) {
+      showSnackbar('Comment cannot be empty', 'warning');
+      return;
+    }
+    
+    try {
+      const comment = await pb.collection('comments').create<Comment>({
+        user: currentUser.id,
+        post: postId,
+        content: text
+      }, {
+        expand: 'user'
+      });
+      
+      // Update comments list
+      setPostComments(prev => {
+        const comments = prev.get(postId) || [];
+        return new Map(prev).set(postId, [comment, ...comments]);
+      });
+      
+      // Clear comment text
+      setCommentText(prev => {
+        const newMap = new Map(prev);
+        newMap.delete(postId);
+        return newMap;
+      });
+      
+      // Update post's comment count
+      const updatePostCommentCount = (posts: Post[]) => 
+        posts.map(p => p.id === postId ? { ...p, comments_count: (p.comments_count || 0) + 1 } : p);
+      
+      setMyPosts(updatePostCommentCount);
+      setBookmarkedPosts(updatePostCommentCount);
+      setLikedPosts(updatePostCommentCount);
+      
+      showSnackbar('Comment added', 'success');
+    } catch (error) {
+      console.error('Error adding comment:', error);
+      showSnackbar('Failed to add comment', 'error');
+    }
+  };
+
+  // Update comment text
+  const handleCommentTextChange = (postId: string, text: string) => {
+    setCommentText(prev => new Map(prev).set(postId, text));
   };
 
   // Load data based on current tab
@@ -248,6 +382,7 @@ export default function Record() {
         }
       } catch (error) {
         console.error('Error loading data:', error);
+        showSnackbar('Failed to load data', 'error');
       } finally {
         setLoading(false);
       }
@@ -302,7 +437,7 @@ export default function Record() {
         showSnackbar('Bookmark removed', 'success');
       } else {
         // Add bookmark
-        const bookmark = await pb.collection('bookmarks').create({
+        const bookmark = await pb.collection('bookmarks').create<Bookmark>({
           user: currentUser.id,
           post: post.id
         });
@@ -337,7 +472,7 @@ export default function Record() {
         setUserLikes(newLikes);
         
         // Update post likes count
-        const updatedPost = await pb.collection('posts').update(post.id, {
+        const updatedPost = await pb.collection('posts').update<Post>(post.id, {
           likes_count: Math.max(0, post.likes_count - 1)
         });
         
@@ -356,7 +491,7 @@ export default function Record() {
         showSnackbar('Like removed', 'success');
       } else {
         // Add like
-        const like = await pb.collection('likes').create({
+        const like = await pb.collection('likes').create<Like>({
           user: currentUser.id,
           post: post.id
         });
@@ -366,7 +501,7 @@ export default function Record() {
         setUserLikes(newLikes);
         
         // Update post likes count
-        const updatedPost = await pb.collection('posts').update(post.id, {
+        const updatedPost = await pb.collection('posts').update<Post>(post.id, {
           likes_count: post.likes_count + 1
         });
         
@@ -407,7 +542,7 @@ export default function Record() {
     if (!currentEditPost) return;
     
     try {
-      const updatedPost = await pb.collection('posts').update(currentEditPost.id, {
+      const updatedPost = await pb.collection('posts').update<Post>(currentEditPost.id, {
         title: editFormData.title,
         content: editFormData.content,
         category: editFormData.category
@@ -466,6 +601,9 @@ export default function Record() {
     const isBookmarked = userBookmarks.has(post.id);
     const authorName = post.expand?.author?.name || post.expand?.author?.username || 'Unknown User';
     const authorAvatar = post.expand?.author?.avatar;
+    const commentsExpanded = expandedComments.has(post.id);
+    const comments = postComments.get(post.id) || [];
+    const isLoadingComments = loadingComments.has(post.id);
     
     return (
       <Card elevation={2} sx={{ mb: 2, transition: 'transform 0.2s', '&:hover': { transform: 'translateY(-4px)', boxShadow: 4 } }}>
@@ -523,8 +661,12 @@ export default function Record() {
               {post.likes_count || 0}
             </Typography>
             
-            <IconButton size="small" sx={{ mr: 1 }}>
-              <CommentIcon />
+            <IconButton 
+              size="small" 
+              sx={{ mr: 1 }}
+              onClick={() => handleToggleComments(post.id)}
+            >
+              {commentsExpanded ? <ExpandLessIcon /> : <CommentIcon />}
             </IconButton>
             <Typography variant="body2" component="span" sx={{ mr: 2 }}>
               {post.comments_count || 0}
@@ -558,6 +700,84 @@ export default function Record() {
             </Box>
           )}
         </Box>
+        
+        {/* Comments Section */}
+        <Collapse in={commentsExpanded}>
+          <Divider />
+          <Box sx={{ p: 2, bgcolor: 'background.default' }}>
+            {/* Add Comment */}
+            <Box sx={{ display: 'flex', gap: 1, mb: 2 }}>
+              <TextField
+                size="small"
+                fullWidth
+                placeholder="Write a comment..."
+                value={commentText.get(post.id) || ''}
+                onChange={(e) => handleCommentTextChange(post.id, e.target.value)}
+                onKeyPress={(e) => {
+                  if (e.key === 'Enter' && !e.shiftKey) {
+                    e.preventDefault();
+                    handleAddComment(post.id);
+                  }
+                }}
+              />
+              <IconButton 
+                color="primary"
+                onClick={() => handleAddComment(post.id)}
+                disabled={!commentText.get(post.id)?.trim()}
+              >
+                <SendIcon />
+              </IconButton>
+            </Box>
+            
+            {/* Comments List */}
+            {isLoadingComments ? (
+              <Box sx={{ display: 'flex', justifyContent: 'center', py: 2 }}>
+                <CircularProgress size={24} />
+              </Box>
+            ) : comments.length > 0 ? (
+              <List sx={{ p: 0 }}>
+                {comments.map((comment) => {
+                  const commentAuthor = comment.expand?.user;
+                  const commentAuthorName = commentAuthor?.name || commentAuthor?.username || 'Unknown User';
+                  
+                  return (
+                    <ListItem key={comment.id} alignItems="flex-start" sx={{ px: 0 }}>
+                      <ListItemAvatar>
+                        <Avatar 
+                          sx={{ width: 32, height: 32, bgcolor: 'secondary.main' }}
+                          src={commentAuthor?.avatar ? pb.files.getUrl(commentAuthor, commentAuthor.avatar) : undefined}
+                        >
+                          {commentAuthorName.charAt(0)}
+                        </Avatar>
+                      </ListItemAvatar>
+                      <ListItemText
+                        primary={
+                          <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                            <Typography variant="subtitle2" component="span">
+                              {commentAuthorName}
+                            </Typography>
+                            <Typography variant="caption" color="text.secondary">
+                              {formatDate(comment.created)}
+                            </Typography>
+                          </Box>
+                        }
+                        secondary={
+                          <Typography variant="body2" sx={{ mt: 0.5 }}>
+                            {comment.content}
+                          </Typography>
+                        }
+                      />
+                    </ListItem>
+                  );
+                })}
+              </List>
+            ) : (
+              <Typography variant="body2" color="text.secondary" align="center" sx={{ py: 2 }}>
+                No comments yet. Be the first to comment!
+              </Typography>
+            )}
+          </Box>
+        </Collapse>
       </Card>
     );
   };
@@ -619,50 +839,6 @@ export default function Record() {
                   {myPosts.map((post) => (
                     <Grid item xs={12} key={post.id}>
                       <PostCard post={post} isMyPost={true} />
-                    </Grid>
-                  ))}
-                </Grid>
-              ) : (
-                <Paper elevation={0} sx={{ p: 4, textAlign: 'center', bgcolor: 'background.default' }}>
-                  <Typography variant="body1" color="text.secondary">
-                    You haven't created any posts yet.
-                  </Typography>
-                </Paper>
-              )}
-            </TabPanel>
-
-            {/* Bookmarks Tab */}
-            <TabPanel value={tabValue} index={1}>
-              <Typography variant="h6" sx={{ mb: 2 }}>
-                Posts you've bookmarked ({bookmarkedPosts.length})
-              </Typography>
-              {bookmarkedPosts.length > 0 ? (
-                <Grid container spacing={2}>
-                  {bookmarkedPosts.map((post) => (
-                    <Grid item xs={12} key={post.id}>
-                      <PostCard post={post} isMyPost={post.author === currentUser.id} />
-                    </Grid>
-                  ))}
-                </Grid>
-              ) : (
-                <Paper elevation={0} sx={{ p: 4, textAlign: 'center', bgcolor: 'background.default' }}>
-                  <Typography variant="body1" color="text.secondary">
-                    You haven't bookmarked any posts yet.
-                  </Typography>
-                </Paper>
-              )}
-            </TabPanel>
-
-            {/* Liked Tab */}
-            <TabPanel value={tabValue} index={2}>
-              <Typography variant="h6" sx={{ mb: 2 }}>
-                Posts you've liked ({likedPosts.length})
-              </Typography>
-              {likedPosts.length > 0 ? (
-                <Grid container spacing={2}>
-                  {likedPosts.map((post) => (
-                    <Grid item xs={12} key={post.id}>
-                      <PostCard post={post} isMyPost={post.author === currentUser.id} />
                     </Grid>
                   ))}
                 </Grid>
