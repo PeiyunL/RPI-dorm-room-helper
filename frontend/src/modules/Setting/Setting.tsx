@@ -1,4 +1,4 @@
-import React, { useEffect, useMemo, useRef, useState } from 'react';
+import React, { useEffect, useRef, useState, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import pb from '../../lib/pocketbase';
 
@@ -16,7 +16,6 @@ import {
   Button,
   TextField,
   FormControl,
-  FormControlLabel,
   InputLabel,
   Select,
   MenuItem,
@@ -29,7 +28,8 @@ import {
   DialogContent,
   DialogContentText,
   DialogActions,
-  CircularProgress
+  CircularProgress,
+  InputAdornment
 } from '@mui/material';
 import { SelectChangeEvent } from '@mui/material/Select';
 import {
@@ -64,7 +64,6 @@ interface UserProfile {
 }
 
 // Fields persisted in backend (users collection)
-// Add/remove keys to match your schema.
 type PersistedSettings = {
   darkMode: boolean;
   emailNotifications: boolean;
@@ -130,7 +129,7 @@ export default function Setting() {
   const fileInputRef = useRef<HTMLInputElement | null>(null);
   const [uploadingAvatar, setUploadingAvatar] = useState<boolean>(false);
 
-  // Apply dark mode to the document (minimal real effect)
+  // Apply dark mode to the document
   useEffect(() => {
     document.documentElement.setAttribute('data-color-scheme', darkMode ? 'dark' : 'light');
     localStorage.setItem('theme', darkMode ? 'dark' : 'light');
@@ -144,22 +143,27 @@ export default function Setting() {
       return;
     }
 
-    // Merge existing fields with defaults
-    const avatarUrl = user.avatar
-      ? pb.files.getUrl(user, user.avatar, { thumb: '100x100' })
-      : '';
+    const safeAvatarUrl =
+      (user as any)?.avatar
+        ? (() => {
+            try {
+              return pb.files.getUrl(user, (user as any).avatar, { thumb: '100x100' });
+            } catch {
+              return '';
+            }
+          })()
+        : '';
 
     setProfile({
-      name: user.name || '',
-      email: user.email || '',
+      name: (user as any).name || '',
+      email: (user as any).email || '',
       phone: (user as any).phone || '',
       major: (user as any).major || '',
       year: (user as any).year || '',
       bio: (user as any).bio || '',
-      avatarUrl,
+      avatarUrl: safeAvatarUrl,
     });
 
-    // Settings (with fallback defaults)
     setEmailNotifications(Boolean((user as any).emailNotifications ?? true));
     setAppNotifications(Boolean((user as any).appNotifications ?? true));
     setLanguage(((user as any).language as string) || localStorage.getItem('i18n_lang') || 'en');
@@ -168,53 +172,68 @@ export default function Setting() {
     setLoading(false);
   }, [navigate]);
 
+  // Keep editedProfile synced while in edit mode if profile updates (e.g., avatar updated)
+  useEffect(() => {
+    if (editMode) setEditedProfile(profile);
+  }, [profile, editMode]);
+
   // Helpers
-  const showSnackbar = (message: string, severity: 'success' | 'error' | 'info' | 'warning' = 'success') => {
-    setSnackbar({ open: true, message, severity });
-  };
+  const showSnackbar = useCallback(
+    (message: string, severity: 'success' | 'error' | 'info' | 'warning' = 'success') => {
+      setSnackbar({ open: true, message, severity });
+    },
+    []
+  );
 
   const closeSnackbar = () => setSnackbar(s => ({ ...s, open: false }));
 
-  const currentUserId = useMemo(() => pb.authStore.model?.id, []);
+  const updateUser = useCallback(
+    async (fields: Partial<PersistedSettings & { avatar?: File } & any>) => {
+      const userId = pb.authStore.model?.id;
+      if (!userId) throw new Error('Not authenticated');
 
-  const updateUser = async (fields: Partial<PersistedSettings & { avatar?: File }>) => {
-    if (!currentUserId) throw new Error('Not authenticated');
-
-    // If avatar is included, use FormData
-    if (fields.avatar) {
-      const fd = new FormData();
-      Object.entries(fields).forEach(([k, v]) => {
-        if (k === 'avatar' && v instanceof File) fd.append('avatar', v);
-        else if (typeof v !== 'undefined') fd.append(k, String(v));
-      });
-      const rec = await pb.collection(USERS_COLLECTION).update(currentUserId, fd);
-      return rec;
-    } else {
-      const rec = await pb.collection(USERS_COLLECTION).update(currentUserId, fields);
-      return rec;
-    }
-  };
+      // If avatar is included, use FormData
+      if (fields.avatar) {
+        const fd = new FormData();
+        Object.entries(fields).forEach(([k, v]) => {
+          if (k === 'avatar' && v instanceof File) fd.append('avatar', v);
+          else if (typeof v !== 'undefined') fd.append(k, String(v));
+        });
+        const rec = await pb.collection(USERS_COLLECTION).update(userId, fd);
+        return rec;
+      } else {
+        const rec = await pb.collection(USERS_COLLECTION).update(userId, fields);
+        return rec;
+      }
+    },
+    []
+  );
 
   // ----- Appearance & Language -----
   const handleLanguageChange = async (event: SelectChangeEvent) => {
     const value = event.target.value as string;
+    const prev = language;
     setLanguage(value);
     localStorage.setItem('i18n_lang', value);
     try {
       await updateUser({ language: value });
       showSnackbar('Language preference updated', 'success');
     } catch (e: any) {
+      setLanguage(prev);
+      localStorage.setItem('i18n_lang', prev);
       showSnackbar(`Failed to update language: ${e?.message || e}`, 'error');
     }
   };
 
   const handleDarkModeToggle = async () => {
     const next = !darkMode;
+    const prev = darkMode;
     setDarkMode(next);
     try {
       await updateUser({ darkMode: next });
       showSnackbar(`Dark mode ${next ? 'enabled' : 'disabled'}`, 'success');
     } catch (e: any) {
+      setDarkMode(prev);
       showSnackbar(`Failed to save theme: ${e?.message || e}`, 'error');
     }
   };
@@ -222,22 +241,26 @@ export default function Setting() {
   // ----- Notifications -----
   const handleEmailNotificationsToggle = async () => {
     const next = !emailNotifications;
+    const prev = emailNotifications;
     setEmailNotifications(next);
     try {
       await updateUser({ emailNotifications: next });
       showSnackbar(`Email notifications ${next ? 'enabled' : 'disabled'}`, 'success');
     } catch (e: any) {
+      setEmailNotifications(prev);
       showSnackbar(`Failed to save email notifications: ${e?.message || e}`, 'error');
     }
   };
 
   const handleAppNotificationsToggle = async () => {
     const next = !appNotifications;
+    const prev = appNotifications;
     setAppNotifications(next);
     try {
       await updateUser({ appNotifications: next });
       showSnackbar(`App notifications ${next ? 'enabled' : 'disabled'}`, 'success');
     } catch (e: any) {
+      setAppNotifications(prev);
       showSnackbar(`Failed to save app notifications: ${e?.message || e}`, 'error');
     }
   };
@@ -266,10 +289,16 @@ export default function Setting() {
       };
       const rec = await updateUser(payload);
 
-      // Refresh avatar url & local state from record
-      const avatarUrl = rec.avatar
-        ? pb.files.getUrl(rec, rec.avatar, { thumb: '100x100' })
-        : '';
+      const avatarUrl =
+        (rec as any)?.avatar
+          ? (() => {
+              try {
+                return pb.files.getUrl(rec, (rec as any).avatar, { thumb: '100x100' });
+              } catch {
+                return '';
+              }
+            })()
+          : '';
 
       setProfile({
         ...editedProfile,
@@ -299,7 +328,16 @@ export default function Setting() {
     setUploadingAvatar(true);
     try {
       const rec = await updateUser({ avatar: file });
-      const url = rec.avatar ? pb.files.getUrl(rec, rec.avatar, { thumb: '100x100' }) : '';
+      const url =
+        (rec as any)?.avatar
+          ? (() => {
+              try {
+                return pb.files.getUrl(rec, (rec as any).avatar, { thumb: '100x100' });
+              } catch {
+                return '';
+              }
+            })()
+          : '';
       setProfile(p => ({ ...p, avatarUrl: url }));
       if (editMode) setEditedProfile(p => ({ ...p, avatarUrl: url }));
       showSnackbar('Avatar updated', 'success');
@@ -334,9 +372,8 @@ export default function Setting() {
 
     setSavingPassword(true);
     try {
-      // PocketBase: supply oldPassword + password + passwordConfirm in update.
       await updateUser({
-        // @ts-ignore - PocketBase accepts these special fields for auth updates
+        // PocketBase accepts these special fields for auth updates
         oldPassword: passwordData.currentPassword as any,
         password: passwordData.newPassword as any,
         passwordConfirm: passwordData.confirmPassword as any,
@@ -359,11 +396,12 @@ export default function Setting() {
 
   const handleDeleteAccount = async () => {
     if (deleteConfirmation !== 'delete my account') return;
-    if (!currentUserId) return;
+    const userId = pb.authStore.model?.id;
+    if (!userId) return;
 
     setDeleting(true);
     try {
-      await pb.collection(USERS_COLLECTION).delete(currentUserId);
+      await pb.collection(USERS_COLLECTION).delete(userId);
       pb.authStore.clear();
       showSnackbar('Account deleted', 'info');
       navigate('/login');
@@ -476,7 +514,13 @@ export default function Setting() {
                           name="email"
                           value={editedProfile.email}
                           onChange={handleProfileChange}
-                          InputProps={{ startAdornment: <EmailIcon color="action" sx={{ mr: 1 }} /> }}
+                          InputProps={{
+                            startAdornment: (
+                              <InputAdornment position="start">
+                                <EmailIcon color="action" />
+                              </InputAdornment>
+                            ),
+                          }}
                         />
                       </Grid>
                       <Grid item xs={12} sm={6}>
@@ -486,7 +530,13 @@ export default function Setting() {
                           name="phone"
                           value={editedProfile.phone}
                           onChange={handleProfileChange}
-                          InputProps={{ startAdornment: <PhoneIcon color="action" sx={{ mr: 1 }} /> }}
+                          InputProps={{
+                            startAdornment: (
+                              <InputAdornment position="start">
+                                <PhoneIcon color="action" />
+                              </InputAdornment>
+                            ),
+                          }}
                         />
                       </Grid>
                       <Grid item xs={12} sm={6}>
@@ -496,7 +546,13 @@ export default function Setting() {
                           name="major"
                           value={editedProfile.major}
                           onChange={handleProfileChange}
-                          InputProps={{ startAdornment: <SchoolIcon color="action" sx={{ mr: 1 }} /> }}
+                          InputProps={{
+                            startAdornment: (
+                              <InputAdornment position="start">
+                                <SchoolIcon color="action" />
+                              </InputAdornment>
+                            ),
+                          }}
                         />
                       </Grid>
                       <Grid item xs={12} sm={6}>
@@ -645,8 +701,10 @@ export default function Setting() {
                       inputProps={{ 'aria-label': 'Language' }}
                     >
                       <MenuItem value="en">
-                        <LanguageIcon fontSize="small" sx={{ mr: 1 }} />
-                        English
+                        <Box sx={{ display: 'flex', alignItems: 'center' }}>
+                          <LanguageIcon fontSize="small" sx={{ mr: 1 }} />
+                          English
+                        </Box>
                       </MenuItem>
                       <MenuItem value="es">Español</MenuItem>
                       <MenuItem value="fr">Français</MenuItem>
