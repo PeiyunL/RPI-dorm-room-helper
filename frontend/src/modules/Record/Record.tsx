@@ -1,49 +1,34 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { 
-  Container, 
-  Typography, 
-  Box, 
-  Paper, 
-  Grid, 
-  Card, 
-  CardContent, 
-  Divider, 
-  Chip, 
-  Avatar, 
-  Tab, 
-  Tabs, 
-  IconButton, 
-  CircularProgress,
-  Button,
-  Dialog,
-  DialogTitle,
-  DialogContent,
-  DialogActions,
-  TextField,
-  Alert,
-  Snackbar,
-  Collapse,
-  List,
-  ListItem,
-  ListItemAvatar,
-  ListItemText
-} from '@mui/material';
-import { 
-  Delete as DeleteIcon, 
-  Edit as EditIcon,
-  History as HistoryIcon,
-  BookmarkBorder as BookmarkIcon,
-  Bookmark as BookmarkedIcon,
-  FavoriteBorder as LikeIcon,
-  Favorite as LikedIcon,
-  Comment as CommentIcon,
-  Send as SendIcon,
-  ExpandMore as ExpandMoreIcon,
-  ExpandLess as ExpandLessIcon
-} from '@mui/icons-material';
-import pb from '../lib/pocketbase.js';
+  Trash2, 
+  Edit3,
+  History,
+  Bookmark,
+  Heart,
+  MessageCircle,
+  Send,
+  ChevronDown,
+  ChevronUp,
+  MoreVertical,
+  X,
+  AlertCircle
+} from 'lucide-react';
 
-// Interface definitions
+// Mock PocketBase for demo
+const pb = {
+  authStore: { model: { id: 'user123', username: 'demo_user', name: 'Demo User' } },
+  collection: (name: string) => ({
+    getList: async () => ({ items: [] }),
+    getFullList: async () => [],
+    create: async (data: any) => ({ id: Date.now().toString(), ...data, created: new Date().toISOString() }),
+    update: async (id: string, data: any) => ({ id, ...data }),
+    delete: async (id: string) => {}
+  }),
+  files: {
+    getUrl: (record: any, filename: string) => `https://via.placeholder.com/150`
+  }
+};
+
 interface Author {
   id: string;
   username: string;
@@ -81,18 +66,6 @@ interface Bookmark {
   created: string;
 }
 
-interface BookmarkExpanded extends Bookmark {
-  expand?: {
-    post?: Post;
-  };
-}
-
-interface LikeExpanded extends Like {
-  expand?: {
-    post?: Post;
-  };
-}
-
 interface Comment {
   id: string;
   user: string;
@@ -103,33 +76,6 @@ interface Comment {
   expand?: {
     user?: Author;
   };
-}
-
-interface TabPanelProps {
-  children?: React.ReactNode;
-  index: number;
-  value: number;
-}
-
-// Tab Panel component
-function TabPanel(props: TabPanelProps) {
-  const { children, value, index, ...other } = props;
-
-  return (
-    <div
-      role="tabpanel"
-      hidden={value !== index}
-      id={`record-tabpanel-${index}`}
-      aria-labelledby={`record-tab-${index}`}
-      {...other}
-    >
-      {value === index && (
-        <Box sx={{ py: 3 }}>
-          {children}
-        </Box>
-      )}
-    </div>
-  );
 }
 
 export default function Record() {
@@ -158,13 +104,16 @@ export default function Record() {
   const [postComments, setPostComments] = useState<Map<string, Comment[]>>(new Map());
   const [commentText, setCommentText] = useState<Map<string, string>>(new Map());
   const [loadingComments, setLoadingComments] = useState<Set<string>>(new Set());
+  const [editingCommentId, setEditingCommentId] = useState<string | null>(null);
+  const [editCommentText, setEditCommentText] = useState('');
+  const [commentMenuOpen, setCommentMenuOpen] = useState<string | null>(null);
+  const [deleteCommentDialogOpen, setDeleteCommentDialogOpen] = useState(false);
+  const [commentToDelete, setCommentToDelete] = useState<{ commentId: string; postId: string } | null>(null);
 
   const currentUser = pb.authStore.model;
 
-  // Fetch user's posts
-  const fetchMyPosts = async () => {
+  const fetchMyPosts = useCallback(async () => {
     if (!currentUser) return;
-    
     try {
       const records = await pb.collection('posts').getList(1, 50, {
         filter: `author = "${currentUser.id}"`,
@@ -175,18 +124,16 @@ export default function Record() {
     } catch (error) {
       console.error('Error fetching my posts:', error);
       showSnackbar('Failed to load your posts', 'error');
+      setMyPosts([]);
     }
-  };
+  }, [currentUser]);
 
-  // Fetch user's likes
-  const fetchUserLikes = async () => {
+  const fetchUserLikes = useCallback(async () => {
     if (!currentUser) return;
-    
     try {
       const likes = await pb.collection('likes').getFullList<Like>({
         filter: `user = "${currentUser.id}"`
       });
-      
       const likesMap = new Map<string, Like>();
       likes.forEach((like: Like) => {
         likesMap.set(like.post, like);
@@ -194,18 +141,16 @@ export default function Record() {
       setUserLikes(likesMap);
     } catch (error) {
       console.error('Error fetching likes:', error);
+      setUserLikes(new Map());
     }
-  };
+  }, [currentUser]);
 
-  // Fetch user's bookmarks
-  const fetchUserBookmarks = async () => {
+  const fetchUserBookmarks = useCallback(async () => {
     if (!currentUser) return;
-    
     try {
       const bookmarks = await pb.collection('bookmarks').getFullList<Bookmark>({
         filter: `user = "${currentUser.id}"`
       });
-      
       const bookmarksMap = new Map<string, Bookmark>();
       bookmarks.forEach((bookmark: Bookmark) => {
         bookmarksMap.set(bookmark.post, bookmark);
@@ -213,64 +158,56 @@ export default function Record() {
       setUserBookmarks(bookmarksMap);
     } catch (error) {
       console.error('Error fetching bookmarks:', error);
+      setUserBookmarks(new Map());
     }
-  };
+  }, [currentUser]);
 
-  // Fetch bookmarked posts
-  const fetchBookmarkedPosts = async () => {
+  const fetchBookmarkedPosts = useCallback(async () => {
     if (!currentUser) return;
-    
     try {
-      const bookmarks = await pb.collection('bookmarks').getFullList<BookmarkExpanded>({
+      const bookmarks = await pb.collection('bookmarks').getFullList<any>({
         filter: `user = "${currentUser.id}"`,
         expand: 'post.author',
         sort: '-created'
       });
-      
       const posts = bookmarks
-        .map((bookmark: BookmarkExpanded) => bookmark.expand?.post)
+        .map((bookmark: any) => bookmark.expand?.post)
         .filter((post): post is Post => post !== undefined);
-      
       setBookmarkedPosts(posts);
     } catch (error) {
       console.error('Error fetching bookmarked posts:', error);
       showSnackbar('Failed to load bookmarked posts', 'error');
+      setBookmarkedPosts([]);
     }
-  };
+  }, [currentUser]);
 
-  // Fetch liked posts
-  const fetchLikedPosts = async () => {
+  const fetchLikedPosts = useCallback(async () => {
     if (!currentUser) return;
-    
     try {
-      const likes = await pb.collection('likes').getFullList<LikeExpanded>({
+      const likes = await pb.collection('likes').getFullList<any>({
         filter: `user = "${currentUser.id}"`,
         expand: 'post.author',
         sort: '-created'
       });
-      
       const posts = likes
-        .map((like: LikeExpanded) => like.expand?.post)
+        .map((like: any) => like.expand?.post)
         .filter((post): post is Post => post !== undefined);
-      
       setLikedPosts(posts);
     } catch (error) {
       console.error('Error fetching liked posts:', error);
       showSnackbar('Failed to load liked posts', 'error');
+      setLikedPosts([]);
     }
-  };
+  }, [currentUser]);
 
-  // Fetch comments for a post
   const fetchComments = async (postId: string) => {
     setLoadingComments(prev => new Set(prev).add(postId));
-    
     try {
       const comments = await pb.collection('comments').getFullList<Comment>({
         filter: `post = "${postId}"`,
         sort: '-created',
         expand: 'user'
       });
-      
       setPostComments(prev => new Map(prev).set(postId, comments));
     } catch (error) {
       console.error('Error fetching comments:', error);
@@ -284,66 +221,49 @@ export default function Record() {
     }
   };
 
-  // Toggle comments visibility
   const handleToggleComments = async (postId: string) => {
     const newExpanded = new Set(expandedComments);
-    
     if (expandedComments.has(postId)) {
       newExpanded.delete(postId);
     } else {
       newExpanded.add(postId);
-      // Fetch comments if not already loaded
       if (!postComments.has(postId)) {
         await fetchComments(postId);
       }
     }
-    
     setExpandedComments(newExpanded);
   };
 
-  // Add a comment
   const handleAddComment = async (postId: string) => {
     if (!currentUser) {
       showSnackbar('Please log in to comment', 'warning');
       return;
     }
-    
     const text = commentText.get(postId)?.trim();
     if (!text) {
       showSnackbar('Comment cannot be empty', 'warning');
       return;
     }
-    
     try {
       const comment = await pb.collection('comments').create<Comment>({
         user: currentUser.id,
         post: postId,
         content: text
-      }, {
-        expand: 'user'
-      });
-      
-      // Update comments list
+      }, { expand: 'user' });
       setPostComments(prev => {
         const comments = prev.get(postId) || [];
         return new Map(prev).set(postId, [comment, ...comments]);
       });
-      
-      // Clear comment text
       setCommentText(prev => {
         const newMap = new Map(prev);
         newMap.delete(postId);
         return newMap;
       });
-      
-      // Update post's comment count
       const updatePostCommentCount = (posts: Post[]) => 
         posts.map(p => p.id === postId ? { ...p, comments_count: (p.comments_count || 0) + 1 } : p);
-      
       setMyPosts(updatePostCommentCount);
       setBookmarkedPosts(updatePostCommentCount);
       setLikedPosts(updatePostCommentCount);
-      
       showSnackbar('Comment added', 'success');
     } catch (error) {
       console.error('Error adding comment:', error);
@@ -351,24 +271,71 @@ export default function Record() {
     }
   };
 
-  // Update comment text
-  const handleCommentTextChange = (postId: string, text: string) => {
-    setCommentText(prev => new Map(prev).set(postId, text));
+  const handleStartEditComment = (comment: Comment) => {
+    setEditingCommentId(comment.id);
+    setEditCommentText(comment.content);
+    setCommentMenuOpen(null);
   };
 
-  // Load data based on current tab
+  const handleSaveEditComment = async (commentId: string, postId: string) => {
+    if (!editCommentText.trim()) {
+      showSnackbar('Comment cannot be empty', 'warning');
+      return;
+    }
+    try {
+      const updatedComment = await pb.collection('comments').update<Comment>(commentId, {
+        content: editCommentText
+      }, { expand: 'user' });
+      setPostComments(prev => {
+        const comments = prev.get(postId) || [];
+        const updatedComments = comments.map(c => 
+          c.id === commentId ? updatedComment : c
+        );
+        return new Map(prev).set(postId, updatedComments);
+      });
+      setEditingCommentId(null);
+      setEditCommentText('');
+      showSnackbar('Comment updated', 'success');
+    } catch (error) {
+      console.error('Error updating comment:', error);
+      showSnackbar('Failed to update comment', 'error');
+    }
+  };
+
+  const handleDeleteCommentClick = (commentId: string, postId: string) => {
+    setCommentToDelete({ commentId, postId });
+    setDeleteCommentDialogOpen(true);
+    setCommentMenuOpen(null);
+  };
+
+  const handleConfirmDeleteComment = async () => {
+    if (!commentToDelete) return;
+    try {
+      await pb.collection('comments').delete(commentToDelete.commentId);
+      setPostComments(prev => {
+        const comments = prev.get(commentToDelete.postId) || [];
+        const updatedComments = comments.filter(c => c.id !== commentToDelete.commentId);
+        return new Map(prev).set(commentToDelete.postId, updatedComments);
+      });
+      const updatePostCommentCount = (posts: Post[]) => 
+        posts.map(p => p.id === commentToDelete.postId ? { ...p, comments_count: Math.max(0, (p.comments_count || 0) - 1) } : p);
+      setMyPosts(updatePostCommentCount);
+      setBookmarkedPosts(updatePostCommentCount);
+      setLikedPosts(updatePostCommentCount);
+      setDeleteCommentDialogOpen(false);
+      setCommentToDelete(null);
+      showSnackbar('Comment deleted', 'success');
+    } catch (error) {
+      console.error('Error deleting comment:', error);
+      showSnackbar('Failed to delete comment', 'error');
+    }
+  };
+
   useEffect(() => {
     const loadData = async () => {
       setLoading(true);
-      
       try {
-        // Always fetch user's likes and bookmarks status
-        await Promise.all([
-          fetchUserLikes(),
-          fetchUserBookmarks()
-        ]);
-        
-        // Fetch data based on current tab
+        await Promise.all([fetchUserLikes(), fetchUserBookmarks()]);
         switch (tabValue) {
           case 0:
             await fetchMyPosts();
@@ -387,29 +354,32 @@ export default function Record() {
         setLoading(false);
       }
     };
-    
     if (currentUser) {
       loadData();
     }
-  }, [tabValue, currentUser]);
-
-  const handleTabChange = (event: React.SyntheticEvent, newValue: number) => {
-    setTabValue(newValue);
-  };
+  }, [tabValue, currentUser, fetchUserLikes, fetchUserBookmarks, fetchMyPosts, fetchBookmarkedPosts, fetchLikedPosts]);
 
   const formatDate = (dateString: string) => {
     const date = new Date(dateString);
+    const now = new Date();
+    const diffMs = now.getTime() - date.getTime();
+    const diffMins = Math.floor(diffMs / 60000);
+    const diffHours = Math.floor(diffMs / 3600000);
+    const diffDays = Math.floor(diffMs / 86400000);
+    if (diffMins < 1) return 'Just now';
+    if (diffMins < 60) return `${diffMins}m ago`;
+    if (diffHours < 24) return `${diffHours}h ago`;
+    if (diffDays < 7) return `${diffDays}d ago`;
     return date.toLocaleDateString('en-US', {
       year: 'numeric',
       month: 'short',
-      day: 'numeric',
-      hour: '2-digit',
-      minute: '2-digit',
+      day: 'numeric'
     });
   };
 
   const showSnackbar = (message: string, severity: 'success' | 'error' | 'info' | 'warning' = 'success') => {
     setSnackbar({ open: true, message, severity });
+    setTimeout(() => setSnackbar({ ...snackbar, open: false }), 4000);
   };
 
   const handleToggleBookmark = async (post: Post) => {
@@ -417,35 +387,25 @@ export default function Record() {
       showSnackbar('Please log in to bookmark posts', 'warning');
       return;
     }
-    
     try {
       const existingBookmark = userBookmarks.get(post.id);
-      
       if (existingBookmark) {
-        // Remove bookmark
         await pb.collection('bookmarks').delete(existingBookmark.id);
-        
         const newBookmarks = new Map(userBookmarks);
         newBookmarks.delete(post.id);
         setUserBookmarks(newBookmarks);
-        
-        // Update bookmarked posts list if on bookmarks tab
         if (tabValue === 1) {
           setBookmarkedPosts(bookmarkedPosts.filter(p => p.id !== post.id));
         }
-        
         showSnackbar('Bookmark removed', 'success');
       } else {
-        // Add bookmark
         const bookmark = await pb.collection('bookmarks').create<Bookmark>({
           user: currentUser.id,
           post: post.id
         });
-        
         const newBookmarks = new Map(userBookmarks);
         newBookmarks.set(post.id, bookmark);
         setUserBookmarks(newBookmarks);
-        
         showSnackbar('Post bookmarked', 'success');
       }
     } catch (error) {
@@ -459,59 +419,37 @@ export default function Record() {
       showSnackbar('Please log in to like posts', 'warning');
       return;
     }
-    
     try {
       const existingLike = userLikes.get(post.id);
-      
       if (existingLike) {
-        // Remove like
         await pb.collection('likes').delete(existingLike.id);
-        
         const newLikes = new Map(userLikes);
         newLikes.delete(post.id);
         setUserLikes(newLikes);
-        
-        // Update post likes count
         const updatedPost = await pb.collection('posts').update<Post>(post.id, {
           likes_count: Math.max(0, post.likes_count - 1)
         });
-        
-        // Update liked posts list if on likes tab
         if (tabValue === 2) {
           setLikedPosts(likedPosts.filter(p => p.id !== post.id));
         }
-        
-        // Update post in my posts if present
         if (tabValue === 0) {
-          setMyPosts(myPosts.map(p => 
-            p.id === post.id ? updatedPost : p
-          ));
+          setMyPosts(myPosts.map(p => p.id === post.id ? updatedPost : p));
         }
-        
         showSnackbar('Like removed', 'success');
       } else {
-        // Add like
         const like = await pb.collection('likes').create<Like>({
           user: currentUser.id,
           post: post.id
         });
-        
         const newLikes = new Map(userLikes);
         newLikes.set(post.id, like);
         setUserLikes(newLikes);
-        
-        // Update post likes count
         const updatedPost = await pb.collection('posts').update<Post>(post.id, {
           likes_count: post.likes_count + 1
         });
-        
-        // Update post in my posts if present
         if (tabValue === 0) {
-          setMyPosts(myPosts.map(p => 
-            p.id === post.id ? updatedPost : p
-          ));
+          setMyPosts(myPosts.map(p => p.id === post.id ? updatedPost : p));
         }
-        
         showSnackbar('Post liked', 'success');
       }
     } catch (error) {
@@ -530,37 +468,27 @@ export default function Record() {
     setEditDialogOpen(true);
   };
 
-  const handleEditFormChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
-    const { name, value } = e.target;
-    setEditFormData({
-      ...editFormData,
-      [name]: value
-    });
-  };
-
   const handleSaveEdit = async () => {
     if (!currentEditPost) return;
-    
+    if (!editFormData.title.trim() || !editFormData.content.trim()) {
+      showSnackbar('Title and content cannot be empty', 'warning');
+      return;
+    }
     try {
       const updatedPost = await pb.collection('posts').update<Post>(currentEditPost.id, {
         title: editFormData.title,
         content: editFormData.content,
         category: editFormData.category
       });
-      
-      // Update post in all lists
       setMyPosts(myPosts.map(post => 
         post.id === currentEditPost.id ? { ...updatedPost, expand: post.expand } : post
       ));
-      
       setBookmarkedPosts(bookmarkedPosts.map(post => 
         post.id === currentEditPost.id ? { ...updatedPost, expand: post.expand } : post
       ));
-      
       setLikedPosts(likedPosts.map(post => 
         post.id === currentEditPost.id ? { ...updatedPost, expand: post.expand } : post
       ));
-      
       setEditDialogOpen(false);
       setCurrentEditPost(null);
       showSnackbar('Post updated successfully', 'success');
@@ -570,22 +498,13 @@ export default function Record() {
     }
   };
 
-  const handleDeleteClick = (postId: string) => {
-    setPostToDelete(postId);
-    setDeleteConfirmOpen(true);
-  };
-
   const handleConfirmDelete = async () => {
     if (!postToDelete) return;
-    
     try {
       await pb.collection('posts').delete(postToDelete);
-      
-      // Remove from all lists
       setMyPosts(myPosts.filter(post => post.id !== postToDelete));
       setBookmarkedPosts(bookmarkedPosts.filter(post => post.id !== postToDelete));
       setLikedPosts(likedPosts.filter(post => post.id !== postToDelete));
-      
       setDeleteConfirmOpen(false);
       setPostToDelete(null);
       showSnackbar('Post deleted successfully', 'success');
@@ -595,347 +514,476 @@ export default function Record() {
     }
   };
 
-  // Post display component
   const PostCard = ({ post, isMyPost = false }: { post: Post, isMyPost?: boolean }) => {
     const isLiked = userLikes.has(post.id);
     const isBookmarked = userBookmarks.has(post.id);
     const authorName = post.expand?.author?.name || post.expand?.author?.username || 'Unknown User';
-    const authorAvatar = post.expand?.author?.avatar;
     const commentsExpanded = expandedComments.has(post.id);
     const comments = postComments.get(post.id) || [];
     const isLoadingComments = loadingComments.has(post.id);
     
     return (
-      <Card elevation={2} sx={{ mb: 2, transition: 'transform 0.2s', '&:hover': { transform: 'translateY(-4px)', boxShadow: 4 } }}>
-        <CardContent>
-          <Box sx={{ display: 'flex', justifyContent: 'space-between', mb: 1 }}>
-            <Chip
-              label={post.category || 'General'}
-              size="small"
-              color="primary"
-              variant="outlined"
-              sx={{ mb: 1 }}
-            />
-            <Typography variant="caption" color="text.secondary">
+      <div className="bg-white rounded-lg shadow-md hover:shadow-xl transition-all duration-300 hover:-translate-y-1 mb-4 overflow-hidden">
+        <div className="p-6">
+          <div className="flex justify-between items-center mb-3 flex-wrap gap-2">
+            <span className="px-3 py-1 bg-blue-100 text-blue-700 text-sm font-medium rounded-full">
+              {post.category || 'General'}
+            </span>
+            <span className="text-sm text-gray-500 font-medium">
               {formatDate(post.created)}
-            </Typography>
-          </Box>
-          <Typography variant="h6" component="h2" gutterBottom>
-            {post.title}
-          </Typography>
-          <Box sx={{ display: 'flex', alignItems: 'center', mb: 2 }}>
-            <Avatar 
-              sx={{ width: 24, height: 24, mr: 1, bgcolor: 'primary.main' }}
-              src={authorAvatar ? pb.files.getUrl(post.expand?.author!, authorAvatar) : undefined}
-            >
-              {!authorAvatar && authorName.charAt(0)}
-            </Avatar>
-            <Typography variant="body2" color="text.secondary">
-              {authorName}
-            </Typography>
-          </Box>
-          <Typography variant="body1" paragraph>
-            {post.content}
-          </Typography>
+            </span>
+          </div>
+          
+          <h2 className="text-xl font-bold text-gray-900 mb-3">{post.title}</h2>
+          
+          <div className="flex items-center mb-3">
+            <div className="w-7 h-7 bg-blue-500 rounded-full flex items-center justify-center text-white font-medium mr-2">
+              {authorName.charAt(0).toUpperCase()}
+            </div>
+            <span className="text-sm text-gray-600 font-medium">{authorName}</span>
+          </div>
+          
+          <p className="text-gray-700 mb-4 leading-relaxed">{post.content}</p>
+          
           {post.image && (
-            <Box sx={{ mt: 2, mb: 2 }}>
+            <div className="mb-4 rounded-lg overflow-hidden">
               <img
                 src={pb.files.getUrl(post, post.image)}
                 alt={post.title}
-                style={{ maxWidth: '100%', maxHeight: '300px', borderRadius: '4px', objectFit: 'cover' }}
+                className="w-full max-h-96 object-cover"
               />
-            </Box>
+            </div>
           )}
-        </CardContent>
-        <Divider />
-        <Box sx={{ display: 'flex', justifyContent: 'space-between', p: 1, alignItems: 'center' }}>
-          <Box>
-            <IconButton
+        </div>
+        
+        <div className="border-t border-gray-200" />
+        
+        <div className="px-6 py-3 flex justify-between items-center flex-wrap gap-2">
+          <div className="flex items-center gap-1">
+            <button
               onClick={() => handleToggleLike(post)}
-              color={isLiked ? 'error' : 'default'}
-              size="small"
+              className={`p-2 rounded-full hover:bg-gray-100 transition-transform hover:scale-110 ${isLiked ? 'text-red-500' : 'text-gray-600'}`}
             >
-              {isLiked ? <LikedIcon /> : <LikeIcon />}
-            </IconButton>
-            <Typography variant="body2" component="span" sx={{ mr: 2 }}>
-              {post.likes_count || 0}
-            </Typography>
+              <Heart className={`w-5 h-5 ${isLiked ? 'fill-current' : ''}`} />
+            </button>
+            <span className="text-sm font-medium min-w-[20px]">{post.likes_count || 0}</span>
             
-            <IconButton 
-              size="small" 
-              sx={{ mr: 1 }}
+            <button
               onClick={() => handleToggleComments(post.id)}
+              className="p-2 rounded-full hover:bg-gray-100 transition-transform hover:scale-110 text-gray-600 ml-2"
             >
-              {commentsExpanded ? <ExpandLessIcon /> : <CommentIcon />}
-            </IconButton>
-            <Typography variant="body2" component="span" sx={{ mr: 2 }}>
-              {post.comments_count || 0}
-            </Typography>
+              {commentsExpanded ? <ChevronUp className="w-5 h-5" /> : <MessageCircle className="w-5 h-5" />}
+            </button>
+            <span className="text-sm font-medium min-w-[20px]">{post.comments_count || 0}</span>
             
-            <IconButton
+            <button
               onClick={() => handleToggleBookmark(post)}
-              color={isBookmarked ? 'primary' : 'default'}
-              size="small"
+              className={`p-2 rounded-full hover:bg-gray-100 transition-transform hover:scale-110 ml-2 ${isBookmarked ? 'text-blue-500' : 'text-gray-600'}`}
             >
-              {isBookmarked ? <BookmarkedIcon /> : <BookmarkIcon />}
-            </IconButton>
-          </Box>
+              <Bookmark className={`w-5 h-5 ${isBookmarked ? 'fill-current' : ''}`} />
+            </button>
+          </div>
           
           {isMyPost && (
-            <Box>
-              <IconButton 
-                color="primary" 
-                size="small"
+            <div className="flex gap-1">
+              <button
                 onClick={() => handleEditPost(post)}
+                className="p-2 rounded-full hover:bg-blue-50 text-blue-600 transition-transform hover:scale-110"
               >
-                <EditIcon />
-              </IconButton>
-              <IconButton 
-                color="error" 
-                size="small"
-                onClick={() => handleDeleteClick(post.id)}
-              >
-                <DeleteIcon />
-              </IconButton>
-            </Box>
-          )}
-        </Box>
-        
-        {/* Comments Section */}
-        <Collapse in={commentsExpanded}>
-          <Divider />
-          <Box sx={{ p: 2, bgcolor: 'background.default' }}>
-            {/* Add Comment */}
-            <Box sx={{ display: 'flex', gap: 1, mb: 2 }}>
-              <TextField
-                size="small"
-                fullWidth
-                placeholder="Write a comment..."
-                value={commentText.get(post.id) || ''}
-                onChange={(e) => handleCommentTextChange(post.id, e.target.value)}
-                onKeyPress={(e) => {
-                  if (e.key === 'Enter' && !e.shiftKey) {
-                    e.preventDefault();
-                    handleAddComment(post.id);
-                  }
+                <Edit3 className="w-4 h-4" />
+              </button>
+              <button
+                onClick={() => {
+                  setPostToDelete(post.id);
+                  setDeleteConfirmOpen(true);
                 }}
-              />
-              <IconButton 
-                color="primary"
-                onClick={() => handleAddComment(post.id)}
-                disabled={!commentText.get(post.id)?.trim()}
+                className="p-2 rounded-full hover:bg-red-50 text-red-600 transition-transform hover:scale-110"
               >
-                <SendIcon />
-              </IconButton>
-            </Box>
-            
-            {/* Comments List */}
-            {isLoadingComments ? (
-              <Box sx={{ display: 'flex', justifyContent: 'center', py: 2 }}>
-                <CircularProgress size={24} />
-              </Box>
-            ) : comments.length > 0 ? (
-              <List sx={{ p: 0 }}>
-                {comments.map((comment) => {
-                  const commentAuthor = comment.expand?.user;
-                  const commentAuthorName = commentAuthor?.name || commentAuthor?.username || 'Unknown User';
-                  
-                  return (
-                    <ListItem key={comment.id} alignItems="flex-start" sx={{ px: 0 }}>
-                      <ListItemAvatar>
-                        <Avatar 
-                          sx={{ width: 32, height: 32, bgcolor: 'secondary.main' }}
-                          src={commentAuthor?.avatar ? pb.files.getUrl(commentAuthor, commentAuthor.avatar) : undefined}
-                        >
-                          {commentAuthorName.charAt(0)}
-                        </Avatar>
-                      </ListItemAvatar>
-                      <ListItemText
-                        primary={
-                          <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-                            <Typography variant="subtitle2" component="span">
-                              {commentAuthorName}
-                            </Typography>
-                            <Typography variant="caption" color="text.secondary">
-                              {formatDate(comment.created)}
-                            </Typography>
-                          </Box>
-                        }
-                        secondary={
-                          <Typography variant="body2" sx={{ mt: 0.5 }}>
-                            {comment.content}
-                          </Typography>
-                        }
-                      />
-                    </ListItem>
-                  );
-                })}
-              </List>
-            ) : (
-              <Typography variant="body2" color="text.secondary" align="center" sx={{ py: 2 }}>
-                No comments yet. Be the first to comment!
-              </Typography>
-            )}
-          </Box>
-        </Collapse>
-      </Card>
+                <Trash2 className="w-4 h-4" />
+              </button>
+            </div>
+          )}
+        </div>
+        
+        {commentsExpanded && (
+          <>
+            <div className="border-t border-gray-200" />
+            <div className="p-4 bg-gray-50">
+              <div className="flex gap-2 mb-4">
+                <input
+                  type="text"
+                  placeholder="Write a comment..."
+                  value={commentText.get(post.id) || ''}
+                  onChange={(e) => setCommentText(prev => new Map(prev).set(post.id, e.target.value))}
+                  onKeyPress={(e) => {
+                    if (e.key === 'Enter' && !e.shiftKey) {
+                      e.preventDefault();
+                      handleAddComment(post.id);
+                    }
+                  }}
+                  className="flex-1 px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                />
+                <button
+                  onClick={() => handleAddComment(post.id)}
+                  disabled={!commentText.get(post.id)?.trim()}
+                  className="p-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600 disabled:bg-gray-300 disabled:cursor-not-allowed transition-transform hover:scale-105"
+                >
+                  <Send className="w-5 h-5" />
+                </button>
+              </div>
+              
+              {isLoadingComments ? (
+                <div className="flex justify-center py-6">
+                  <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-blue-500" />
+                </div>
+              ) : comments.length > 0 ? (
+                <div className="space-y-3">
+                  {comments.map((comment) => {
+                    const commentAuthor = comment.expand?.user;
+                    const commentAuthorName = commentAuthor?.name || commentAuthor?.username || 'Unknown User';
+                    const isMyComment = currentUser && comment.user === currentUser.id;
+                    const isEditing = editingCommentId === comment.id;
+                    
+                    return (
+                      <div key={comment.id} className="bg-white rounded-lg p-3 shadow-sm">
+                        <div className="flex items-start gap-3">
+                          <div className="w-8 h-8 bg-purple-500 rounded-full flex items-center justify-center text-white font-medium flex-shrink-0">
+                            {commentAuthorName.charAt(0).toUpperCase()}
+                          </div>
+                          <div className="flex-1 min-w-0">
+                            <div className="flex justify-between items-start mb-1">
+                              <div className="flex items-center gap-2 flex-wrap">
+                                <span className="font-semibold text-sm">{commentAuthorName}</span>
+                                <span className="text-xs text-gray-500">{formatDate(comment.created)}</span>
+                                {comment.updated !== comment.created && (
+                                  <span className="text-xs bg-gray-200 text-gray-600 px-2 py-0.5 rounded">Edited</span>
+                                )}
+                              </div>
+                              {isMyComment && !isEditing && (
+                                <div className="relative">
+                                  <button
+                                    onClick={() => setCommentMenuOpen(commentMenuOpen === comment.id ? null : comment.id)}
+                                    className="p-1 hover:bg-gray-100 rounded"
+                                  >
+                                    <MoreVertical className="w-4 h-4 text-gray-500" />
+                                  </button>
+                                  {commentMenuOpen === comment.id && (
+                                    <div className="absolute right-0 mt-1 w-32 bg-white border border-gray-200 rounded-lg shadow-lg z-10">
+                                      <button
+                                        onClick={() => handleStartEditComment(comment)}
+                                        className="w-full text-left px-3 py-2 hover:bg-gray-50 flex items-center gap-2 text-sm"
+                                      >
+                                        <Edit3 className="w-3 h-3" />
+                                        Edit
+                                      </button>
+                                      <button
+                                        onClick={() => handleDeleteCommentClick(comment.id, post.id)}
+                                        className="w-full text-left px-3 py-2 hover:bg-gray-50 flex items-center gap-2 text-sm text-red-600"
+                                      >
+                                        <Trash2 className="w-3 h-3" />
+                                        Delete
+                                      </button>
+                                    </div>
+                                  )}
+                                </div>
+                              )}
+                            </div>
+                            {isEditing ? (
+                              <div>
+                                <textarea
+                                  value={editCommentText}
+                                  onChange={(e) => setEditCommentText(e.target.value)}
+                                  className="w-full p-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 mb-2"
+                                  rows={2}
+                                  autoFocus
+                                />
+                                <div className="flex gap-2">
+                                  <button
+                                    onClick={() => handleSaveEditComment(comment.id, post.id)}
+                                    disabled={!editCommentText.trim()}
+                                    className="px-3 py-1 bg-blue-500 text-white text-sm rounded hover:bg-blue-600 disabled:bg-gray-300"
+                                  >
+                                    Save
+                                  </button>
+                                  <button
+                                    onClick={() => {
+                                      setEditingCommentId(null);
+                                      setEditCommentText('');
+                                    }}
+                                    className="px-3 py-1 border border-gray-300 text-sm rounded hover:bg-gray-50"
+                                  >
+                                    Cancel
+                                  </button>
+                                </div>
+                              </div>
+                            ) : (
+                              <p className="text-sm text-gray-700">{comment.content}</p>
+                            )}
+                          </div>
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
+              ) : (
+                <div className="text-center py-8 bg-white rounded-lg">
+                  <MessageCircle className="w-12 h-12 text-gray-300 mx-auto mb-2" />
+                  <p className="text-sm text-gray-500">No comments yet. Be the first to comment!</p>
+                </div>
+              )}
+            </div>
+          </>
+        )}
+      </div>
     );
   };
 
   if (!currentUser) {
     return (
-      <Container maxWidth="md" sx={{ py: 4 }}>
-        <Alert severity="warning">
-          Please log in to view your records.
-        </Alert>
-      </Container>
+      <div className="max-w-4xl mx-auto p-4">
+        <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-4 flex items-start gap-3">
+          <AlertCircle className="w-5 h-5 text-yellow-600 flex-shrink-0 mt-0.5" />
+          <p className="text-yellow-800">Please log in to view your records.</p>
+        </div>
+      </div>
     );
   }
 
+  const tabs = ['My Posts', 'Bookmarks', 'Liked'];
+  const currentPosts = tabValue === 0 ? myPosts : tabValue === 1 ? bookmarkedPosts : likedPosts;
+
   return (
-    <div>
-      <Container maxWidth="md" sx={{ py: 4 }}>
+    <div className="min-h-screen bg-gray-50">
+      <div className="max-w-4xl mx-auto p-4 md:p-6">
         {/* Header */}
-        <Box sx={{ mb: 4 }}>
-          <Typography variant="h4" component="h1" sx={{ fontWeight: 'bold', color: '#1976d2', display: 'flex', alignItems: 'center' }}>
-            <HistoryIcon sx={{ mr: 2, fontSize: 32 }} />
-            My Record
-          </Typography>
-          <Typography variant="subtitle1" color="text.secondary" sx={{ mt: 1 }}>
-            Manage your posts, bookmarks, and activity
-          </Typography>
-        </Box>
+        <div className="mb-6">
+          <div className="flex items-center mb-2">
+            <History className="w-8 h-8 text-blue-600 mr-3" />
+            <h1 className="text-3xl md:text-4xl font-bold text-blue-600">My Record</h1>
+          </div>
+          <p className="text-gray-600">Manage your posts, bookmarks, and activity</p>
+        </div>
 
         {/* Tabs */}
-        <Paper elevation={2} sx={{ mb: 4 }}>
-          <Tabs 
-            value={tabValue} 
-            onChange={handleTabChange}
-            variant="fullWidth"
-            textColor="primary"
-            indicatorColor="primary"
-            aria-label="record tabs"
-          >
-            <Tab label="My Posts" id="record-tab-0" aria-controls="record-tabpanel-0" />
-            <Tab label="Bookmarks" id="record-tab-1" aria-controls="record-tabpanel-1" />
-            <Tab label="Liked" id="record-tab-2" aria-controls="record-tabpanel-2" />
-          </Tabs>
-        </Paper>
+        <div className="bg-white rounded-lg shadow-md mb-6 overflow-hidden">
+          <div className="flex">
+            {tabs.map((tab, index) => (
+              <button
+                key={tab}
+                onClick={() => setTabValue(index)}
+                className={`flex-1 py-3 px-4 font-semibold text-sm md:text-base transition-colors ${
+                  tabValue === index
+                    ? 'bg-blue-500 text-white'
+                    : 'bg-white text-gray-600 hover:bg-gray-50'
+                }`}
+              >
+                {tab}
+              </button>
+            ))}
+          </div>
+        </div>
 
-        {/* Tab Panels */}
+        {/* Content */}
         {loading ? (
-          <Box sx={{ display: 'flex', justifyContent: 'center', my: 4 }}>
-            <CircularProgress />
-          </Box>
+          <div className="flex justify-center py-16">
+            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-500" />
+          </div>
         ) : (
-          <>
-            {/* My Posts Tab */}
-            <TabPanel value={tabValue} index={0}>
-              <Typography variant="h6" sx={{ mb: 2 }}>
-                Posts you've created ({myPosts.length})
-              </Typography>
-              {myPosts.length > 0 ? (
-                <Grid container spacing={2}>
-                  {myPosts.map((post) => (
-                    <Grid item xs={12} key={post.id}>
-                      <PostCard post={post} isMyPost={true} />
-                    </Grid>
-                  ))}
-                </Grid>
-              ) : (
-                <Paper elevation={0} sx={{ p: 4, textAlign: 'center', bgcolor: 'background.default' }}>
-                  <Typography variant="body1" color="text.secondary">
-                    You haven't liked any posts yet.
-                  </Typography>
-                </Paper>
-              )}
-            </TabPanel>
-          </>
+          <div>
+            <h2 className="text-xl font-semibold mb-4">
+              {tabValue === 0 ? 'Your Posts' : tabValue === 1 ? 'Bookmarked Posts' : 'Liked Posts'} ({currentPosts.length})
+            </h2>
+            {currentPosts.length > 0 ? (
+              <div>
+                {currentPosts.map((post) => (
+                  <PostCard key={post.id} post={post} isMyPost={currentUser?.id === post.author} />
+                ))}
+              </div>
+            ) : (
+              <div className="bg-white rounded-lg shadow-md p-12 text-center">
+                {tabValue === 0 ? (
+                  <>
+                    <Edit3 className="w-16 h-16 text-gray-300 mx-auto mb-4" />
+                    <h3 className="text-xl font-semibold text-gray-600 mb-2">No posts yet</h3>
+                    <p className="text-gray-500">Create your first post to get started!</p>
+                  </>
+                ) : tabValue === 1 ? (
+                  <>
+                    <Bookmark className="w-16 h-16 text-gray-300 mx-auto mb-4" />
+                    <h3 className="text-xl font-semibold text-gray-600 mb-2">No bookmarks yet</h3>
+                    <p className="text-gray-500">Save posts you want to read later!</p>
+                  </>
+                ) : (
+                  <>
+                    <Heart className="w-16 h-16 text-gray-300 mx-auto mb-4" />
+                    <h3 className="text-xl font-semibold text-gray-600 mb-2">No liked posts yet</h3>
+                    <p className="text-gray-500">Start liking posts you enjoy!</p>
+                  </>
+                )}
+              </div>
+            )}
+          </div>
         )}
 
         {/* Edit Post Dialog */}
-        <Dialog open={editDialogOpen} onClose={() => setEditDialogOpen(false)} maxWidth="md" fullWidth>
-          <DialogTitle>Edit Post</DialogTitle>
-          <DialogContent>
-            <TextField
-              autoFocus
-              margin="dense"
-              id="title"
-              name="title"
-              label="Title"
-              type="text"
-              fullWidth
-              variant="outlined"
-              value={editFormData.title}
-              onChange={handleEditFormChange}
-              sx={{ mb: 2 }}
-            />
-            <TextField
-              margin="dense"
-              id="category"
-              name="category"
-              label="Category"
-              type="text"
-              fullWidth
-              variant="outlined"
-              value={editFormData.category}
-              onChange={handleEditFormChange}
-              sx={{ mb: 2 }}
-            />
-            <TextField
-              margin="dense"
-              id="content"
-              name="content"
-              label="Content"
-              multiline
-              rows={6}
-              fullWidth
-              variant="outlined"
-              value={editFormData.content}
-              onChange={handleEditFormChange}
-            />
-          </DialogContent>
-          <DialogActions>
-            <Button onClick={() => setEditDialogOpen(false)}>Cancel</Button>
-            <Button onClick={handleSaveEdit} variant="contained">Save Changes</Button>
-          </DialogActions>
-        </Dialog>
+        {editDialogOpen && (
+          <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
+            <div className="bg-white rounded-lg shadow-xl max-w-2xl w-full max-h-[90vh] overflow-y-auto">
+              <div className="flex justify-between items-center p-6 border-b">
+                <h2 className="text-2xl font-bold">Edit Post</h2>
+                <button
+                  onClick={() => setEditDialogOpen(false)}
+                  className="p-2 hover:bg-gray-100 rounded-full"
+                >
+                  <X className="w-5 h-5" />
+                </button>
+              </div>
+              <div className="p-6 space-y-4">
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">Title</label>
+                  <input
+                    type="text"
+                    name="title"
+                    value={editFormData.title}
+                    onChange={(e) => setEditFormData({ ...editFormData, title: e.target.value })}
+                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    required
+                  />
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">Category</label>
+                  <input
+                    type="text"
+                    name="category"
+                    value={editFormData.category}
+                    onChange={(e) => setEditFormData({ ...editFormData, category: e.target.value })}
+                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  />
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">Content</label>
+                  <textarea
+                    name="content"
+                    value={editFormData.content}
+                    onChange={(e) => setEditFormData({ ...editFormData, content: e.target.value })}
+                    rows={6}
+                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    required
+                  />
+                </div>
+              </div>
+              <div className="flex justify-end gap-3 p-6 border-t">
+                <button
+                  onClick={() => setEditDialogOpen(false)}
+                  className="px-4 py-2 border border-gray-300 rounded-lg hover:bg-gray-50"
+                >
+                  Cancel
+                </button>
+                <button
+                  onClick={handleSaveEdit}
+                  disabled={!editFormData.title.trim() || !editFormData.content.trim()}
+                  className="px-4 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600 disabled:bg-gray-300 disabled:cursor-not-allowed"
+                >
+                  Save Changes
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
 
-        {/* Delete Confirmation Dialog */}
-        <Dialog
-          open={deleteConfirmOpen}
-          onClose={() => setDeleteConfirmOpen(false)}
-        >
-          <DialogTitle>Confirm Delete</DialogTitle>
-          <DialogContent>
-            <Typography>
-              Are you sure you want to delete this post? This action cannot be undone.
-            </Typography>
-          </DialogContent>
-          <DialogActions>
-            <Button onClick={() => setDeleteConfirmOpen(false)}>Cancel</Button>
-            <Button onClick={handleConfirmDelete} color="error" variant="contained">
-              Delete
-            </Button>
-          </DialogActions>
-        </Dialog>
+        {/* Delete Post Dialog */}
+        {deleteConfirmOpen && (
+          <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
+            <div className="bg-white rounded-lg shadow-xl max-w-md w-full">
+              <div className="p-6">
+                <h2 className="text-xl font-bold mb-4">Confirm Delete</h2>
+                <p className="text-gray-700">
+                  Are you sure you want to delete this post? This action cannot be undone.
+                </p>
+              </div>
+              <div className="flex justify-end gap-3 p-6 border-t">
+                <button
+                  onClick={() => setDeleteConfirmOpen(false)}
+                  className="px-4 py-2 border border-gray-300 rounded-lg hover:bg-gray-50"
+                >
+                  Cancel
+                </button>
+                <button
+                  onClick={handleConfirmDelete}
+                  className="px-4 py-2 bg-red-500 text-white rounded-lg hover:bg-red-600"
+                >
+                  Delete
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
 
-        {/* Snackbar for notifications */}
-        <Snackbar
-          open={snackbar.open}
-          autoHideDuration={6000}
-          onClose={() => setSnackbar({ ...snackbar, open: false })}
-          anchorOrigin={{ vertical: 'bottom', horizontal: 'center' }}
-        >
-          <Alert 
-            onClose={() => setSnackbar({ ...snackbar, open: false })} 
-            severity={snackbar.severity}
-            sx={{ width: '100%' }}
-          >
-            {snackbar.message}
-          </Alert>
-        </Snackbar>
-      </Container>
+        {/* Delete Comment Dialog */}
+        {deleteCommentDialogOpen && (
+          <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
+            <div className="bg-white rounded-lg shadow-xl max-w-md w-full">
+              <div className="p-6">
+                <h2 className="text-xl font-bold mb-4">Delete Comment</h2>
+                <p className="text-gray-700">
+                  Are you sure you want to delete this comment? This action cannot be undone.
+                </p>
+              </div>
+              <div className="flex justify-end gap-3 p-6 border-t">
+                <button
+                  onClick={() => setDeleteCommentDialogOpen(false)}
+                  className="px-4 py-2 border border-gray-300 rounded-lg hover:bg-gray-50"
+                >
+                  Cancel
+                </button>
+                <button
+                  onClick={handleConfirmDeleteComment}
+                  className="px-4 py-2 bg-red-500 text-white rounded-lg hover:bg-red-600"
+                >
+                  Delete
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* Snackbar */}
+        {snackbar.open && (
+          <div className="fixed bottom-4 left-1/2 transform -translate-x-1/2 z-50 animate-fade-in">
+            <div className={`px-6 py-3 rounded-lg shadow-lg flex items-center gap-3 ${
+              snackbar.severity === 'success' ? 'bg-green-500 text-white' :
+              snackbar.severity === 'error' ? 'bg-red-500 text-white' :
+              snackbar.severity === 'warning' ? 'bg-yellow-500 text-white' :
+              'bg-blue-500 text-white'
+            }`}>
+              <AlertCircle className="w-5 h-5" />
+              <span>{snackbar.message}</span>
+              <button
+                onClick={() => setSnackbar({ ...snackbar, open: false })}
+                className="ml-2 hover:bg-white hover:bg-opacity-20 rounded p-1"
+              >
+                <X className="w-4 h-4" />
+              </button>
+            </div>
+          </div>
+        )}
+      </div>
+      
+      <style>{`
+        @keyframes fade-in {
+          from {
+            opacity: 0;
+            transform: translateX(-50%) translateY(20px);
+          }
+          to {
+            opacity: 1;
+            transform: translateX(-50%) translateY(0);
+          }
+        }
+        .animate-fade-in {
+          animation: fade-in 0.3s ease-out;
+        }
+      `}</style>
     </div>
   );
 }
