@@ -92,19 +92,11 @@ type SnackbarState = {
 const getAvatarUrl = (user: any): string => {
   if (!user?.avatar) return '';
   try {
-    return pb.files.getUrl(user, user.avatar, { thumb: '100x100' });
+    // Add timestamp to prevent caching issues
+    return pb.files.getUrl(user, user.avatar, { thumb: '100x100' }) + `?t=${Date.now()}`;
   } catch {
     return '';
   }
-};
-
-const getSavedTheme = (): boolean => {
-  const saved = localStorage.getItem('theme');
-  return saved === 'dark';
-};
-
-const getSavedLanguage = (): string => {
-  return localStorage.getItem('i18n_lang') || 'en';
 };
 
 export default function Setting() {
@@ -123,11 +115,11 @@ export default function Setting() {
   });
   const [loading, setLoading] = useState(true);
 
-  // Settings states
-  const [darkMode, setDarkMode] = useState<boolean>(getSavedTheme);
+  // Settings states - stored in user record, not localStorage
+  const [darkMode, setDarkMode] = useState<boolean>(false);
   const [emailNotifications, setEmailNotifications] = useState<boolean>(true);
   const [appNotifications, setAppNotifications] = useState<boolean>(true);
-  const [language, setLanguage] = useState<string>(getSavedLanguage);
+  const [language, setLanguage] = useState<string>('en');
 
   // Edit mode states
   const [editMode, setEditMode] = useState<boolean>(false);
@@ -158,10 +150,9 @@ export default function Setting() {
   // Loading states
   const [uploadingAvatar, setUploadingAvatar] = useState<boolean>(false);
 
-  // Apply dark mode theme
+  // Apply dark mode theme - using data attribute instead of localStorage
   useEffect(() => {
     document.documentElement.setAttribute('data-color-scheme', darkMode ? 'dark' : 'light');
-    localStorage.setItem('theme', darkMode ? 'dark' : 'light');
   }, [darkMode]);
 
   // Snackbar helper
@@ -201,30 +192,43 @@ export default function Setting() {
 
   // Load user data
   useEffect(() => {
-    const user = pb.authStore.model;
-    if (!user) {
-      navigate('/login');
-      return;
-    }
+    const loadUserData = async () => {
+      const user = pb.authStore.model;
+      if (!user) {
+        navigate('/login');
+        return;
+      }
 
-    const userAny = user as any;
-    setProfile({
-      name: userAny.name || '',
-      email: userAny.email || '',
-      phone: userAny.phone || '',
-      major: userAny.major || '',
-      year: userAny.year || '',
-      bio: userAny.bio || '',
-      avatarUrl: getAvatarUrl(user),
-    });
+      try {
+        // Fetch fresh user data to ensure we have latest settings
+        const userId = user.id;
+        const freshUser = await pb.collection(USERS_COLLECTION).getOne(userId);
+        
+        const userAny = freshUser as any;
+        setProfile({
+          name: userAny.name || '',
+          email: userAny.email || '',
+          phone: userAny.phone || '',
+          major: userAny.major || '',
+          year: userAny.year || '',
+          bio: userAny.bio || '',
+          avatarUrl: getAvatarUrl(freshUser),
+        });
 
-    setEmailNotifications(userAny.emailNotifications ?? true);
-    setAppNotifications(userAny.appNotifications ?? true);
-    setLanguage(userAny.language || getSavedLanguage());
-    setDarkMode(userAny.darkMode ?? getSavedTheme());
+        setEmailNotifications(userAny.emailNotifications ?? true);
+        setAppNotifications(userAny.appNotifications ?? true);
+        setLanguage(userAny.language || 'en');
+        setDarkMode(userAny.darkMode ?? false);
+      } catch (error) {
+        console.error('Failed to load user data:', error);
+        showSnackbar('Failed to load user data', 'error');
+      } finally {
+        setLoading(false);
+      }
+    };
 
-    setLoading(false);
-  }, [navigate]);
+    loadUserData();
+  }, [navigate, showSnackbar]);
 
   // Sync edited profile when profile updates
   useEffect(() => {
@@ -259,13 +263,11 @@ export default function Setting() {
     const value = event.target.value;
     const prev = language;
     setLanguage(value);
-    localStorage.setItem('i18n_lang', value);
     try {
       await updateUser({ language: value });
       showSnackbar('Language preference updated', 'success');
     } catch (e: any) {
       setLanguage(prev);
-      localStorage.setItem('i18n_lang', prev);
       showSnackbar(`Failed to update language: ${e?.message || e}`, 'error');
     }
   }, [language, updateUser, showSnackbar]);
@@ -312,6 +314,10 @@ export default function Setting() {
         year: editedProfile.year,
         bio: editedProfile.bio,
       };
+      
+      // If email changed, show a warning about verification
+      const emailChanged = editedProfile.email !== profile.email;
+      
       const rec = await updateUser(payload);
 
       setProfile({
@@ -319,13 +325,18 @@ export default function Setting() {
         avatarUrl: getAvatarUrl(rec),
       });
       setEditMode(false);
-      showSnackbar('Profile updated successfully', 'success');
+      
+      if (emailChanged) {
+        showSnackbar('Profile updated! Please check your new email for verification.', 'info');
+      } else {
+        showSnackbar('Profile updated successfully', 'success');
+      }
     } catch (e: any) {
       showSnackbar(`Failed to update profile: ${e?.message || e}`, 'error');
     } finally {
       setSavingProfile(false);
     }
-  }, [editedProfile, updateUser, showSnackbar]);
+  }, [editedProfile, profile.email, updateUser, showSnackbar]);
 
   const handleCancelEdit = useCallback(() => {
     setEditMode(false);
@@ -340,6 +351,18 @@ export default function Setting() {
   const onAvatarFileSelected = useCallback(async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file) return;
+
+    // Validate file size (max 5MB)
+    if (file.size > 5 * 1024 * 1024) {
+      showSnackbar('File size must be less than 5MB', 'error');
+      return;
+    }
+
+    // Validate file type
+    if (!file.type.startsWith('image/')) {
+      showSnackbar('Please upload an image file', 'error');
+      return;
+    }
 
     setUploadingAvatar(true);
     try {
@@ -383,16 +406,23 @@ export default function Setting() {
 
     setSavingPassword(true);
     try {
+      // PocketBase uses these exact field names for password change
       await updateUser({
         oldPassword: passwordData.currentPassword,
         password: passwordData.newPassword,
         passwordConfirm: passwordData.confirmPassword,
-      } as any);
+      });
 
       setPasswordDialogOpen(false);
+      setPasswordData({ currentPassword: '', newPassword: '', confirmPassword: '' });
       showSnackbar('Password updated successfully', 'success');
     } catch (e: any) {
-      showSnackbar(`Failed to update password: ${e?.message || e}`, 'error');
+      const errorMsg = e?.message || e;
+      if (errorMsg.includes('oldPassword')) {
+        showSnackbar('Current password is incorrect', 'error');
+      } else {
+        showSnackbar(`Failed to update password: ${errorMsg}`, 'error');
+      }
     } finally {
       setSavingPassword(false);
     }
@@ -413,11 +443,10 @@ export default function Setting() {
     try {
       await pb.collection(USERS_COLLECTION).delete(userId);
       pb.authStore.clear();
-      showSnackbar('Account deleted', 'info');
+      showSnackbar('Account deleted successfully', 'info');
       navigate('/login');
     } catch (e: any) {
       showSnackbar(`Failed to delete account: ${e?.message || e}`, 'error');
-    } finally {
       setDeleting(false);
       setDeleteDialogOpen(false);
     }
@@ -434,29 +463,29 @@ export default function Setting() {
   const profileDisplay = useMemo(() => (
     <Grid container spacing={2}>
       <Grid item xs={12}>
-        <Typography variant="h6">{profile.name}</Typography>
+        <Typography variant="h6">{profile.name || 'No name set'}</Typography>
       </Grid>
       <Grid item xs={12} sm={6}>
         <Box sx={{ display: 'flex', alignItems: 'center', mb: 1 }}>
           <EmailIcon color="action" sx={{ mr: 1 }} />
-          <Typography variant="body1">{profile.email}</Typography>
+          <Typography variant="body1">{profile.email || 'No email'}</Typography>
         </Box>
       </Grid>
       <Grid item xs={12} sm={6}>
         <Box sx={{ display: 'flex', alignItems: 'center', mb: 1 }}>
           <PhoneIcon color="action" sx={{ mr: 1 }} />
-          <Typography variant="body1">{profile.phone}</Typography>
+          <Typography variant="body1">{profile.phone || 'No phone'}</Typography>
         </Box>
       </Grid>
       <Grid item xs={12} sm={6}>
         <Box sx={{ display: 'flex', alignItems: 'center', mb: 1 }}>
           <SchoolIcon color="action" sx={{ mr: 1 }} />
-          <Typography variant="body1">{profile.major}</Typography>
+          <Typography variant="body1">{profile.major || 'No major'}</Typography>
         </Box>
       </Grid>
       <Grid item xs={12} sm={6}>
         <Typography variant="body1">
-          <strong>Year:</strong> {profile.year}
+          <strong>Year:</strong> {profile.year || 'Not set'}
         </Typography>
       </Grid>
       <Grid item xs={12}>
@@ -464,7 +493,7 @@ export default function Setting() {
           <strong>Bio:</strong>
         </Typography>
         <Typography variant="body2" paragraph>
-          {profile.bio}
+          {profile.bio || 'No bio added yet'}
         </Typography>
       </Grid>
     </Grid>
@@ -526,7 +555,7 @@ export default function Setting() {
             <Grid container spacing={3}>
               <Grid item xs={12} md={3} sx={{ display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
                 <Avatar sx={{ width: 100, height: 100, mb: 2 }} src={profile.avatarUrl}>
-                  {profile.name?.charAt(0)}
+                  {profile.name?.charAt(0)?.toUpperCase() || 'U'}
                 </Avatar>
                 {editMode && (
                   <>
@@ -567,6 +596,7 @@ export default function Setting() {
                         fullWidth
                         label="Email"
                         name="email"
+                        type="email"
                         value={editedProfile.email}
                         onChange={handleProfileChange}
                         InputProps={{
@@ -793,11 +823,11 @@ export default function Setting() {
       </Grid>
 
       {/* Password Change Dialog */}
-      <Dialog open={passwordDialogOpen} onClose={() => setPasswordDialogOpen(false)}>
+      <Dialog open={passwordDialogOpen} onClose={() => !savingPassword && setPasswordDialogOpen(false)}>
         <DialogTitle>Change Password</DialogTitle>
         <DialogContent>
           <DialogContentText sx={{ mb: 2 }}>
-            Please enter your current password and a new password.
+            Please enter your current password and a new password (minimum {MIN_PASSWORD_LENGTH} characters).
           </DialogContentText>
           <TextField
             autoFocus
@@ -842,14 +872,14 @@ export default function Setting() {
       </Dialog>
 
       {/* Delete Account Dialog */}
-      <Dialog open={deleteDialogOpen} onClose={() => setDeleteDialogOpen(false)}>
+      <Dialog open={deleteDialogOpen} onClose={() => !deleting && setDeleteDialogOpen(false)}>
         <DialogTitle>Delete Account</DialogTitle>
         <DialogContent>
           <DialogContentText sx={{ mb: 2 }}>
             This action cannot be undone. All your data, including posts and comments, will be permanently deleted.
           </DialogContentText>
           <DialogContentText sx={{ mb: 2 }}>
-            To confirm, please type "{DELETE_CONFIRMATION_TEXT}" below:
+            To confirm, please type "<strong>{DELETE_CONFIRMATION_TEXT}</strong>" below:
           </DialogContentText>
           <TextField
             autoFocus
@@ -858,6 +888,7 @@ export default function Setting() {
             variant="outlined"
             value={deleteConfirmation}
             onChange={(e) => setDeleteConfirmation(e.target.value)}
+            placeholder={DELETE_CONFIRMATION_TEXT}
           />
         </DialogContent>
         <DialogActions>
