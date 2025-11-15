@@ -180,6 +180,46 @@ export interface UserPreferences {
     showLegend: boolean;
     autoZoomOnSelect: boolean;
   };
+  roommatePreferences?: RoommatePreferences;
+}
+
+export interface RoommateProfile {
+  id: string;
+  name: string;
+  avatar?: string;
+  year: string;
+  major: string;
+  bio: string;
+  compatibilityScore?: number;
+  sleepSchedule: 'early' | 'normal' | 'late';
+  studyHabits: 'in-room' | 'library' | 'flexible';
+  cleanliness: 'very-clean' | 'moderate' | 'relaxed';
+  guests: 'never' | 'occasionally' | 'frequently';
+  noise: 'quiet' | 'moderate' | 'social';
+  interests?: string[];
+  verified?: boolean;
+  contactInfo?: {
+    email?: string;
+    phone?: string;
+    social?: string;
+  };
+}
+
+export interface RoommatePreferences {
+  sleepSchedule: 'early' | 'normal' | 'late';
+  studyHabits: 'in-room' | 'library' | 'flexible';
+  cleanliness: 'very-clean' | 'moderate' | 'relaxed';
+  guests: 'never' | 'occasionally' | 'frequently';
+  noise: 'quiet' | 'moderate' | 'social';
+  smoking: boolean;
+  pets: boolean;
+  shareFood: boolean;
+  interests?: string[];
+  major?: string;
+  year?: string;
+  gender?: string;
+  budget?: number[];
+  notes?: string;
 }
 
 export interface SearchResult {
