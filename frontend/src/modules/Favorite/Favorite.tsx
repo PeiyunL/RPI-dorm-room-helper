@@ -1,4 +1,5 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
+import { useNavigate } from 'react-router-dom';
 import pb from '../../lib/pocketbase';
 import {
   Container,
@@ -26,7 +27,11 @@ import {
   DialogActions,
   DialogContent,
   DialogContentText,
-  DialogTitle
+  DialogTitle,
+  Menu,
+  MenuItem,
+  ListItemIcon,
+  ListItemText
 } from '@mui/material';
 import {
   Favorite as FavoriteIcon,
@@ -36,8 +41,17 @@ import {
   Comment as CommentIcon,
   Bookmark as BookmarkIcon,
   BookmarkBorder as BookmarkBorderIcon,
-  Sort as SortIcon
+  Sort as SortIcon,
+  AccessTime as TimeIcon,
+  TrendingUp as TrendingIcon,
+  Title as TitleIcon,
+  Category as CategoryIcon,
+  Refresh as RefreshIcon
 } from '@mui/icons-material';
+
+const FAVORITES_COLLECTION = 'favorites';
+const POSTS_COLLECTION = 'posts';
+const LIKES_COLLECTION = 'likes';
 
 // Define types
 interface Post {
@@ -46,13 +60,24 @@ interface Post {
   content: string;
   authorId: string;
   authorName: string;
+  authorAvatar?: string;
   category: string;
   createdAt: string;
   imageUrl?: string;
   likes: number;
   comments: number;
-  liked: boolean;
-  bookmarked: boolean;
+  isLikedByUser: boolean;
+  favoriteRecordId: string;
+}
+
+interface Favorite {
+  id: string;
+  user: string;
+  post: string;
+  created: string;
+  expand?: {
+    post?: any;
+  };
 }
 
 interface TabPanelProps {
@@ -60,6 +85,18 @@ interface TabPanelProps {
   index: number;
   value: number;
 }
+
+type SnackbarState = {
+  open: boolean;
+  message: string;
+  severity: 'success' | 'error' | 'info' | 'warning';
+};
+
+type SortOption = {
+  value: string;
+  label: string;
+  icon: React.ReactElement;
+};
 
 // TabPanel component
 function TabPanel(props: TabPanelProps) {
@@ -77,169 +114,175 @@ function TabPanel(props: TabPanelProps) {
   );
 }
 
-// Mock data for favorites
-const MOCK_FAVORITES: Post[] = [
-  {
-    id: '1',
-    title: 'Best study spots on campus',
-    content: 'After three years at RPI, I\'ve found the best places to study that aren\'t crowded and have good wifi. My top picks are: 1) Third floor of the library near the window seats 2) The lounge in the EMPAC building 3) The cafe in the student union during off-hours...',
-    authorId: 'user1',
-    authorName: 'Jamie Chen',
-    category: 'Campus Tips',
-    createdAt: '2025-03-15T14:30:00Z',
-    likes: 42,
-    comments: 15,
-    liked: true,
-    bookmarked: true
-  },
-  {
-    id: '2',
-    title: 'Selling mini-fridge - perfect condition',
-    content: 'Moving off campus and selling my mini-fridge. Only used for one year, perfect condition. Black color, 2.7 cubic feet with freezer compartment. Asking $60 OBO. Can deliver on campus.',
-    authorId: 'user2',
-    authorName: 'Alex Johnson',
-    category: 'For Sale',
-    createdAt: '2025-04-05T10:15:00Z',
-    imageUrl: 'https://via.placeholder.com/300x200',
-    likes: 8,
-    comments: 4,
-    liked: true,
-    bookmarked: true
-  },
-  {
-    id: '3',
-    title: 'Summer sublet available near campus',
-    content: 'I\'m looking for someone to sublet my room for the summer (May-August). It\'s a private room in a 3-bedroom apartment, 10 minute walk to campus. Rent is $500/month including utilities. Roommates are two grad students who are very quiet and clean.',
-    authorId: 'user3',
-    authorName: 'Morgan Smith',
-    category: 'Housing',
-    createdAt: '2025-03-28T09:45:00Z',
-    imageUrl: 'https://via.placeholder.com/300x200',
-    likes: 15,
-    comments: 7,
-    liked: true,
-    bookmarked: true
-  },
-  {
-    id: '4',
-    title: 'Best meal plan options for sophomores',
-    content: 'After trying all the meal plans this year, I wanted to share my thoughts on which one gives you the most value as a sophomore. The 15-meal plan seems to be the sweet spot if you sometimes cook or eat off campus on weekends...',
-    authorId: 'user4',
-    authorName: 'Taylor Wong',
-    category: 'Food',
-    createdAt: '2025-03-10T16:20:00Z',
-    likes: 27,
-    comments: 12,
-    liked: true,
-    bookmarked: true
-  },
-  {
-    id: '5',
-    title: 'Textbooks for sale - Computer Science',
-    content: 'Selling textbooks for the following CS courses: Data Structures, Algorithms, Computer Organization, and Operating Systems. All in great condition with minimal highlighting. Prices range from $30-50, much cheaper than bookstore. DM me if interested!',
-    authorId: 'user5',
-    authorName: 'Jordan Park',
-    category: 'For Sale',
-    createdAt: '2025-04-01T11:10:00Z',
-    likes: 19,
-    comments: 8,
-    liked: true,
-    bookmarked: false
-  }
-];
-
-// Mock data for saved locations
-const SAVED_LOCATIONS = [
-  {
-    id: 'loc1',
-    name: 'Folsom Library',
-    description: 'Main campus library with study spaces',
-    category: 'Study Spot',
-    address: '110 8th St, Troy, NY 12180',
-    imageUrl: 'https://via.placeholder.com/300x200',
-    saved: true
-  },
-  {
-    id: 'loc2',
-    name: 'Student Union',
-    description: 'Campus hub with dining options and meeting rooms',
-    category: 'Campus Building',
-    address: '15th Street, Troy, NY 12180',
-    imageUrl: 'https://via.placeholder.com/300x200',
-    saved: true
-  },
-  {
-    id: 'loc3',
-    name: 'EMPAC',
-    description: 'Experimental Media and Performing Arts Center',
-    category: 'Arts & Entertainment',
-    address: '110 8th St, Troy, NY 12180',
-    imageUrl: 'https://via.placeholder.com/300x200',
-    saved: true
-  }
-];
-
 export default function Favorite() {
+  const navigate = useNavigate();
+  
   // State variables
   const [activeTab, setActiveTab] = useState(0);
   const [favorites, setFavorites] = useState<Post[]>([]);
-  const [locations, setLocations] = useState<any[]>([]); // update with correct interface if needed
+  const [displayedFavorites, setDisplayedFavorites] = useState<Post[]>([]);
   const [searchQuery, setSearchQuery] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
-  const [itemToDelete, setItemToDelete] = useState<string | null>(null);
-  const [itemTypeToDelete, setItemTypeToDelete] = useState<'post' | 'location'>('post');
-  const [snackbar, setSnackbar] = useState({
+  const [itemToDelete, setItemToDelete] = useState<{ id: string; favoriteId: string; title: string } | null>(null);
+  const [deletingItem, setDeletingItem] = useState(false);
+  const [sortBy, setSortBy] = useState('-created');
+  const [sortAnchorEl, setSortAnchorEl] = useState<null | HTMLElement>(null);
+  const [userLikes, setUserLikes] = useState<Set<string>>(new Set());
+  const [snackbar, setSnackbar] = useState<SnackbarState>({
     open: false,
     message: '',
-    severity: 'success' as 'success' | 'error' | 'info' | 'warning'
+    severity: 'success'
   });
 
-  // Simulate loading data
-  // useEffect(() => {
-  //   setIsLoading(true);
-  //   // Simulate API call
-  //   setTimeout(() => {
-  //     setIsLoading(false);
-  //   }, 800);
-  // }, [activeTab]);
+  const sortOptions: SortOption[] = [
+    { value: '-created', label: 'Newest First', icon: <TimeIcon /> },
+    { value: 'created', label: 'Oldest First', icon: <TimeIcon /> },
+    { value: '-likes', label: 'Most Liked', icon: <TrendingIcon /> },
+    { value: 'title', label: 'Title (A-Z)', icon: <TitleIcon /> },
+    { value: 'category', label: 'Category', icon: <CategoryIcon /> }
+  ];
 
-  useEffect(() => {
-  const fetchFavorites = async () => {
-    setIsLoading(true);
+  // Show snackbar helper
+  const showSnackbar = useCallback(
+    (message: string, severity: 'success' | 'error' | 'info' | 'warning' = 'success') => {
+      setSnackbar({ open: true, message, severity });
+    },
+    []
+  );
+
+  // Get avatar URL helper
+  const getAvatarUrl = (user: any): string => {
+    if (!user?.avatar) return '';
     try {
-      const records = await pb.collection('favorites').getFullList({
-        sort: '-created',
-        expand: 'author', // assuming "author" is a relation
-      });
-
-      // Map data into your Post format
-      const formatted = records.map((record: any) => ({
-        id: record.id,
-        title: record.title,
-        content: record.content,
-        authorId: record.author,
-        authorName: record.expand?.author?.name || 'Unknown',
-        category: record.category,
-        createdAt: record.created,
-        imageUrl: record.imageUrl,
-        likes: record.likes || 0,
-        comments: record.comments || 0,
-        liked: true,
-        bookmarked: true,
-      }));
-
-      setFavorites(formatted);
-    } catch (err) {
-      console.error('Error fetching favorites:', err);
-    } finally {
-      setIsLoading(false);
+      return pb.files.getUrl(user, user.avatar, { thumb: '100x100' });
+    } catch {
+      return '';
     }
   };
 
-  fetchFavorites();
-}, [activeTab]);
+  // Get post image URL helper
+  const getPostImageUrl = (post: any): string => {
+    if (!post?.image) return '';
+    try {
+      return pb.files.getUrl(post, post.image, { thumb: '400x300' });
+    } catch {
+      return '';
+    }
+  };
 
+  // Fetch user's likes
+  const fetchUserLikes = useCallback(async () => {
+    try {
+      const user = pb.authStore.model;
+      if (!user) return;
+
+      const likes = await pb.collection(LIKES_COLLECTION).getFullList({
+        filter: `user = "${user.id}"`,
+        fields: 'post'
+      });
+
+      setUserLikes(new Set(likes.map(like => like.post)));
+    } catch (err: any) {
+      console.error('Error fetching user likes:', err);
+    }
+  }, []);
+
+  // Fetch favorites from PocketBase
+  const fetchFavorites = useCallback(async (showLoading = true) => {
+    if (showLoading) setIsLoading(true);
+    
+    try {
+      const user = pb.authStore.model;
+      if (!user) {
+        navigate('/login');
+        return;
+      }
+
+      // Fetch user's likes first
+      await fetchUserLikes();
+
+      // Fetch all favorite records for current user with expanded post data
+      const records = await pb.collection(FAVORITES_COLLECTION).getFullList<Favorite>({
+        filter: `user = "${user.id}"`,
+        sort: '-created',
+        expand: 'post,post.author',
+      });
+
+      // Map to Post format
+      const formatted: Post[] = records
+        .filter(record => record.expand?.post) // Filter out favorites with deleted posts
+        .map((record) => {
+          const post = record.expand!.post;
+          const author = post.expand?.author;
+          
+          return {
+            id: post.id,
+            title: post.title || 'Untitled',
+            content: post.content || '',
+            authorId: post.author || '',
+            authorName: author?.name || author?.username || 'Unknown',
+            authorAvatar: author ? getAvatarUrl(author) : '',
+            category: post.category || 'General',
+            createdAt: post.created || record.created,
+            imageUrl: getPostImageUrl(post),
+            likes: post.likes || 0,
+            comments: post.commentsCount || 0,
+            isLikedByUser: userLikes.has(post.id),
+            favoriteRecordId: record.id,
+          };
+        });
+
+      setFavorites(formatted);
+      setDisplayedFavorites(formatted);
+    } catch (err: any) {
+      console.error('Error fetching favorites:', err);
+      showSnackbar(`Failed to load favorites: ${err?.message || err}`, 'error');
+    } finally {
+      if (showLoading) setIsLoading(false);
+    }
+  }, [navigate, showSnackbar, fetchUserLikes, userLikes]);
+
+  // Load favorites on mount
+  useEffect(() => {
+    fetchFavorites();
+  }, [fetchFavorites]);
+
+  // Apply search and sort
+  useEffect(() => {
+    let filtered = [...favorites];
+
+    // Apply search filter
+    if (searchQuery) {
+      filtered = filtered.filter(
+        (favorite) =>
+          favorite.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
+          favorite.content.toLowerCase().includes(searchQuery.toLowerCase()) ||
+          favorite.authorName.toLowerCase().includes(searchQuery.toLowerCase()) ||
+          favorite.category.toLowerCase().includes(searchQuery.toLowerCase())
+      );
+    }
+
+    // Apply sorting
+    filtered.sort((a, b) => {
+      switch (sortBy) {
+        case '-created':
+          return new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime();
+        case 'created':
+          return new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime();
+        case '-likes':
+          return b.likes - a.likes;
+        case 'title':
+          return a.title.localeCompare(b.title);
+        case 'category':
+          return a.category.localeCompare(b.category);
+        default:
+          return 0;
+      }
+    });
+
+    setDisplayedFavorites(filtered);
+  }, [favorites, searchQuery, sortBy]);
 
   // Handle tab change
   const handleTabChange = (event: React.SyntheticEvent, newValue: number) => {
@@ -252,81 +295,126 @@ export default function Favorite() {
     setSearchQuery(event.target.value);
   };
 
-  // Filter items based on search query
-  const filteredFavorites = favorites.filter(
-    (favorite) =>
-      favorite.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      favorite.content.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      favorite.authorName.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      favorite.category.toLowerCase().includes(searchQuery.toLowerCase())
-  );
-
-  const filteredLocations = locations.filter(
-    (location) =>
-      location.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      location.description.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      location.category.toLowerCase().includes(searchQuery.toLowerCase())
-  );
-
-  // Handle like toggle
-  const handleToggleLike = (postId: string) => {
-    setFavorites(
-      favorites.map((post) =>
-        post.id === postId
-          ? {
-              ...post,
-              liked: !post.liked,
-              likes: post.liked ? post.likes - 1 : post.likes + 1
-            }
-          : post
-      )
-    );
+  // Handle sort menu
+  const handleSortClick = (event: React.MouseEvent<HTMLElement>) => {
+    setSortAnchorEl(event.currentTarget);
   };
 
-  // Handle bookmark toggle
-  const handleToggleBookmark = (postId: string) => {
-    setFavorites(
-      favorites.map((post) =>
-        post.id === postId
-          ? {
-              ...post,
-              bookmarked: !post.bookmarked
-            }
-          : post
-      )
-    );
+  const handleSortClose = () => {
+    setSortAnchorEl(null);
+  };
+
+  const handleSortSelect = (value: string) => {
+    setSortBy(value);
+    handleSortClose();
+  };
+
+  // Handle like toggle
+  const handleToggleLike = async (postId: string) => {
+    try {
+      const user = pb.authStore.model;
+      if (!user) {
+        showSnackbar('Please log in to like posts', 'error');
+        return;
+      }
+
+      const isLiked = userLikes.has(postId);
+
+      // Optimistically update UI
+      setFavorites(prevFavorites =>
+        prevFavorites.map(post =>
+          post.id === postId
+            ? { 
+                ...post, 
+                likes: isLiked ? Math.max(0, post.likes - 1) : post.likes + 1,
+                isLikedByUser: !isLiked 
+              }
+            : post
+        )
+      );
+
+      // Update userLikes set
+      const newUserLikes = new Set(userLikes);
+      if (isLiked) {
+        newUserLikes.delete(postId);
+      } else {
+        newUserLikes.add(postId);
+      }
+      setUserLikes(newUserLikes);
+
+      if (isLiked) {
+        // Unlike - find and delete the like record
+        const existingLikes = await pb.collection(LIKES_COLLECTION).getFullList({
+          filter: `user = "${user.id}" && post = "${postId}"`
+        });
+        
+        if (existingLikes.length > 0) {
+          await pb.collection(LIKES_COLLECTION).delete(existingLikes[0].id);
+        }
+      } else {
+        // Like - create a like record
+        await pb.collection(LIKES_COLLECTION).create({
+          user: user.id,
+          post: postId,
+        });
+      }
+    } catch (err: any) {
+      // Revert on error
+      await fetchUserLikes();
+      await fetchFavorites(false);
+      showSnackbar(`Failed to update like: ${err?.message || err}`, 'error');
+    }
   };
 
   // Handle remove favorite confirmation dialog
-  const handleOpenDeleteDialog = (id: string, type: 'post' | 'location') => {
-    setItemToDelete(id);
-    setItemTypeToDelete(type);
+  const handleOpenDeleteDialog = (postId: string, favoriteId: string, title: string) => {
+    setItemToDelete({ id: postId, favoriteId, title });
     setDeleteDialogOpen(true);
   };
 
   // Handle remove favorite confirmation
-  const handleConfirmDelete = () => {
+  const handleConfirmDelete = async () => {
     if (!itemToDelete) return;
 
-    if (itemTypeToDelete === 'post') {
-      setFavorites(favorites.filter((post) => post.id !== itemToDelete));
-    } else {
-      setLocations(locations.filter((location) => location.id !== itemToDelete));
+    setDeletingItem(true);
+    try {
+      // Delete the favorite record from PocketBase
+      await pb.collection(FAVORITES_COLLECTION).delete(itemToDelete.favoriteId);
+
+      // Remove from local state
+      setFavorites(prevFavorites =>
+        prevFavorites.filter(post => post.id !== itemToDelete.id)
+      );
+
+      showSnackbar('Removed from favorites', 'success');
+    } catch (err: any) {
+      showSnackbar(`Failed to remove favorite: ${err?.message || err}`, 'error');
+    } finally {
+      setDeletingItem(false);
+      setDeleteDialogOpen(false);
+      setItemToDelete(null);
     }
+  };
 
-    setSnackbar({
-      open: true,
-      message: `Item removed from favorites`,
-      severity: 'success'
-    });
-
-    setDeleteDialogOpen(false);
-    setItemToDelete(null);
+  // Handle refresh
+  const handleRefresh = () => {
+    fetchFavorites();
   };
 
   // Format date
   const formatDate = (dateString: string) => {
     const date = new Date(dateString);
+    const now = new Date();
+    const diffMs = now.getTime() - date.getTime();
+    const diffMins = Math.floor(diffMs / 60000);
+    const diffHours = Math.floor(diffMs / 3600000);
+    const diffDays = Math.floor(diffMs / 86400000);
+
+    if (diffMins < 1) return 'Just now';
+    if (diffMins < 60) return `${diffMins}m ago`;
+    if (diffHours < 24) return `${diffHours}h ago`;
+    if (diffDays < 7) return `${diffDays}d ago`;
+    
     return date.toLocaleDateString('en-US', {
       year: 'numeric',
       month: 'short',
@@ -336,10 +424,7 @@ export default function Favorite() {
 
   // Handle snackbar close
   const handleCloseSnackbar = () => {
-    setSnackbar({
-      ...snackbar,
-      open: false
-    });
+    setSnackbar(prev => ({ ...prev, open: false }));
   };
 
   // Truncate text
@@ -348,274 +433,322 @@ export default function Favorite() {
     return text.substring(0, maxLength) + '...';
   };
 
+  // Handle view post details
+  const handleViewPost = (postId: string) => {
+    navigate(`/posts/${postId}`);
+  };
+
+  // Get current sort label
+  const getCurrentSortLabel = () => {
+    const option = sortOptions.find(opt => opt.value === sortBy);
+    return option ? option.label : 'Sort';
+  };
+
   return (
-    <div>
-      <Container maxWidth="lg" sx={{ py: 4 }}>
-        {/* Header */}
-        <Box sx={{ mb: 4 }}>
+    <Container maxWidth="lg" sx={{ py: 4 }}>
+      {/* Header */}
+      <Box sx={{ mb: 4 }}>
+        <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 1 }}>
           <Typography variant="h4" component="h1" sx={{ fontWeight: 'bold', color: '#1976d2', display: 'flex', alignItems: 'center' }}>
-            <FavoriteIcon sx={{ mr: 1, color: '#e91e63' }} />
+            <BookmarkIcon sx={{ mr: 1, color: '#1976d2' }} />
             My Favorites
           </Typography>
-          <Typography variant="subtitle1" color="text.secondary" sx={{ mt: 1 }}>
-            Manage your favorite posts and saved locations
-          </Typography>
+          <IconButton onClick={handleRefresh} color="primary" disabled={isLoading}>
+            <RefreshIcon />
+          </IconButton>
         </Box>
+        <Typography variant="subtitle1" color="text.secondary">
+          {favorites.length} saved {favorites.length === 1 ? 'post' : 'posts'}
+        </Typography>
+      </Box>
 
-        {/* Tabs */}
-        <Paper elevation={2} sx={{ mb: 4 }}>
-          <Tabs
-            value={activeTab}
-            onChange={handleTabChange}
-            indicatorColor="primary"
-            textColor="primary"
-            variant="fullWidth"
-          >
-            <Tab label={`Favorite Posts (${favorites.filter(p => p.liked).length})`} id="tab-0" aria-controls="tabpanel-0" />
-            <Tab label={`Saved Locations (${locations.length})`} id="tab-1" aria-controls="tabpanel-1" />
-          </Tabs>
-        </Paper>
-
-        {/* Search Bar */}
-        <Paper elevation={1} sx={{ p: 2, mb: 4 }}>
-          <TextField
-            fullWidth
-            placeholder={`Search ${activeTab === 0 ? 'posts' : 'locations'}...`}
-            variant="outlined"
-            size="small"
-            value={searchQuery}
-            onChange={handleSearchChange}
-            InputProps={{
-              startAdornment: (
-                <InputAdornment position="start">
-                  <SearchIcon color="action" />
-                </InputAdornment>
-              )
-            }}
-          />
-        </Paper>
-
-        {/* Loading Indicator */}
-        {isLoading ? (
-          <Box sx={{ display: 'flex', justifyContent: 'center', my: 4 }}>
-            <CircularProgress />
-          </Box>
-        ) : (
-          <>
-            {/* Favorites Tab Panel */}
-            <TabPanel value={activeTab} index={0}>
-              {filteredFavorites.length > 0 ? (
-                <Grid container spacing={3}>
-                  {filteredFavorites.map((post) => (
-                    <Grid item xs={12} key={post.id}>
-                      <Card elevation={2} sx={{ transition: 'all 0.2s', '&:hover': { transform: 'translateY(-4px)', boxShadow: 4 } }}>
-                        <CardContent>
-                          <Box sx={{ display: 'flex', justifyContent: 'space-between', mb: 1 }}>
-                            <Chip
-                              label={post.category}
-                              size="small"
-                              color="primary"
-                              variant="outlined"
-                              sx={{ mb: 1 }}
-                            />
-                            <Typography variant="caption" color="text.secondary">
-                              {formatDate(post.createdAt)}
-                            </Typography>
-                          </Box>
-                          
-                          <Typography variant="h6" component="h2" gutterBottom>
-                            {post.title}
-                          </Typography>
-                          
-                          <Box sx={{ display: 'flex', alignItems: 'center', mb: 2 }}>
-                            <Avatar sx={{ width: 24, height: 24, mr: 1, bgcolor: 'primary.main' }}>
-                              {post.authorName.charAt(0)}
-                            </Avatar>
-                            <Typography variant="body2" color="text.secondary">
-                              {post.authorName}
-                            </Typography>
-                          </Box>
-                          
-                          <Typography variant="body1" paragraph>
-                            {truncateText(post.content, 200)}
-                          </Typography>
-                          
-                          {post.imageUrl && (
-                            <CardMedia
-                              component="img"
-                              height="140"
-                              image={post.imageUrl}
-                              alt={post.title}
-                              sx={{ borderRadius: 1, mb: 2 }}
-                            />
-                          )}
-                        </CardContent>
-                        
-                        <Divider />
-                        
-                        <CardActions sx={{ justifyContent: 'space-between' }}>
-                          <Box>
-                            <IconButton
-                              onClick={() => handleToggleLike(post.id)}
-                              color={post.liked ? 'error' : 'default'}
-                              size="small"
-                            >
-                              {post.liked ? <FavoriteIcon /> : <FavoriteBorderIcon />}
-                            </IconButton>
-                            <Typography variant="body2" component="span" sx={{ mr: 2 }}>
-                              {post.likes}
-                            </Typography>
-                            
-                            <IconButton size="small" color="default">
-                              <CommentIcon />
-                            </IconButton>
-                            <Typography variant="body2" component="span" sx={{ mr: 2 }}>
-                              {post.comments}
-                            </Typography>
-                            
-                            <IconButton
-                              onClick={() => handleToggleBookmark(post.id)}
-                              color={post.bookmarked ? 'primary' : 'default'}
-                              size="small"
-                            >
-                              {post.bookmarked ? <BookmarkIcon /> : <BookmarkBorderIcon />}
-                            </IconButton>
-                          </Box>
-                          
-                          <Button
-                            size="small"
-                            color="error"
-                            startIcon={<DeleteIcon />}
-                            onClick={() => handleOpenDeleteDialog(post.id, 'post')}
-                          >
-                            Remove
-                          </Button>
-                        </CardActions>
-                      </Card>
-                    </Grid>
-                  ))}
-                </Grid>
-              ) : (
-                <Paper elevation={0} sx={{ p: 4, textAlign: 'center', bgcolor: 'background.default' }}>
-                  <Typography variant="h6" color="text.secondary" gutterBottom>
-                    No favorite posts found
-                  </Typography>
-                  <Typography variant="body2" color="text.secondary">
-                    {searchQuery
-                      ? "No posts match your search criteria"
-                      : "You haven't favorited any posts yet. Browse the home page and like posts to add them here."}
-                  </Typography>
-                </Paper>
-              )}
-            </TabPanel>
-
-            {/* Saved Locations Tab Panel */}
-            <TabPanel value={activeTab} index={1}>
-              {filteredLocations.length > 0 ? (
-                <Grid container spacing={3}>
-                  {filteredLocations.map((location) => (
-                    <Grid item xs={12} sm={6} md={4} key={location.id}>
-                      <Card elevation={2} sx={{ height: '100%', display: 'flex', flexDirection: 'column', transition: 'all 0.2s', '&:hover': { transform: 'translateY(-4px)', boxShadow: 4 } }}>
-                        {location.imageUrl && (
-                          <CardMedia
-                            component="img"
-                            height="140"
-                            image={location.imageUrl}
-                            alt={location.name}
-                          />
-                        )}
-                        
-                        <CardContent sx={{ flexGrow: 1 }}>
-                          <Box sx={{ display: 'flex', justifyContent: 'space-between', mb: 1 }}>
-                            <Chip
-                              label={location.category}
-                              size="small"
-                              color="primary"
-                              variant="outlined"
-                              sx={{ mb: 1 }}
-                            />
-                          </Box>
-                          
-                          <Typography variant="h6" component="h2" gutterBottom>
-                            {location.name}
-                          </Typography>
-                          
-                          <Typography variant="body2" color="text.secondary" paragraph>
-                            {location.description}
-                          </Typography>
-                          
-                          <Typography variant="body2" color="text.secondary">
-                            {location.address}
-                          </Typography>
-                        </CardContent>
-                        
-                        <CardActions>
-                          <Button
-                            size="small"
-                            color="primary"
-                          >
-                            View Details
-                          </Button>
-                          <Button
-                            size="small"
-                            color="error"
-                            startIcon={<DeleteIcon />}
-                            onClick={() => handleOpenDeleteDialog(location.id, 'location')}
-                          >
-                            Remove
-                          </Button>
-                        </CardActions>
-                      </Card>
-                    </Grid>
-                  ))}
-                </Grid>
-              ) : (
-                <Paper elevation={0} sx={{ p: 4, textAlign: 'center', bgcolor: 'background.default' }}>
-                  <Typography variant="h6" color="text.secondary" gutterBottom>
-                    No saved locations found
-                  </Typography>
-                  <Typography variant="body2" color="text.secondary">
-                    {searchQuery
-                      ? "No locations match your search criteria"
-                      : "You haven't saved any locations yet. Browse the map and save locations to add them here."}
-                  </Typography>
-                </Paper>
-              )}
-            </TabPanel>
-          </>
-        )}
-        
-        {/* Delete Confirmation Dialog */}
-        <Dialog
-          open={deleteDialogOpen}
-          onClose={() => setDeleteDialogOpen(false)}
-        >
-          <DialogTitle>Remove from Favorites</DialogTitle>
-          <DialogContent>
-            <DialogContentText>
-              Are you sure you want to remove this {itemTypeToDelete} from your favorites?
-            </DialogContentText>
-          </DialogContent>
-          <DialogActions>
-            <Button onClick={() => setDeleteDialogOpen(false)}>Cancel</Button>
-            <Button onClick={handleConfirmDelete} color="error" variant="contained">
-              Remove
+      {/* Search and Sort Bar */}
+      <Paper elevation={1} sx={{ p: 2, mb: 4 }}>
+        <Grid container spacing={2} alignItems="center">
+          <Grid item xs={12} sm={8} md={9}>
+            <TextField
+              fullWidth
+              placeholder="Search favorite posts by title, content, author, or category..."
+              variant="outlined"
+              size="small"
+              value={searchQuery}
+              onChange={handleSearchChange}
+              InputProps={{
+                startAdornment: (
+                  <InputAdornment position="start">
+                    <SearchIcon color="action" />
+                  </InputAdornment>
+                )
+              }}
+            />
+          </Grid>
+          <Grid item xs={12} sm={4} md={3}>
+            <Button
+              fullWidth
+              variant="outlined"
+              startIcon={<SortIcon />}
+              onClick={handleSortClick}
+              sx={{ height: '40px' }}
+            >
+              {getCurrentSortLabel()}
             </Button>
-          </DialogActions>
-        </Dialog>
+            <Menu
+              anchorEl={sortAnchorEl}
+              open={Boolean(sortAnchorEl)}
+              onClose={handleSortClose}
+            >
+              {sortOptions.map((option) => (
+                <MenuItem
+                  key={option.value}
+                  selected={sortBy === option.value}
+                  onClick={() => handleSortSelect(option.value)}
+                >
+                  <ListItemIcon>
+                    {option.icon}
+                  </ListItemIcon>
+                  <ListItemText>{option.label}</ListItemText>
+                </MenuItem>
+              ))}
+            </Menu>
+          </Grid>
+        </Grid>
+      </Paper>
 
-        {/* Snackbar for notifications */}
-        <Snackbar
-          open={snackbar.open}
-          autoHideDuration={4000}
-          onClose={handleCloseSnackbar}
-          anchorOrigin={{ vertical: 'bottom', horizontal: 'center' }}
+      {/* Loading Indicator */}
+      {isLoading ? (
+        <Box sx={{ display: 'flex', justifyContent: 'center', my: 8 }}>
+          <CircularProgress size={60} />
+        </Box>
+      ) : (
+        <>
+          {displayedFavorites.length > 0 ? (
+            <Grid container spacing={3}>
+              {displayedFavorites.map((post) => (
+                <Grid item xs={12} key={post.id}>
+                  <Card 
+                    elevation={2} 
+                    sx={{ 
+                      transition: 'all 0.3s ease',
+                      '&:hover': { 
+                        transform: 'translateY(-4px)', 
+                        boxShadow: 6 
+                      } 
+                    }}
+                  >
+                    <CardContent>
+                      <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 2 }}>
+                        <Chip
+                          label={post.category}
+                          size="small"
+                          color="primary"
+                          variant="outlined"
+                        />
+                        <Typography variant="caption" color="text.secondary" sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}>
+                          <TimeIcon sx={{ fontSize: 16 }} />
+                          {formatDate(post.createdAt)}
+                        </Typography>
+                      </Box>
+                      
+                      <Typography 
+                        variant="h5" 
+                        component="h2" 
+                        gutterBottom
+                        sx={{ 
+                          cursor: 'pointer',
+                          fontWeight: 600,
+                          '&:hover': { color: 'primary.main' },
+                          transition: 'color 0.2s'
+                        }}
+                        onClick={() => handleViewPost(post.id)}
+                      >
+                        {post.title}
+                      </Typography>
+                      
+                      <Box sx={{ display: 'flex', alignItems: 'center', mb: 2 }}>
+                        <Avatar 
+                          sx={{ width: 32, height: 32, mr: 1 }} 
+                          src={post.authorAvatar}
+                        >
+                          {post.authorName.charAt(0).toUpperCase()}
+                        </Avatar>
+                        <Typography variant="body2" color="text.secondary" sx={{ fontWeight: 500 }}>
+                          {post.authorName}
+                        </Typography>
+                      </Box>
+                      
+                      <Typography variant="body1" paragraph sx={{ color: 'text.secondary', lineHeight: 1.7 }}>
+                        {truncateText(post.content, 250)}
+                      </Typography>
+                      
+                      {post.imageUrl && (
+                        <CardMedia
+                          component="img"
+                          height="200"
+                          image={post.imageUrl}
+                          alt={post.title}
+                          sx={{ 
+                            borderRadius: 2, 
+                            mb: 2,
+                            cursor: 'pointer',
+                            transition: 'transform 0.2s',
+                            '&:hover': {
+                              transform: 'scale(1.02)'
+                            }
+                          }}
+                          onClick={() => handleViewPost(post.id)}
+                        />
+                      )}
+                    </CardContent>
+                    
+                    <Divider />
+                    
+                    <CardActions sx={{ justifyContent: 'space-between', px: 2, py: 1.5 }}>
+                      <Box sx={{ display: 'flex', gap: 1 }}>
+                        <Button
+                          size="small"
+                          startIcon={post.isLikedByUser ? <FavoriteIcon /> : <FavoriteBorderIcon />}
+                          onClick={() => handleToggleLike(post.id)}
+                          color={post.isLikedByUser ? 'error' : 'inherit'}
+                          sx={{ minWidth: 'auto' }}
+                        >
+                          {post.likes}
+                        </Button>
+                        
+                        <Button
+                          size="small"
+                          startIcon={<CommentIcon />}
+                          onClick={() => handleViewPost(post.id)}
+                          color="inherit"
+                          sx={{ minWidth: 'auto' }}
+                        >
+                          {post.comments}
+                        </Button>
+                      </Box>
+                      
+                      <Box sx={{ display: 'flex', gap: 1 }}>
+                        <Button
+                          size="small"
+                          variant="outlined"
+                          onClick={() => handleViewPost(post.id)}
+                        >
+                          View Post
+                        </Button>
+                        <Button
+                          size="small"
+                          color="error"
+                          variant="outlined"
+                          startIcon={<DeleteIcon />}
+                          onClick={() => handleOpenDeleteDialog(post.id, post.favoriteRecordId, post.title)}
+                        >
+                          Remove
+                        </Button>
+                      </Box>
+                    </CardActions>
+                  </Card>
+                </Grid>
+              ))}
+            </Grid>
+          ) : (
+            <Paper 
+              elevation={0} 
+              sx={{ 
+                p: 8, 
+                textAlign: 'center', 
+                bgcolor: 'background.default',
+                borderRadius: 2,
+                border: '2px dashed',
+                borderColor: 'divider'
+              }}
+            >
+              <BookmarkBorderIcon sx={{ fontSize: 80, color: 'text.disabled', mb: 2 }} />
+              <Typography variant="h5" color="text.secondary" gutterBottom fontWeight={600}>
+                {searchQuery ? 'No posts found' : 'No favorites yet'}
+              </Typography>
+              <Typography variant="body1" color="text.secondary" paragraph sx={{ maxWidth: 500, mx: 'auto', mb: 3 }}>
+                {searchQuery
+                  ? `No posts match "${searchQuery}". Try different keywords or clear your search.`
+                  : "You haven't saved any posts yet. Browse posts and click the bookmark icon to save them here for easy access later."}
+              </Typography>
+              {!searchQuery && (
+                <Button 
+                  variant="contained" 
+                  color="primary" 
+                  size="large"
+                  onClick={() => navigate('/posts')}
+                  sx={{ mt: 1 }}
+                >
+                  Browse Posts
+                </Button>
+              )}
+              {searchQuery && (
+                <Button 
+                  variant="outlined" 
+                  color="primary" 
+                  onClick={() => setSearchQuery('')}
+                  sx={{ mt: 1 }}
+                >
+                  Clear Search
+                </Button>
+              )}
+            </Paper>
+          )}
+        </>
+      )}
+      
+      {/* Delete Confirmation Dialog */}
+      <Dialog
+        open={deleteDialogOpen}
+        onClose={() => !deletingItem && setDeleteDialogOpen(false)}
+        maxWidth="sm"
+        fullWidth
+      >
+        <DialogTitle sx={{ pb: 1 }}>
+          Remove from Favorites
+        </DialogTitle>
+        <DialogContent>
+          <DialogContentText>
+            Are you sure you want to remove <strong>"{itemToDelete?.title}"</strong> from your favorites?
+          </DialogContentText>
+          <DialogContentText sx={{ mt: 1, fontSize: '0.875rem', color: 'text.secondary' }}>
+            Don't worry, you can always add it back later by visiting the post.
+          </DialogContentText>
+        </DialogContent>
+        <DialogActions sx={{ px: 3, pb: 2 }}>
+          <Button 
+            onClick={() => setDeleteDialogOpen(false)} 
+            disabled={deletingItem}
+            variant="outlined"
+          >
+            Cancel
+          </Button>
+          <Button 
+            onClick={handleConfirmDelete} 
+            color="error" 
+            variant="contained" 
+            disabled={deletingItem}
+            startIcon={deletingItem ? <CircularProgress size={16} /> : <DeleteIcon />}
+          >
+            {deletingItem ? 'Removing...' : 'Remove'}
+          </Button>
+        </DialogActions>
+      </Dialog>
+
+      {/* Snackbar for notifications */}
+      <Snackbar
+        open={snackbar.open}
+        autoHideDuration={4000}
+        onClose={handleCloseSnackbar}
+        anchorOrigin={{ vertical: 'bottom', horizontal: 'center' }}
+      >
+        <Alert 
+          onClose={handleCloseSnackbar} 
+          severity={snackbar.severity} 
+          variant="filled"
+          sx={{ width: '100%' }}
         >
-          <Alert onClose={handleCloseSnackbar} severity={snackbar.severity} variant="filled">
-            {snackbar.message}
-          </Alert>
-        </Snackbar>
-      </Container>
-    </div>
+          {snackbar.message}
+        </Alert>
+      </Snackbar>
+    </Container>
   );
 }
