@@ -1,9 +1,9 @@
-import { 
-  Container, 
-  Typography, 
-  Card, 
-  CardContent, 
-  Avatar, 
+import {
+  Container,
+  Typography,
+  Card,
+  CardContent,
+  Avatar,
   Stack,
   Box,
   Divider,
@@ -19,13 +19,17 @@ import {
   AccordionDetails,
   Button,
   Link,
+} from '@mui/material';
+
+import {
   Timeline,
   TimelineItem,
   TimelineSeparator,
   TimelineConnector,
   TimelineContent,
-  TimelineDot
-} from '@mui/material';
+  TimelineDot,
+} from '@mui/lab';
+
 import InfoIcon from '@mui/icons-material/Info';
 import SchoolIcon from '@mui/icons-material/School';
 import HomeIcon from '@mui/icons-material/Home';

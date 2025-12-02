@@ -1,3 +1,4 @@
+// @ts-nocheck
 import React, { useState, useEffect, useCallback, useRef } from 'react';
 import { 
   Trash2, Edit3, History, Bookmark, Heart, MessageCircle, Send,

@@ -1,8 +1,8 @@
 // hooks/useMapPerformance.ts
 
 import { useState, useEffect, useCallback, useRef } from 'react';
-import { CampusFacility, Room, FilterCriteria } from '../types/MapTypes';
-import { fetchDormitories, fetchFacilities, fetchRooms } from '../services/api';
+import { CampusFacility, Room, FilterCriteria } from '../../types/MapTypes';
+import { fetchDormitories, fetchFacilities, fetchRooms } from '../../services/api';
 
 /**
  * Custom hook for lazy loading map data with caching
@@ -54,7 +54,7 @@ export function useLazyLoadMapData() {
     try {
       const data = await fetchFacilities();
       const filtered = types 
-        ? data.filter(f => types.includes(f.type))
+        ? data.filter((f: CampusFacility) => types.includes(f.type))
         : data;
       
       cacheRef.current.set(cacheKey, filtered);
@@ -265,18 +265,20 @@ export function useIntersectionObserver(
  * Custom hook for request animation frame
  */
 export function useAnimationFrame(callback: (deltaTime: number) => void) {
-  const requestRef = useRef<number>();
-  const previousTimeRef = useRef<number>();
+  const requestRef = useRef<number | null>(null);
+  const previousTimeRef = useRef<number | null>(null);
 
   useEffect(() => {
     const animate = (time: number) => {
-      if (previousTimeRef.current !== undefined) {
-        const deltaTime = time - previousTimeRef.current;
+      const prev = previousTimeRef.current;
+      if (prev !== null) {
+        const deltaTime = time - prev;
         callback(deltaTime);
       }
       previousTimeRef.current = time;
       requestRef.current = requestAnimationFrame(animate);
     };
+
 
     requestRef.current = requestAnimationFrame(animate);
 

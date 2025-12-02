@@ -1,7 +1,7 @@
 // utils/mapUtils.ts
 
 import L from 'leaflet';
-import { Coordinates, CampusFacility, Room, FilterCriteria, ComparisonMetrics } from '../types/MapTypes';
+import { Coordinates, CampusFacility, Room, FilterCriteria, ComparisonMetrics } from '../Map/MapTypes';
 
 /**
  * Calculate the distance between two coordinates using Haversine formula
@@ -91,9 +91,10 @@ export function filterRooms(rooms: Room[], criteria: FilterCriteria): Room[] {
 
     // Amenity filter
     if (criteria.requiredAmenities?.length) {
-      const roomAmenityIds = room.amenities.map(a => a.id);
+      // 🔧 typed 'a' explicitly
+      const roomAmenityIds = room.amenities.map((a: { id: string }) => a.id);
       const hasAllRequired = criteria.requiredAmenities.every(
-        reqId => roomAmenityIds.includes(reqId)
+        (reqId: string) => roomAmenityIds.includes(reqId)
       );
       if (!hasAllRequired) return false;
     }
@@ -161,7 +162,8 @@ export function calculateComparisonMetrics(
     cons.push('Compact room size');
   }
 
-  if (room.amenities.some(a => a.name === 'Air Conditioning')) {
+  // 🔧 typed 'a' explicitly
+  if (room.amenities.some((a: { name: string }) => a.name === 'Air Conditioning')) {
     pros.push('Air conditioned');
   }
 
