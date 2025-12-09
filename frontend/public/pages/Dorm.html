@@ -1,0 +1,389 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>RPI Dorm Room Helper</title>
+    <link rel="icon" href="../assets/favicon.ico" type="image/x-icon">
+    <link rel="stylesheet" href="../styles/style.css">
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.7.1/dist/leaflet.css" />
+    <script src="https://unpkg.com/leaflet@1.7.1/dist/leaflet.js"></script>
+
+
+    <!-- <img src="../assets/images/RPI.jpg" width="1200" height="500"/> -->
+    <style>
+        /* Flexbox container to hold dorm list and map */
+        .container {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            margin: 20px;
+        }
+
+        /* Dorm list styling */
+        .dorm-list {
+            width: 45%; /* Adjust to your preference */
+            margin-right: 20px;
+        }
+
+        /* Map container */
+        #map {
+            width: 45%; /* Adjust to your preference */
+            height: 500px; /* Adjust height as needed */
+        }
+
+        /* Container to hold the image and the text */
+        .image-container {
+            position: relative;
+            width: 1300px; /* place holders */
+            height: 500px; /* place holders*/
+        }
+
+        /* The background image */
+        .image-container img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover; /* Ensures the image covers the container */
+            position: absolute;
+            z-index: 1; /* Background image is behind everything */
+        }
+
+        /* Header overlaying the image */
+        header {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            z-index: 2; /* Higher z-index to ensure it is over the image */
+            color: white;
+            text-align: center;
+            padding: 20px;
+            font-size: 24px;
+        }
+
+        /* Header content styling */
+        header img {
+            max-height: 100px;
+            margin-right: 10px;
+        }
+
+        header h1 {
+            display: inline;
+            font-size: 2rem;
+            font-weight: bold;
+            text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.6); /* Optional text shadow for readability */
+        }
+
+        .login {
+            position: absolute;
+            top: 20px;
+            right: 20px;
+        }
+
+        .menu-container {
+            position: absolute;
+            bottom: 20px;
+            left: 20px;
+            z-index: 3; /* On top of the image */
+            background-color: rgba(0, 0, 0, 0.5); /* Semi-transparent background */
+            padding: 10px;
+            border-radius: 10px;
+            color: white;
+        }
+
+        .menu-item {
+            display: block;
+            color: white;
+            margin: 5px 0;
+            text-decoration: none;
+            font-size: 18px;
+        }
+
+        .menu-item:hover {
+            text-decoration: underline;
+        }
+    </style>
+</head>
+
+<body>
+
+    <div class="image-container">
+        <!-- Background Image -->
+        <img src="../assets/images/RPI.jpg" alt="RPI Background Image">
+
+        <!-- Header Section -->
+        <header>
+            <!-- <img src="../assets/images/RPI Small Logo RGB-TwoColor.png" alt="RPI Logo">-->
+            <h1><i>Welcome to RPI Dorm Room Helper</i></h1>
+            <div class="login">
+                <a href="#" id="loginButton">Login</a>
+                <img id="userAvatar" src="../assets/images/avatar.jpg" alt="User Avatar" style="display: none;">
+            </div>
+        </header>
+
+        <!-- Menu Container -->
+        <div class="menu-container">
+            <!--<div class="menu-label">Menu</div>-->
+            <div class="menu-trigger"></div>
+            <div class="side-menu">
+                <a href="#" class="menu-item" onclick="handleMenuClick('Dorm')">Dorm</a>
+                <a href="#" class="menu-item" onclick="handleMenuClick('subkey 2')">subkey 2</a>
+                <a href="#" class="menu-item" onclick="handleMenuClick('subkey 3')">subkey 3</a>
+                <a href="#" class="menu-item" onclick="handleMenuClick('Favorites')">Favorites</a>
+                <a href="#" class="menu-item" onclick="handleMenuClick('Record')">Record</a>
+                <a href="#" class="menu-item" onclick="handleMenuClick('Settings')">Settings</a>
+                <a href="#" class="menu-item" onclick="handleMenuClick('About us')">About us</a>
+                <button id="logoutButton">Log Out</button>
+            </div>
+        </div>
+    </div>
+</head>
+
+
+<body>
+    <!-- Filter Section -->
+    <p><br></p>
+    <p><br></p>
+    <p><br></p>
+    <div class="filter">
+        <label for="dormType">Filter by Dorm Type:</label>
+        <select id="dormType">
+            <option value="all">All</option>
+            <option value="single">Single</option>
+            <option value="double">Double</option>
+            <option value="suite">Suite</option>
+        </select>
+    
+        <label for="priceRange">Filter by Price Range:</label>
+        <select id="priceRange">
+            <option value="all">All</option>
+            <option value="low">Below $5000</option>
+            <option value="mid">Between $5000 - $7000</option>
+            <option value="high">Above $7000</option>
+        </select>
+
+      <!-- placeholder for distance to main campus-->
+        <label for="distance">Filter by Distance to main campus:</label>
+        <select id="distance">
+            <option value="all">All</option>
+            <option value="low">Below 2 km</option>
+            <option value="mid">Between 2 to 5 km</option>
+            <option value="high">Above 5 km</option>
+        </select>
+    </div>
+
+    <div class="container">
+        <!-- Dorm list on the left -->
+        <div class="dorm-list" id="dormList">
+            <p>List of available dorms will go here...</p>
+        </div>
+
+        <!-- Map on the right -->
+        <div id="map"></div>
+    </div>
+
+    <!-- Inline JavaScript -->
+    <script>
+
+    var map = L.map('map').setView([42.7302, -73.6788], 16); // RPI campus coordinates and a zoom level of 10
+
+    // Add a base map layer (OpenStreetMap)
+    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+    attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
+    }).addTo(map);
+
+    // Define a style for normal map features
+    var defaultStyle = {
+        color: '#3388ff',  // Default blue color
+        weight: 2,
+        opacity: 1
+    };
+
+    // Define a style for when a feature is clicked
+    var clickedStyle = {
+        color: '#ff0000',  // Red color when clicked
+        weight: 3,
+        opacity: 1
+    };
+
+    var dormitoryStyle = {
+    color: '#ff0000',  // Red outline color
+    weight: 2,
+    opacity: 1,
+    fillColor: '#ff0000',  // Red fill color
+    fillOpacity: 0.5
+    };
+
+// Load the GeoJSON and add it to the map
+    fetch('../assets/map.geojson')
+        .then(response => {
+            if (!response.ok) {
+                throw new Error('Network response was not ok');
+            }
+            return response.json();
+        })
+        .then(geojsonData => {
+            console.log('GeoJSON data:', geojsonData);  // Log the data to see if it loads correctly
+            L.geoJSON(geojsonData, {
+                style: function(feature) {
+                    console.log('Feature properties:', feature.properties);  // Log feature properties
+                    if (feature.properties.building === 'dormitory') {
+                        return dormitoryStyle;
+                    } else {
+                        return defaultStyle;
+                    }
+                },
+                onEachFeature: function(feature, layer) {
+                    if (feature.properties.building === 'dormitory') {
+                        layer.bindPopup(feature.properties.name || "Dormitory");
+                    }
+                }
+            }).addTo(map);
+        })
+        .catch(error => console.error('Error loading GeoJSON:', error));
+
+
+
+//     var testGeoJSON = {
+//     "type": "FeatureCollection",
+//     "features": [
+//         {
+//             "type": "Feature",
+//             "properties": {
+//                 "building": "dormitory",
+//                 "name": "Test Dorm"
+//             },
+//             "geometry": {
+//                 "type": "Polygon",
+//                 "coordinates": [
+//                     [
+//                         [-73.6859323, 42.7316014],
+//                         [-73.6859884, 42.7313315],
+//                         [-73.6861024, 42.7307834],
+//                         [-73.6855949, 42.7307265],
+//                         [-73.6859323, 42.7316014]
+//                     ]
+//                 ]
+//             }
+//         }
+//     ]
+// };
+
+// L.geoJSON(testGeoJSON, {
+//     style: function(feature) {
+//         if (feature.properties.building === 'dormitory') {
+//             return dormitoryStyle;
+//         } else {
+//             return defaultStyle;
+//         }
+//     },
+//     onEachFeature: function(feature, layer) {
+//         if (feature.properties.building === 'dormitory') {
+//             layer.bindPopup(feature.properties.name || "Dormitory");
+//         }
+//     }
+// }).addTo(map);
+
+
+
+    document.addEventListener("DOMContentLoaded", function() {
+        // Dorm data array
+        const dorms = [
+        { name: 'Cary', rooms: [{ type: 'single', price: 4500, distance: 2 }, { type: 'double', price: 6000, distance: 2 }, { type: 'triple', price: 7500, distance: 2 }] },
+        { name: 'Dorm B', rooms: [{ type: 'double', price: 6000, distance: 4 }] },
+        { name: 'Dorm C', rooms: [{ type: 'suite', price: 8000, distance: 5 }] },
+        { name: 'Dorm D', rooms: [{ type: 'single', price: 5000, distance: 12 }, { type: 'double', price: 7000, distance: 12 }] },
+        { name: 'Dorm E', rooms: [{ type: 'double', price: 7000, distance: 13 }, { type: 'suite', price: 9000, distance: 13 }] }
+    ];
+
+        const dormTypeSelect = document.getElementById('dormType');
+        const priceRangeSelect = document.getElementById('priceRange');
+        const distanceSelect = document.getElementById('distance');
+        //do not delete the comments, it will be useful once I fix the bug and move it back to script.
+
+        // Attach event listeners to call filterDorms when selection changes
+        if (dormTypeSelect && priceRangeSelect) {
+            dormTypeSelect.addEventListener('change', filterDorms);
+            priceRangeSelect.addEventListener('change', filterDorms);
+            distanceSelect.addEventListener('change', filterDorms);
+
+            // Call filterDorms on page load to show all dorms by default
+            filterDorms();
+        } else {
+            //do not delete this line, using it to fix bug when moving this part of the code to script.js under event listeners.
+            console.error("One or both dropdowns are not found in the DOM.");
+        }
+
+        function filterDorms() {
+            const dormType = dormTypeSelect.value;
+            const priceRange = priceRangeSelect.value;
+            const distance = distanceSelect.value;
+            const dormList = document.getElementById('dormList');
+
+            // Clear previous list
+            dormList.innerHTML = '';
+            let matchingDormsCount = 0; 
+
+
+            // Filtering logic based on selected dorm type and price range
+            dorms.forEach(dorm => {
+            let matchingRooms = dorm.rooms.filter(room => {
+                let matchesType = dormType === 'all' || room.type === dormType;
+                let matchesPrice = true;
+                let matchesDistance = true;
+
+                if (priceRange === 'low') {
+                    matchesPrice = room.price < 5000;
+                } else if (priceRange === 'mid') {
+                    matchesPrice = room.price >= 5000 && room.price <= 7000;
+                } else if (priceRange === 'high') {
+                    matchesPrice = room.price > 7000;
+                }
+
+                if (distance === 'low') {
+                    matchesDistance = room.distance < 2;
+                } else if (distance === 'mid') {
+                    matchesDistance = room.distance >= 2 && room.distance <= 5;
+                } else if (distance === 'high') {
+                    matchesDistance = room.distance > 5;
+                }
+
+                return matchesType && matchesPrice && matchesDistance;
+            });
+
+            if (matchingRooms.length > 0) {
+                // Create a new div for each dorm
+                matchingDormsCount++;
+                const dormDiv = document.createElement('div');
+                dormDiv.classList.add('dorm');
+
+                // Create a link for the dorm name
+                const dormLink = document.createElement('a');
+                dormLink.href = dorm.name.toLowerCase() + '.html'; // Assuming the dorm page is named dorm_name.html
+                dormLink.textContent = dorm.name;
+
+                // Append the dorm link (as the title)
+                dormDiv.appendChild(dormLink);
+
+                // Add room details below the dorm name for matching rooms
+                matchingRooms.forEach(room => {
+                    const roomInfo = document.createElement('p');
+                    roomInfo.textContent = `Room type: ${room.type}, Price: $${room.price}, Distance to main campus: ${room.distance}km`;
+                    dormDiv.appendChild(roomInfo);
+                });
+
+                // Append the entire dorm div to the dorm list
+                dormList.appendChild(dormDiv);
+            }            
+            });
+            const dormCountInfo = document.createElement('p');
+        dormCountInfo.textContent = `${matchingDormsCount} dorms match your filter.`;
+        dormList.prepend(dormCountInfo);
+        }
+
+    });
+    </script>
+
+</body>
+</html>
+
