@@ -1,0 +1,159 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Beman and Brinsmade</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #F5F4F0;
+            margin: 0;
+            padding: 0;
+            color: #3c3c3b;
+        }
+        .container, .navigation-bar, .section {
+            padding: 40px 20px;
+            border-bottom: 2px solid #E6E6E6;
+        }
+        .container {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        .title-section, .address, .navigation-bar a {
+            text-transform: uppercase;
+            font-size: 14px;
+            color: #737373;
+        }
+        .main-title { font-size: 48px; font-weight: 700; }
+        .navigation-bar { display: flex; justify-content: center; background: #fff; }
+        .navigation-bar a {
+            margin: 0 15px;
+            text-decoration: none;
+            font-weight: 600;
+        }
+        .navigation-bar a:hover { color: #737373; }
+        .content-box {
+            background: #fff;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            border: 1px solid #E6E6E6;
+        }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 20px 0;
+        }
+        th, td { padding: 10px; border: 1px solid #e0e0e0; }
+        th { background: #f4f4f4; }
+        .accordion-header {
+            background: #f4f4f4;
+            padding: 15px 20px;
+            cursor: pointer;
+            font-weight: bold;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            transition: background 0.3s;
+        }
+        .accordion-header:hover { background-color: #e0e0e0; }
+        .accordion-content { display: none; padding: 20px; font-size: 16px; }
+        .accordion-header::after {
+            content: '▼';
+            font-size: 14px;
+            transition: transform 0.3s;
+        }
+        .accordion-header.active::after { transform: rotate(180deg); }
+        @media (prefers-color-scheme: dark) {
+            body, .container, .navigation-bar, .content-box, .accordion-header {
+                background-color: #181818;
+                color: #ffffff;
+                border-color: #242424;
+            }
+            .navigation-bar a { color: #E0E0E0; }
+            .accordion-header:hover { background-color: #242424; }
+        }
+    </style>
+    <script>
+        document.addEventListener("DOMContentLoaded", function() {
+            document.querySelectorAll(".accordion-header").forEach(header => {
+                header.addEventListener("click", function() {
+                    this.classList.toggle("active");
+                    this.nextElementSibling.style.display = this.classList.contains("active") ? "block" : "none";
+                });
+            });
+        });
+    </script>
+</head>
+<body>
+    <div class="container">
+        <div>
+            <div class="title-section">Dorm</div>
+            <div class="main-title">Beman and Brinsmade</div>
+            <div class="address">Sophomore Dorm</div>
+        </div>
+    </div>
+    <div class="navigation-bar">
+        <a href="#property-details">Details</a>
+        <a href="#pricing">Pricing</a>
+        <a href="#amenities">Amenities</a>
+        <a href="#furniture">Furniture</a>
+        <a href="#dining">Dining</a>
+    </div>
+    <div id="property-details" class="section">
+        <h2>Property Details</h2>
+        <div class="content-box">
+            <ul>
+                <li>On Floor: ✖️</li>
+                <li>In Room: ✔️</li>
+                <li>Cleaning Available: ✖️</li>
+                <li>All-Gender Restroom: ✖️</li>
+            </ul>
+        </div>
+    </div>
+    <div id="pricing" class="section">
+        <h2>Pricing</h2>
+        <div class="content-box">
+            <table>
+                <tr><th>Room Type</th><th>Size</th><th>Price</th></tr>
+                <tr><td>Single</td><td>96 sqft</td><td>$8,710</td></tr>
+                <tr><td>Double</td><td>-</td><td>-</td></tr>
+                <tr><td>Triple</td><td>-</td><td>-</td></tr>
+            </table>
+        </div>
+    </div>
+    <div class="section">
+        <h2>Features</h2>
+        <div class="content-box">
+            <div class="accordion">
+                <div class="accordion-header">Amenities</div>
+                <div class="accordion-content">
+                    <ul>
+                        <li>Air Conditioning: ✖️</li>
+                        <li>Blinds: ✔️</li>
+                        <li>Building Lounge: ✖️</li>
+                        <li>Kitchen: ✔️ (In apartment)</li>
+                        <li>Laundry: ✔️ (Brinsmade 3 laundry)</li>
+                        <li>Wireless: ✔️</li>
+                    </ul>
+                </div>
+                <div class="accordion-header">Furniture</div>
+                <div class="accordion-content">
+                    <ul>
+                        <li>Wardrobe: ✔️ (36" x 25" x 72")</li>
+                        <li>Desk & Chair: ✔️ (48" x 24")</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div id="dining" class="section">
+        <h2>Dining</h2>
+        <div class="content-box">
+            <p><strong>Nearest Dining Hall:</strong> BARH Dining Hall</p>
+        </div>
+    </div>
+</body>
+</html>

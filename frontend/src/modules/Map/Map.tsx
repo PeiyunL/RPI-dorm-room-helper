@@ -1,4 +1,5 @@
 import { useEffect, useRef, useState, useCallback } from "react";
+import { useNavigate } from "react-router-dom";
 import { 
   Box, 
   CircularProgress, 
@@ -67,6 +68,29 @@ const createCustomIcon = (iconType: string) => {
   });
 };
 
+function dormNameToHtml(name: string): string {
+  const map: Record<string, string> = {
+    "Barton Hall": "Barton Hall.html",
+    "Cary Hall": "Cary Hall.html",
+    "Davison Hall": "Davison.html",
+    "Nason Hall": "Nason Hall.html",
+    "Warren Hall": "Warren Hall.html",
+    "North Hall": "North Hall.html",
+    "E Complex": "E Complex.html",
+    "Blitman Commons": "Blitman Residence Commons (RPI).html",
+    "Bryckwyck": "Bryckwyck.html",
+    "Bray Hall": "Bray Hall.html",
+    "Nugent Hall": "Nugent Hall.html",
+    "Quad": "Quadrangle_Complex.html",
+    "RAHP A": "RAHP A Site (Single Students).html",
+    "RAHP B": "RAHP B Site (Married Students).html",
+    // Add all your dorm pages here...
+  };
+
+  return map[name];
+}
+
+
 // Interfaces
 interface Facility {
   id: string;
@@ -106,6 +130,7 @@ interface ComparisonRoom {
 }
 
 export default function EnhancedMapComponent() {
+  // const navigate = useNavigate();
   const mapRef = useRef<LeafletMap | null>(null);
   const mapContainerRef = useRef<HTMLDivElement | null>(null);
   const [geojsonLayer, setGeojsonLayer] = useState<GeoJSON | null>(null);
@@ -181,12 +206,12 @@ export default function EnhancedMapComponent() {
         <div style="padding: 10px; min-width: 200px;">
           <h3 style="margin: 0 0 10px 0; color: #800000;">${dormName}</h3>
           <div style="display: flex; gap: 10px; margin-bottom: 10px;">
-            <button onclick="window.postMessage({action: 'viewInfo', dorm: '${dormName}'}, '*')" 
+            <button onclick="window.postMessage({source:'dorm-map', action: 'viewInfo', dorm: '${dormName}'}, '*')" 
               style="flex: 1; padding: 5px; background: #800000; color: white; border: none; border-radius: 4px; cursor: pointer;">
               View Info
             </button>
-            <button onclick="window.postMessage({action: 'compare', dorm: '${dormName}'}, '*')" 
-              style="flex: 1; padding: 5px; background: #ff7800; color: white; border: none; border-radius: 4px; cursor: pointer;">
+            <button onclick="window.postMessage({source:'dorm-map', action: 'compare', dorm: '${dormName}'}, '*')" 
+              style="flex: 1; padding: 5px; background: #ccc; color: #333; border: none; border-radius: 4px; cursor: pointer;">
               Compare
             </button>
           </div>
@@ -333,6 +358,34 @@ useEffect(() => {
   // 👇 IMPORTANT: only run once
   // eslint-disable-next-line react-hooks/exhaustive-deps
 }, []);
+
+  useEffect(() => {
+    const handler = (event: MessageEvent) => {
+      const data = event.data;
+      if (!data || data.source !== "dorm-map") return;
+
+      if (data.action === "viewInfo" && data.dorm) {
+        const file = dormNameToHtml(data.dorm);
+        if (file) {
+          // Directly open HTML file inside /pages/
+          window.location.href = `pages/${file}`;
+        } else {
+          console.error("No HTML page found for dorm:", data.dorm);
+        }
+      }
+
+      if (data.action === "compare" && data.dorm) {
+        console.log("Compare clicked for", data.dorm);
+        // keep your compare logic here
+      }
+    };
+
+    window.addEventListener("message", handler);
+    return () => window.removeEventListener("message", handler);
+  }, []);
+
+
+
 
   // Update facility visibility
   useEffect(() => {
