@@ -3,375 +3,632 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Sharp Hall</title>
+    <title>Sharp Hall - RPI Housing</title>
     <style>
-        .check, .cross {
-        font-family: Arial, sans-serif;
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+
+        :root {
+            --rpi-red: #D6001C;
+            --rpi-dark-red: #A50016;
+            --rpi-gray: #54585A;
+            --rpi-light-gray: #E8E9EA;
+            --background: #FFFFFF;
+            --text-primary: #1A1A1A;
+            --text-secondary: #54585A;
+            --border-color: #E8E9EA;
         }
 
         body {
-            font-family: 'Arial', sans-serif;
-            background-color:#F5F4F0;
-            margin: 0;
-            padding: 0;
-            color: #3c3c3b;
-        }
-
-        .container {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            padding: 40px 20px;
-            border-bottom: 2px solid #E6E6E6;
-        }
-
-        .title-section {
-            text-transform: uppercase;
-            font-size: 14px;
-            color: #737373;
-        }
-
-        .main-title {
-            font-size: 48px;
-            font-weight: 700;
-            margin: 10px 0;
-            color: #3c3c3b;
-        }
-
-        .address {
-            font-size: 14px;
-            color: #3c3c3b;
-            text-transform: uppercase;
-            margin-bottom: 20px;
-            letter-spacing: 1px;
-        }
-
-        /* Image Carousel */
-        .carousel {
-            position: relative;
-            max-width: 800px;
-            margin: 20px auto;
-            text-align: center;
-        }
-
-        .carousel img {
-            width: 100%;
-            height: auto;
-            border-radius: 8px;
-        }
-
-        .carousel-thumbnails {
-            display: flex;
-            justify-content: center;
-            gap: 10px;
-            margin-top: 10px;
-        }
-
-        .carousel-thumbnails img {
-            width: 100px;
-            height: auto;
-            cursor: pointer;
-            opacity: 0.6;
-            transition: opacity 0.3s;
-            border-radius: 5px;
-        }
-
-        .carousel-thumbnails img:hover, .carousel-thumbnails img.active {
-            opacity: 1;
-        }
-
-        .carousel-controls {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            position: absolute;
-            top: 50%;
-            width: 100%;
-            transform: translateY(-50%);
-        }
-
-        .carousel-controls button {
-            background-color: rgba(0, 0, 0, 0.5);
-            color: #fff;
-            border: none;
-            padding: 10px;
-            cursor: pointer;
-            border-radius: 50%;
-        }
-
-        .carousel-counter {
-            margin-top: 10px;
-            font-size: 14px;
-            color: #737373;
-        }
-
-        /* Navigation Bar */
-        .navigation-bar {
-            display: flex;
-            justify-content: center;
-            padding: 10px 0;
-            border-bottom: 2px solid #E6E6E6;
-            background-color: #ffffff;
-        }
-
-        .navigation-bar a {
-            margin: 0 15px;
-            font-size: 14px;
-            text-transform: uppercase;
-            color: #3c3c3b;
-            text-decoration: none;
-            font-weight: 600;
-        }
-
-        .navigation-bar a:hover {
-            color: #737373;
-        }
-
-        /* Section styling */
-        .section {
-            padding: 40px 20px;
-            font-size: 18px;
-            color: #3c3c3b;
-        }
-
-        .section h3 {
-            margin-top: 20px;
-            font-size: 24px;
-        }
-
-        .accordion {
-            width: 100%;
-            background-color: #ffffff;
-            border: 1px solid #E6E6E6;
-            border-radius: 5px;
-            overflow: hidden;
-        }
-
-        .accordion-item {
-            border-top: 1px solid #E6E6E6;
-        }
-
-        .accordion-header {
-            background-color: #f4f4f4;
-            padding: 15px 20px;
-            cursor: pointer;
-            font-weight: bold;
-            color: #3c3c3b;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-        }
-
-        .accordion-content {
-            display: none;
-            padding: 20px;
-            font-size: 16px;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: var(--rpi-light-gray);
+            color: var(--text-primary);
             line-height: 1.6;
         }
 
-        .accordion-content ul {
-            list-style: none;
-            padding: 0;
+        /* Hero Section */
+        .hero {
+            background: linear-gradient(135deg, var(--rpi-red) 0%, var(--rpi-dark-red) 100%);
+            color: white;
+            padding: 60px 20px 40px;
+            text-align: center;
+            position: relative;
+            overflow: hidden;
         }
 
-        .accordion-content li {
-            margin: 10px 0;
-            font-size: 16px;
+        .hero::before {
+            content: '';
+            position: absolute;
+            inset: 0;
+            background: url('data:image/svg+xml,<svg width="100" height="100" xmlns="http://www.w3.org/2000/svg"><defs><pattern id="grid" width="100" height="100" patternUnits="userSpaceOnUse"><path d="M 100 0 L 0 0 0 100" fill="none" stroke="rgba(255,255,255,0.05)" stroke-width="1"/></pattern></defs><rect width="100" height="100" fill="url(%23grid)"/></svg>');
+            opacity: 0.3;
+        }
+
+        .hero-content {
+            max-width: 1200px;
+            margin: 0 auto;
+            position: relative;
+            z-index: 1;
+        }
+
+        .badge {
+            display: inline-block;
+            background: rgba(255,255,255,0.2);
+            padding: 8px 16px;
+            border-radius: 20px;
+            font-size: 12px;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            margin-bottom: 16px;
+            backdrop-filter: blur(10px);
+        }
+
+        .hero h1 {
+            font-size: 56px;
+            font-weight: 700;
+            margin: 16px 0;
+            text-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+
+        .hero-subtitle {
+            font-size: 18px;
+            opacity: 0.95;
+            margin-top: 8px;
+        }
+
+        /* Image Slider */
+        .image-slider {
+            width: 100%;
+            height: 500px;
+            overflow: hidden;
+            position: relative;
+            background: var(--rpi-gray);
+        }
+
+        .slides {
+            display: flex;
+            transition: transform 0.6s cubic-bezier(0.4, 0, 0.2, 1);
+            height: 100%;
+        }
+
+        .slides img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            flex-shrink: 0;
+        }
+
+        .slider-dots {
+            position: absolute;
+            bottom: 20px;
+            left: 50%;
+            transform: translateX(-50%);
+            display: flex;
+            gap: 10px;
+            z-index: 10;
+        }
+
+        .dot {
+            width: 12px;
+            height: 12px;
+            border-radius: 50%;
+            background: rgba(255, 255, 255, 0.5);
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+
+        .dot.active {
+            background: white;
+            width: 32px;
+            border-radius: 6px;
+        }
+
+        /* Navigation */
+        .nav-bar {
+            background: var(--background);
+            box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+            position: sticky;
+            top: 0;
+            z-index: 100;
+        }
+
+        .nav-container {
+            max-width: 1200px;
+            margin: 0 auto;
+            display: flex;
+            justify-content: center;
+            gap: 40px;
+            padding: 20px;
+            flex-wrap: wrap;
+        }
+
+        .nav-container a {
+            color: var(--text-secondary);
+            text-decoration: none;
+            font-weight: 600;
+            font-size: 14px;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            padding: 8px 0;
+            border-bottom: 3px solid transparent;
+            transition: all 0.3s;
+        }
+
+        .nav-container a:hover {
+            color: var(--rpi-red);
+            border-bottom-color: var(--rpi-red);
+        }
+
+        /* Main Content */
+        .container {
+            max-width: 1200px;
+            margin: 40px auto;
+            padding: 0 20px;
+        }
+
+        .section {
+            background: var(--background);
+            border-radius: 12px;
+            padding: 40px;
+            margin-bottom: 30px;
+            box-shadow: 0 2px 12px rgba(0,0,0,0.06);
+        }
+
+        .section h2 {
+            font-size: 32px;
+            color: var(--rpi-red);
+            margin-bottom: 24px;
             display: flex;
             align-items: center;
+            gap: 12px;
         }
 
-        /* Check and Cross symbols */
-        li .check {
-            color: green;
-            margin-right: 8px;
+        .section h2::before {
+            content: '';
+            width: 4px;
+            height: 32px;
+            background: var(--rpi-red);
+            border-radius: 2px;
         }
 
-        li .cross {
-            color: red;
-            margin-right: 8px;
+        .card {
+            background: var(--background);
+            border: 2px solid var(--border-color);
+            border-radius: 8px;
+            padding: 24px;
+            transition: all 0.3s;
         }
 
-        /* Rotate icon */
-        .accordion-header::after {
-            content: '▼';
-            font-size: 14px;
-            color: #737373;
-            transition: transform 0.3s ease;
+        .card:hover {
+            border-color: var(--rpi-red);
+            box-shadow: 0 4px 16px rgba(214, 0, 28, 0.1);
         }
 
-        .accordion-header.active::after {
-            transform: rotate(180deg);
+        /* Feature list */
+        .feature-list {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 16px;
+            list-style: none;
         }
 
+        .feature-list li {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            padding: 12px;
+            background: var(--rpi-light-gray);
+            border-radius: 6px;
+            transition: all 0.3s;
+        }
+
+        .feature-list li:hover {
+            background: rgba(214, 0, 28, 0.05);
+            transform: translateX(4px);
+        }
+
+        .feature-list li::before {
+            content: '✓';
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            width: 24px;
+            height: 24px;
+            background: var(--rpi-red);
+            color: white;
+            border-radius: 50%;
+            font-weight: bold;
+            flex-shrink: 0;
+        }
+
+        /* Table */
         table {
             width: 100%;
-            border-collapse: collapse;
+            border-collapse: separate;
+            border-spacing: 0;
             margin: 20px 0;
+            overflow: hidden;
+            border-radius: 8px;
         }
 
-        table th, table td {
+        th {
+            background: var(--rpi-red);
+            color: white;
             text-align: left;
-            padding: 10px;
-            border: 1px solid #e0e0e0;
+            padding: 16px;
+            font-weight: 600;
+            text-transform: uppercase;
+            font-size: 13px;
+            letter-spacing: 0.5px;
         }
 
-        table th {
-            background-color: #f4f4f4;
+        td {
+            padding: 16px;
+            border-bottom: 1px solid var(--border-color);
+            background: var(--background);
         }
 
-        .content-box {
-            background-color: #ffffff; /* White background */
-            padding: 20px; /* Space inside the box */
-            border-radius: 8px; /* Rounded corners */
-            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1); /* Subtle shadow */
-            margin: 20px 0; /* Space between sections */
-            border: 1px solid #E6E6E6; /* Optional border */
+        tr:last-child td {
+            border-bottom: none;
+        }
+
+        tr:hover td {
+            background: var(--rpi-light-gray);
+        }
+
+        /* Accordion */
+        .accordion-item {
+            border: 2px solid var(--border-color);
+            border-radius: 8px;
+            margin-bottom: 16px;
+            overflow: hidden;
+            transition: all 0.3s;
+        }
+
+        .accordion-item:hover {
+            border-color: var(--rpi-red);
+        }
+
+        .accordion-header {
+            background: var(--rpi-light-gray);
+            padding: 20px 24px;
+            cursor: pointer;
+            font-weight: 600;
+            font-size: 16px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            transition: all 0.3s;
+            user-select: none;
+        }
+
+        .accordion-header:hover {
+            background: rgba(214, 0, 28, 0.05);
+        }
+
+        .accordion-header.active {
+            background: var(--rpi-red);
+            color: white;
+        }
+
+        .accordion-icon {
+            width: 24px;
+            height: 24px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 50%;
+            background: white;
+            color: var(--rpi-red);
+            font-weight: bold;
+            transition: transform 0.3s;
+        }
+
+        .accordion-header.active .accordion-icon {
+            transform: rotate(180deg);
+            background: rgba(255, 255, 255, 0.2);
+            color: white;
+        }
+
+        .accordion-content {
+            max-height: 0;
+            overflow: hidden;
+            transition: max-height 0.3s ease-out;
+            background: var(--background);
+        }
+
+        .accordion-content.active {
+            max-height: 1000px;
+            transition: max-height 0.5s ease-in;
+        }
+
+        .accordion-content-inner {
+            padding: 24px;
+        }
+
+        /* Info box */
+        .info-box {
+            background: linear-gradient(135deg, var(--rpi-red) 0%, var(--rpi-dark-red) 100%);
+            color: white;
+            padding: 32px;
+            border-radius: 12px;
+            margin: 20px 0;
+            display: flex;
+            align-items: center;
+            gap: 20px;
+        }
+
+        .info-box strong {
+            font-size: 18px;
+            display: block;
+            margin-bottom: 8px;
+        }
+
+        /* Responsive */
+        @media (max-width: 768px) {
+            .hero h1 {
+                font-size: 36px;
+            }
+
+            .section {
+                padding: 24px;
+            }
+
+            .nav-container {
+                gap: 20px;
+            }
+
+            .image-slider {
+                height: 300px;
+            }
+
+            .feature-list {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        /* Dark Mode */
+        @media (prefers-color-scheme: dark) {
+            :root {
+                --background: #1A1A1A;
+                --text-primary: #FFFFFF;
+                --text-secondary: #B0B0B0;
+                --border-color: #2A2A2A;
+                --rpi-light-gray: #242424;
+            }
+
+            .card {
+                background: #242424;
+            }
+
+            .accordion-header {
+                background: #242424;
+            }
+
+            .accordion-header:hover {
+                background: rgba(214, 0, 28, 0.1);
+            }
+
+            .feature-list li {
+                background: #242424;
+            }
+
+            .feature-list li:hover {
+                background: rgba(214, 0, 28, 0.1);
+            }
+
+            td {
+                background: #1A1A1A;
+            }
+
+            tr:hover td {
+                background: #242424;
+            }
         }
     </style>
+</head>
+<body>
+    <!-- Hero -->
+    <div class="hero">
+        <div class="hero-content">
+            <div class="badge">Freshman • Sophomore Dorm</div>
+            <h1>Sharp Hall</h1>
+            <div class="hero-subtitle">Rensselaer Polytechnic Institute</div>
+        </div>
+    </div>
+
+    <!-- Image Slider -->
+    <div class="image-slider">
+        <div class="slides">
+            <img src="path_to_image1.jpg" alt="Sharp Hall Exterior">
+            <img src="path_to_image2.jpg" alt="Sharp Hall Interior">
+            <img src="path_to_image3.jpg" alt="Sharp Hall Room Example">
+        </div>
+        <div class="slider-dots">
+            <div class="dot active" data-slide="0"></div>
+            <div class="dot" data-slide="1"></div>
+            <div class="dot" data-slide="2"></div>
+        </div>
+    </div>
+
+    <!-- Navigation -->
+    <nav class="nav-bar">
+        <div class="nav-container">
+            <a href="#property-details">Details</a>
+            <a href="#pricing">Pricing</a>
+            <a href="#amenities">Amenities</a>
+            <a href="#furniture">Furniture</a>
+            <a href="#dining">Dining</a>
+        </div>
+    </nav>
+
+    <div class="container">
+        <!-- Property Details -->
+        <section id="property-details" class="section">
+            <h2>Property Details</h2>
+            <div class="card">
+                <ul class="feature-list">
+                    <li>In-room restrooms</li>
+                    <li>No on-floor shared restrooms</li>
+                    <li>Cleaning available once per week</li>
+                    <li>No designated all-gender restroom listed</li>
+                </ul>
+            </div>
+        </section>
+
+        <!-- Pricing -->
+        <section id="pricing" class="section">
+            <h2>Pricing &amp; Floor Plans</h2>
+            <table>
+                <thead>
+                    <tr>
+                        <th>Room Type</th>
+                        <th>Square Footage</th>
+                        <th>Price per Semester</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td><strong>Single</strong></td>
+                        <td>101 sq ft</td>
+                        <td><strong>$10,930</strong></td>
+                    </tr>
+                    <tr>
+                        <td><strong>Double</strong></td>
+                        <td>—</td>
+                        <td>—</td>
+                    </tr>
+                    <tr>
+                        <td><strong>Triple</strong></td>
+                        <td>—</td>
+                        <td>—</td>
+                    </tr>
+                </tbody>
+            </table>
+        </section>
+
+        <!-- Amenities -->
+        <section id="amenities" class="section">
+            <h2>Features &amp; Amenities</h2>
+            <div class="accordion">
+                <div class="accordion-item">
+                    <div class="accordion-header">
+                        <span>Building Amenities</span>
+                        <span class="accordion-icon">▼</span>
+                    </div>
+                    <div class="accordion-content">
+                        <div class="accordion-content-inner">
+                            <ul class="feature-list">
+                                <li>Air conditioning</li>
+                                <li>Blinds</li>
+                                <li>Cable TV</li>
+                                <li>Card access required for entry</li>
+                                <li>Ethernet and wireless internet</li>
+                                <li>Kitchen/kitchenette (basement)</li>
+                                <li>Laundry (basement)</li>
+                                <li>Printer in building (basement)</li>
+                                <li>Study rooms</li>
+                            </ul>
+                            <p style="margin-top:16px; color: var(--text-secondary);">
+                                Not available: building lounge, carpet, classroom, elevator, floor lounges, indoor bicycle storage.
+                            </p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Furniture -->
+        <section id="furniture" class="section">
+            <h2>Room Furniture</h2>
+            <div class="accordion">
+                <div class="accordion-item">
+                    <div class="accordion-header">
+                        <span>Standard Room Furniture</span>
+                        <span class="accordion-icon">▼</span>
+                    </div>
+                    <div class="accordion-content">
+                        <div class="accordion-content-inner">
+                            <ul class="feature-list">
+                                <li>Wardrobe (36" × 25" × 72")</li>
+                                <li>No built-in closets</li>
+                                <li>Loftable/bunkable bed</li>
+                                <li>Extra-long twin mattress (36" × 80" × 6")</li>
+                                <li>Typical under-bed height: 30 inches</li>
+                                <li>Desk and chair (48" × 24")</li>
+                                <li>Bookcase above desk (34" × 9" × 26")</li>
+                            </ul>
+                            <p style="margin-top:16px; color: var(--text-secondary);">
+                                Three-drawer dressers are not listed as included furniture in Sharp Hall rooms.
+                            </p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Dining -->
+        <section id="dining" class="section">
+            <h2>Dining Options</h2>
+            <div class="info-box">
+                <div>
+                    <strong>Nearest Dining Hall</strong>
+                    <p>Commons Dining Hall – primary dining option for Sharp Hall residents.</p>
+                </div>
+            </div>
+        </section>
+    </div>
+
     <script>
-        document.addEventListener("DOMContentLoaded", function() {
-            const headers = document.querySelectorAll(".accordion-header");
-            headers.forEach(header => {
-                header.addEventListener("click", function() {
-                    const content = this.nextElementSibling;
-                    this.classList.toggle("active");
-                    content.style.display = content.style.display === "block" ? "none" : "block";
+        // Image Slider
+        let currentSlide = 0;
+        const slider = document.querySelector('.slides');
+        const slides = document.querySelectorAll('.slides img');
+        const dots = document.querySelectorAll('.dot');
+
+        function goToSlide(n) {
+            currentSlide = n;
+            slider.style.transform = `translateX(-${currentSlide * 100}%)`;
+            dots.forEach((dot, i) => {
+                dot.classList.toggle('active', i === currentSlide);
+            });
+        }
+
+        dots.forEach((dot, i) => {
+            dot.addEventListener('click', () => goToSlide(i));
+        });
+
+        setInterval(() => {
+            currentSlide = (currentSlide + 1) % slides.length;
+            goToSlide(currentSlide);
+        }, 5000);
+
+        // Accordion
+        document.querySelectorAll('.accordion-header').forEach(header => {
+            header.addEventListener('click', function() {
+                const wasActive = this.classList.contains('active');
+                const section = this.closest('.section');
+                section.querySelectorAll('.accordion-header').forEach(h => {
+                    h.classList.remove('active');
+                    h.nextElementSibling.classList.remove('active');
                 });
+                if (!wasActive) {
+                    this.classList.add('active');
+                    this.nextElementSibling.classList.add('active');
+                }
+            });
+        });
+
+        // Smooth Scroll
+        document.querySelectorAll('.nav-container a').forEach(anchor => {
+            anchor.addEventListener('click', function(e) {
+                e.preventDefault();
+                const target = document.querySelector(this.getAttribute('href'));
+                if (target) {
+                    target.scrollIntoView({ behavior: 'smooth', block: 'start' });
+                }
             });
         });
     </script>
-</head>
-<body>
-    <div class="container">
-        <div>
-            <div class="title-section">Dorm</div>
-            <div class="main-title">Sharp Hall</div>
-            <div class="address">Freshman, Sophomore Dorm</div>
-        </div>
-    </div>
-
-    <!-- Image Carousel -->
-    <div class="carousel">
-        <img id="mainImage" src="path_to_image1.jpg" alt="Sharp Hall Image">
-        <div class="carousel-controls">
-            <button class="prev-button">&#10094;</button>
-            <button class="next-button">&#10095;</button>
-        </div>
-        <div class="carousel-counter" id="carouselCounter">1/3</div>
-        <div class="carousel-thumbnails">
-            <img src="path_to_image1.jpg" alt="Thumbnail 1" data-index="0" class="thumbnail active">
-            <img src="path_to_image2.jpg" alt="Thumbnail 2" data-index="1" class="thumbnail">
-            <img src="path_to_image3.jpg" alt="Thumbnail 3" data-index="2" class="thumbnail">
-        </div>
-    </div>
-
-    <!-- Navigation Bar -->
-    <div class="navigation-bar">
-        <a href="#property-details">Details</a>
-        <a href="#pricing">Pricing</a>
-        <a href="#amenities">Amenities</a>
-        <a href="#furniture">Furniture</a>
-        <a href="#dining">Dining</a>
-    </div>
-
-    <!-- Property Details Section -->
-    <div id="property-details" class="section">
-        <h2>Property Details</h2>
-        <div class="content-box">
-            <p><strong>Restrooms:</strong></p>
-            <ul>
-                <li>On Floor: <span class="cross">✖️</span></li>
-                <li>In Room: <span class="check">✔️</span></li>
-                <li>Cleaning Available: <span class="check">✔️</span></li>
-                <li>Cleaning Schedule: Once a week</li>
-                <li>All-Gender Restroom Available: <span class="cross">✖️</span></li>
-            </ul>
-        </div>
-    </div>
-
-    <!-- Pricing Section -->
-    <div id="pricing" class="section">
-        <h2>Pricing and Floor Plans</h2>
-        <div class="content-box">
-        <table>
-            <tr>
-                <th>Room Type</th>
-                <th>Size</th>
-                <th>Price</th>
-            </tr>
-            <tr>
-                <td>Single</td>
-                <td>101 sqft</td>
-                <td>$10,930</td>
-            </tr>
-            <tr>
-                <td>Double</td>
-                <td>-</td>
-                <td>-</td>
-            </tr>
-            <tr>
-                <td>Triple</td>
-                <td>-</td>
-                <td>-</td>
-            </tr>
-        </table>
-    </div>
-    </div>
-
-    <!-- Amenities and Furniture Accordion Section -->
-    <div class="section">
-        <h2>Features</h2>
-        <div class="content-box">
-        <div class="accordion">
-            <div class="accordion-item">
-                <div class="accordion-header">Amenities</div>
-                <div class="accordion-content">
-                    <ul>
-                        <li>Air Conditioning: <span class="check">✔️</span></li>
-                        <li>Blinds: <span class="check">✔️</span></li>
-                        <li>Building Lounge: <span class="cross">✖️</span></li>
-                        <li>Cable TV: <span class="check">✔️</span></li>
-                        <li>Card Access Required for Entry: <span class="check">✔️</span></li>
-                        <li>Carpet: <span class="cross">✖️</span></li>
-                        <li>Classroom: <span class="cross">✖️</span></li>
-                        <li>Elevator: <span class="cross">✖️</span></li>
-                        <li>Ethernet: <span class="check">✔️</span></li>
-                        <li>Floor Lounge: <span class="cross">✖️</span></li>
-                        <li>Indoor Bicycle Storage: <span class="cross">✖️</span></li>
-                        <li>Kitchen/Kitchenette: <span class="check">✔️</span> (Basement)</li>
-                        <li>Laundry: <span class="check">✔️</span> (Basement)</li>
-                        <li>Printer in Building: <span class="check">✔️</span> (Basement)</li>
-                        <li>Study Room(s): <span class="check">✔️</span></li>
-                        <li>Wireless: <span class="check">✔️</span></li>
-                    </ul>
-                </div>
-            </div>
-
-            <div class="accordion-item">
-                <div class="accordion-header">Furniture</div>
-                <div class="accordion-content">
-                    <ul>
-                        <li>Wardrobe: <span class="check">✔️</span> (36" x 25" x 72")</li>
-                        <li>Built-in Closet: <span class="cross">✖️</span></li>
-                        <li>Loftable/Bunkable Bed: <span class="check">✔️</span></li>
-                        <li>Mattress Size: <span class="check">✔️</span> Extra Long Twin (36" x 80" x 6")</li>
-                        <li>Underbed Height (typical unlofted): <span class="check">✔️</span> 30 inches</li>
-                        <li>Desk and Chair: <span class="check">✔️</span> (48" x 24")</li>
-                        <li>Bookcase (above desk): <span class="check">✔️</span> (34" x 9" x 26")</li>
-                        <li>Dresser (Three Drawer): <span class="cross">✖️</span></li>
-                    </ul>
-                </div>
-            </div>
-        </div>
-    </div>
-
-    <!-- Dining Section -->
-    <div id="dining" class="section">
-        <h2>Dining</h2>
-        <div class="content-box">
-        <p><strong>Nearest Dining Hall:</strong> Commons Dining Hall</p>
-        </div>
-    </div>
 </body>
 </html>
