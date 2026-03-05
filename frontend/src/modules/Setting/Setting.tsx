@@ -249,6 +249,9 @@ export default function Setting() {
       setter(nextValue);
       try {
         await updateUser({ [field]: nextValue });
+        if (field === 'darkMode') {
+          window.dispatchEvent(new Event('user-settings-updated'));
+        }
         showSnackbar(`${label} ${nextValue ? 'enabled' : 'disabled'}`, 'success');
       } catch (e: any) {
         setter(currentValue);
@@ -265,6 +268,8 @@ export default function Setting() {
     setLanguage(value);
     try {
       await updateUser({ language: value });
+      window.dispatchEvent(new Event('user-settings-updated'));
+
       showSnackbar('Language preference updated', 'success');
     } catch (e: any) {
       setLanguage(prev);

@@ -3,374 +3,334 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Colonie Apartments</title>
+    <title>Colonie Apartments - RPI Housing</title>
     <style>
-        .check, .cross {
-        font-family: Arial, sans-serif;
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+
+        :root {
+            --rpi-red: #D6001C;
+            --rpi-dark-red: #A50016;
+            --rpi-light-gray: #E8E9EA;
+            --rpi-gray: #54585A;
+            --background: #FFFFFF;
+            --text-primary: #1A1A1A;
+            --text-secondary: #54585A;
+            --border-color: #E6E6E6;
         }
 
         body {
-            font-family: 'Arial', sans-serif;
-            background-color:#F5F4F0;
-            margin: 0;
-            padding: 0;
-            color: #3c3c3b;
+            font-family:'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background:var(--rpi-light-gray);
+            color:var(--text-primary);
+            line-height:1.6;
         }
 
-        .container {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            padding: 40px 20px;
-            border-bottom: 2px solid #E6E6E6;
+        /* HERO */
+        .hero {
+            background:linear-gradient(135deg,var(--rpi-red),var(--rpi-dark-red));
+            color:white;
+            padding:60px 20px 40px;
+            text-align:center;
+            position:relative;
+            overflow:hidden;
         }
-
-        .title-section {
-            text-transform: uppercase;
-            font-size: 14px;
-            color: #737373;
+        .hero::before{
+            content:'';
+            position:absolute;
+            inset:0;
+            background:url('data:image/svg+xml,<svg width="140" height="140" xmlns="http://www.w3.org/2000/svg"><defs><pattern id="grid" width="140" height="140" patternUnits="userSpaceOnUse"><path d="M 140 0 L 0 0 0 140" fill="none" stroke="rgba(255,255,255,0.06)" stroke-width="1"/></pattern></defs><rect width="140" height="140" fill="url(%23grid)"/></svg>');
+            opacity:.3;
         }
-
-        .main-title {
-            font-size: 48px;
-            font-weight: 700;
-            margin: 10px 0;
-            color: #3c3c3b;
+        .hero-content { max-width:1200px; margin:auto; position:relative; }
+        .badge {
+            display:inline-block; padding:8px 16px; background:rgba(255,255,255,.2);
+            border-radius:20px; text-transform:uppercase; font-size:12px; letter-spacing:1px;
         }
+        .hero h1 { font-size:56px; margin-top:16px; }
+        .hero-subtitle { font-size:18px; margin-top:8px; opacity:.9; }
 
-        .address {
-            font-size: 14px;
-            color: #3c3c3b;
-            text-transform: uppercase;
-            margin-bottom: 20px;
-            letter-spacing: 1px;
+        /* SLIDER */
+        .image-slider { width:100%; height:500px; overflow:hidden; background:var(--rpi-gray); position:relative; }
+        .slides { display:flex; height:100%; transition:transform .6s ease; }
+        .slides img { width:100%; height:100%; object-fit:cover; }
+        .slider-dots {
+            position:absolute; bottom:20px; left:50%; transform:translateX(-50%);
+            display:flex; gap:10px;
         }
-
-        /* Image Carousel */
-        .carousel {
-            position: relative;
-            max-width: 800px;
-            margin: 20px auto;
-            text-align: center;
+        .dot {
+            width:12px; height:12px; background:rgba(255,255,255,.6);
+            border-radius:50%; cursor:pointer;
         }
+        .dot.active { background:white; width:30px; border-radius:6px; }
 
-        .carousel img {
-            width: 100%;
-            height: auto;
-            border-radius: 8px;
+        /* NAV */
+        .nav-bar { background:white; position:sticky; top:0; z-index:100; box-shadow:0 2px 8px rgba(0,0,0,.1); }
+        .nav-container {
+            max-width:1200px; margin:auto; padding:20px;
+            display:flex; justify-content:center; gap:40px;
         }
-
-        .carousel-thumbnails {
-            display: flex;
-            justify-content: center;
-            gap: 10px;
-            margin-top: 10px;
+        .nav-container a {
+            text-decoration:none; font-size:14px; text-transform:uppercase;
+            color:var(--text-secondary); font-weight:600;
+            padding-bottom:6px; border-bottom:3px solid transparent;
         }
+        .nav-container a:hover { color:var(--rpi-red); border-bottom-color:var(--rpi-red); }
 
-        .carousel-thumbnails img {
-            width: 100px;
-            height: auto;
-            cursor: pointer;
-            opacity: 0.6;
-            transition: opacity 0.3s;
-            border-radius: 5px;
-        }
-
-        .carousel-thumbnails img:hover, .carousel-thumbnails img.active {
-            opacity: 1;
-        }
-
-        .carousel-controls {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            position: absolute;
-            top: 50%;
-            width: 100%;
-            transform: translateY(-50%);
-        }
-
-        .carousel-controls button {
-            background-color: rgba(0, 0, 0, 0.5);
-            color: #fff;
-            border: none;
-            padding: 10px;
-            cursor: pointer;
-            border-radius: 50%;
-        }
-
-        .carousel-counter {
-            margin-top: 10px;
-            font-size: 14px;
-            color: #737373;
-        }
-
-        /* Navigation Bar */
-        .navigation-bar {
-            display: flex;
-            justify-content: center;
-            padding: 10px 0;
-            border-bottom: 2px solid #E6E6E6;
-            background-color: #ffffff;
-        }
-
-        .navigation-bar a {
-            margin: 0 15px;
-            font-size: 14px;
-            text-transform: uppercase;
-            color: #3c3c3b;
-            text-decoration: none;
-            font-weight: 600;
-        }
-
-        .navigation-bar a:hover {
-            color: #737373;
-        }
-
-        /* Section styling */
+        /* SECTIONS */
+        .container { max-width:1200px; margin:40px auto; padding:0 20px; }
         .section {
-            padding: 40px 20px;
-            font-size: 18px;
-            color: #3c3c3b;
+            background:white; padding:40px; border-radius:12px;
+            margin-bottom:30px; box-shadow:0 2px 12px rgba(0,0,0,.06);
+        }
+        .section h2 {
+            color:var(--rpi-red); font-size:32px; margin-bottom:24px;
+            display:flex; gap:10px; align-items:center;
+        }
+        .section h2::before { content:''; width:4px; height:32px; background:var(--rpi-red); }
+
+        /* LIST */
+        .feature-list {
+            list-style:none;
+            display:grid;
+            grid-template-columns:repeat(auto-fit,minmax(250px,1fr));
+            gap:12px;
+        }
+        .feature-list li {
+            background:var(--rpi-light-gray); padding:12px; border-radius:8px;
+            display:flex; gap:12px; align-items:center;
+        }
+        .feature-list li::before {
+            content:'✓'; width:24px; height:24px; border-radius:50%;
+            background:var(--rpi-red); color:white; display:flex; justify-content:center; align-items:center;
         }
 
-        .section h3 {
-            margin-top: 20px;
-            font-size: 24px;
-        }
+        /* TABLE */
+        table { width:100%; border-collapse:separate; border-spacing:0; overflow:hidden; border-radius:8px; }
+        th { background:var(--rpi-red); color:white; padding:16px; text-transform:uppercase; }
+        td { padding:16px; background:white; border-bottom:1px solid var(--border-color); }
 
-        .accordion {
-            width: 100%;
-            background-color: #ffffff;
-            border: 1px solid #E6E6E6;
-            border-radius: 5px;
-            overflow: hidden;
-        }
-
-        .accordion-item {
-            border-top: 1px solid #E6E6E6;
-        }
-
+        /* ACCORDION */
+        .accordion-item { border:2px solid var(--border-color); margin-bottom:20px; border-radius:8px; }
         .accordion-header {
-            background-color: #f4f4f4;
-            padding: 15px 20px;
-            cursor: pointer;
-            font-weight: bold;
-            color: #3c3c3b;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
+            background:var(--rpi-light-gray); padding:20px; cursor:pointer;
+            display:flex; justify-content:space-between; font-weight:600;
         }
+        .accordion-header.active { background:var(--rpi-red); color:white; }
+        .accordion-content { max-height:0; overflow:hidden; transition:max-height .4s ease; }
+        .accordion-content-inner { padding:20px; }
 
-        .accordion-content {
-            display: none;
-            padding: 20px;
-            font-size: 16px;
-            line-height: 1.6;
-        }
-
-        .accordion-content ul {
-            list-style: none;
-            padding: 0;
-        }
-
-        .accordion-content li {
-            margin: 10px 0;
-            font-size: 16px;
-            display: flex;
-            align-items: center;
-        }
-
-        /* Check and Cross symbols */
-        li .check {
-            color: green;
-            margin-right: 8px;
-        }
-
-        li .cross {
-            color: red;
-            margin-right: 8px;
-        }
-
-        /* Rotate icon */
-        .accordion-header::after {
-            content: '▼';
-            font-size: 14px;
-            color: #737373;
-            transition: transform 0.3s ease;
-        }
-
-        .accordion-header.active::after {
-            transform: rotate(180deg);
-        }
-
-        table {
-            width: 100%;
-            border-collapse: collapse;
-            margin: 20px 0;
-        }
-
-        table th, table td {
-            text-align: left;
-            padding: 10px;
-            border: 1px solid #e0e0e0;
-        }
-
-        table th {
-            background-color: #f4f4f4;
-        }
-
-        .content-box {
-            background-color: #ffffff; /* White background */
-            padding: 20px; /* Space inside the box */
-            border-radius: 8px; /* Rounded corners */
-            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1); /* Subtle shadow */
-            margin: 20px 0; /* Space between sections */
-            border: 1px solid #E6E6E6; /* Optional border */
+        /* DINING */
+        .info-box {
+            background:linear-gradient(135deg,var(--rpi-red),var(--rpi-dark-red));
+            color:white; padding:32px; border-radius:12px;
         }
     </style>
-    <script>
-        document.addEventListener("DOMContentLoaded", function() {
-            const headers = document.querySelectorAll(".accordion-header");
-            headers.forEach(header => {
-                header.addEventListener("click", function() {
-                    const content = this.nextElementSibling;
-                    this.classList.toggle("active");
-                    content.style.display = content.style.display === "block" ? "none" : "block";
-                });
-            });
-        });
-    </script>
 </head>
+
 <body>
-    <div class="container">
-        <div>
-            <div class="title-section">Dorm</div>
-            <div class="main-title">Colonie Apartments</div>
-            <div class="address">Sophomore Dorm</div>
-        </div>
+
+<!-- HERO -->
+<div class="hero">
+    <div class="hero-content">
+        <div class="badge">Sophomore Housing</div>
+        <h1>Colonie Apartments</h1>
+        <div class="hero-subtitle">Sophomore Dorm</div>
+    </div>
+</div>
+
+<!-- SLIDER -->
+<div class="image-slider">
+    <div class="slides">
+        <img src="path_to_image1.jpg" alt="Colonie Exterior">
+        <img src="path_to_image2.jpg" alt="Colonie Interior">
+        <img src="path_to_image3.jpg" alt="Colonie Room">
     </div>
 
-    <!-- Image Carousel -->
-    <div class="carousel">
-        <img id="mainImage" src="path_to_image1.jpg" alt="Colonie Apartments Image">
-        <div class="carousel-controls">
-            <button class="prev-button">&#10094;</button>
-            <button class="next-button">&#10095;</button>
-        </div>
-        <div class="carousel-counter" id="carouselCounter">1/3</div>
-        <div class="carousel-thumbnails">
-            <img src="path_to_image1.jpg" alt="Thumbnail 1" data-index="0" class="thumbnail active">
-            <img src="path_to_image2.jpg" alt="Thumbnail 2" data-index="1" class="thumbnail">
-            <img src="path_to_image3.jpg" alt="Thumbnail 3" data-index="2" class="thumbnail">
-        </div>
+    <div class="slider-dots">
+        <div class="dot active" data-slide="0"></div>
+        <div class="dot" data-slide="1"></div>
+        <div class="dot" data-slide="2"></div>
     </div>
+</div>
 
-    <!-- Navigation Bar -->
-    <div class="navigation-bar">
+<!-- NAV -->
+<nav class="nav-bar">
+    <div class="nav-container">
         <a href="#property-details">Details</a>
         <a href="#pricing">Pricing</a>
         <a href="#amenities">Amenities</a>
         <a href="#furniture">Furniture</a>
         <a href="#dining">Dining</a>
     </div>
+</nav>
 
-    <!-- Property Details Section -->
-    <div id="property-details" class="section">
+<!-- CONTENT -->
+<div class="container">
+
+    <!-- DETAILS -->
+    <section id="property-details" class="section">
         <h2>Property Details</h2>
-        <div class="content-box">
-            <p><strong>Restrooms:</strong></p>
-            <ul>
-                <li>On Floor: <span class="cross">✖️</span></li>
-                <li>In Room: <span class="check">✔️</span></li>
-                <li>Cleaning Available: <span class="cross">✖️</span></li>
-                <li>All-Gender Restroom Available: <span class="cross">✖️</span></li>
-            </ul>
-        </div>
-    </div>
 
-    <!-- Pricing Section -->
-    <div id="pricing" class="section">
-        <h2>Pricing and Floor Plans</h2>
-        <div class="content-box">
+        <ul class="feature-list">
+            <li>Bathroom On Floor: ✖️</li>
+            <li>In-Room Bathroom: ✔️</li>
+            <li>Cleaning Available: ✖️</li>
+            <li>All-Gender Restroom: ✖️</li>
+        </ul>
+    </section>
+
+    <!-- PRICING -->
+    <section id="pricing" class="section">
+        <h2>Pricing & Floor Plans</h2>
+
         <table>
-            <tr>
-                <th>Room Type</th>
-                <th>Size</th>
-                <th>Price</th>
-            </tr>
-            <tr>
-                <td>Single</td>
-                <td>-</td>
-                <td>-</td>
-            </tr>
-            <tr>
-                <td>Double</td>
-                <td>216 sqft</td>
-                <td>$9,650</td>
-            </tr>
-            <tr>
-                <td>Triple</td>
-                <td>-</td>
-                <td>-</td>
-            </tr>
+            <thead>
+                <tr>
+                    <th>Room Type</th>
+                    <th>Square Footage</th>
+                    <th>Price per Semester</th>
+                </tr>
+            </thead>
+
+            <tbody>
+                <tr>
+                    <td><strong>Single</strong></td>
+                    <td>—</td>
+                    <td>—</td>
+                </tr>
+
+                <tr>
+                    <td><strong>Double</strong></td>
+                    <td>216 sq ft</td>
+                    <td>$9,650</td>
+                </tr>
+
+                <tr>
+                    <td><strong>Triple</strong></td>
+                    <td>—</td>
+                    <td>—</td>
+                </tr>
+            </tbody>
         </table>
-    </div>
-    </div>
+    </section>
 
-    <!-- Amenities and Furniture Accordion Section -->
-    <div class="section">
-        <h2>Features</h2>
-        <div class="content-box">
+    <!-- AMENITIES -->
+    <section id="amenities" class="section">
+        <h2>Features & Amenities</h2>
+
         <div class="accordion">
+
             <div class="accordion-item">
-                <div class="accordion-header">Amenities</div>
+                <div class="accordion-header">
+                    <span>Building Amenities</span>
+                    <span>▼</span>
+                </div>
                 <div class="accordion-content">
-                    <ul>
-                        <li>Air Conditioning: <span class="check">✔️</span></li>
-                        <li>Blinds: <span class="check">✔️</span></li>
-                        <li>Building Lounge: <span class="cross">✖️</span></li>
-                        <li>Cable TV: <span class="check">✔️</span></li>
-                        <li>Card Access Required for Entry: <span class="check">✔️</span></li>
-                        <li>Carpet: <span class="cross">✖️</span></li>
-                        <li>Classroom: <span class="cross">✖️</span></li>
-                        <li>Elevator: <span class="cross">✖️</span></li>
-                        <li>Ethernet: <span class="check">✔️</span></li>
-                        <li>Floor Lounge: <span class="check">✔️</span></li>
-                        <li>Indoor Bicycle Storage: <span class="cross">✖️</span></li>
-                        <li>Kitchen/Kitchenette: <span class="check">✔️</span> (One per floor)</li>
-                        <li>Laundry: <span class="check">✔️</span> (First floor each building)</li>
-                        <li>Printer in Building: <span class="check">✔️</span> (Colonie B first floor lounge)</li>
-                        <li>Study Room(s): <span class="check">✔️</span></li>
-                        <li>Wireless: <span class="check">✔️</span></li>
-                    </ul>
+                    <div class="accordion-content-inner">
+
+                        <ul class="feature-list">
+                            <li>Air Conditioning: ✔️</li>
+                            <li>Blinds: ✔️</li>
+                            <li>Building Lounge: ✖️</li>
+                            <li>Cable TV: ✔️</li>
+                            <li>Card Access Required: ✔️</li>
+                            <li>Carpet: ✖️</li>
+                            <li>Classroom: ✖️</li>
+                            <li>Elevator: ✖️</li>
+                            <li>Ethernet: ✔️</li>
+                            <li>Floor Lounge: ✔️</li>
+                            <li>Indoor Bicycle Storage: ✖️</li>
+                            <li>Kitchen: ✔️ (One per floor)</li>
+                            <li>Laundry: ✔️ (Each building, 1st floor)</li>
+                            <li>Printer: ✔️ (Colonie B)</li>
+                            <li>Study Room(s): ✔️</li>
+                            <li>Wireless: ✔️</li>
+                        </ul>
+
+                    </div>
                 </div>
             </div>
 
-            <div class="accordion-item">
-                <div class="accordion-header">Furniture</div>
-                <div class="accordion-content">
-                    <ul>
-                        <li>Wardrobe: <span class="cross">✖️</span></li>
-                        <li>Built-in Closet: <span class="check">✔️</span> (60" x 30" x 78")</li>
-                        <li>Loftable/Bunkable Bed: <span class="check">✔️</span></li>
-                        <li>Mattress Size: <span class="check">✔️</span> Extra Long Twin (36" x 80" x 6")</li>
-                        <li>Underbed Height (typical unlofted): <span class="check">✔️</span> 30 inches</li>
-                        <li>Desk and Chair: <span class="check">✔️</span> (48" x 24")</li>
-                        <li>Bookcase (above desk): <span class="check">✔️</span> (34" x 9" x 26")</li>
-                        <li>Dresser (Three Drawer): <span class="check">✔️</span> (32" x 19" x 30")</li>
-                    </ul>
-                </div>
-            </div>
         </div>
-    </div>
+    </section>
 
-    <!-- Dining Section -->
-    <div id="dining" class="section">
-        <h2>Dining</h2>
-        <div class="content-box">
-        <p><strong>Nearest Dining Hall:</strong> BARH Dining Hall</p>
+    <!-- FURNITURE -->
+    <section id="furniture" class="section">
+        <h2>Furniture</h2>
+
+        <div class="accordion">
+
+            <div class="accordion-item">
+                <div class="accordion-header">
+                    <span>Room Furniture</span>
+                    <span>▼</span>
+                </div>
+
+                <div class="accordion-content">
+                    <div class="accordion-content-inner">
+
+                        <ul class="feature-list">
+                            <li>Wardrobe: ✖️</li>
+                            <li>Built-in Closet: ✔️ (60" × 30" × 78")</li>
+                            <li>Loftable/Bunkable Bed: ✔️</li>
+                            <li>Mattress Size: Extra Long Twin (36" × 80" × 6")</li>
+                            <li>Underbed Height: 30 inches</li>
+                            <li>Desk & Chair: ✔️ (48" × 24")</li>
+                            <li>Bookcase: ✔️ (34" × 9" × 26")</li>
+                            <li>Dresser: ✔️ (32" × 19" × 30")</li>
+                        </ul>
+
+                    </div>
+                </div>
+
+            </div>
+
         </div>
-    </div>
+    </section>
+
+    <!-- DINING -->
+    <section id="dining" class="section">
+        <h2>Dining Options</h2>
+
+        <div class="info-box">
+            <strong>Nearest Dining Hall</strong>
+            <p>BARH Dining Hall</p>
+        </div>
+
+    </section>
+
+</div>
+
+<script>
+/* SLIDER */
+let currentSlide = 0;
+const slider = document.querySelector(".slides");
+const slides = document.querySelectorAll(".slides img");
+const dots = document.querySelectorAll(".dot");
+
+function goToSlide(n){
+    currentSlide = n;
+    slider.style.transform = `translateX(-${n*100}%)`;
+    dots.forEach((d,i)=>d.classList.toggle("active",i===n));
+}
+dots.forEach((dot,i)=>dot.addEventListener("click",()=>goToSlide(i)));
+setInterval(()=>goToSlide((currentSlide+1)%slides.length),5000);
+
+/* ACCORDION */
+document.querySelectorAll(".accordion-header").forEach(header=>{
+    header.addEventListener("click",()=>{
+        const active = header.classList.contains("active");
+        document.querySelectorAll(".accordion-header").forEach(h=>h.classList.remove("active"));
+        document.querySelectorAll(".accordion-content").forEach(c=>c.style.maxHeight=0);
+
+        if(!active){
+            header.classList.add("active");
+            const content=header.nextElementSibling;
+            content.style.maxHeight = content.scrollHeight + "px";
+        }
+    });
+});
+</script>
+
 </body>
 </html>

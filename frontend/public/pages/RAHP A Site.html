@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Warren Hall - RPI Housing</title>
+    <title>RAHP A Site - Colvin &amp; Albright</title>
     <style>
         * { margin: 0; padding: 0; box-sizing: border-box; }
 
@@ -260,6 +260,7 @@
         }
 
         tr:last-child td { border-bottom: none; }
+
         tr:hover td { background: var(--rpi-light-gray); }
 
         .accordion-item {
@@ -365,17 +366,17 @@
 <body>
     <div class="hero">
         <div class="hero-content">
-            <div class="badge">Freshman Dorm</div>
-            <h1>Warren Hall</h1>
+            <div class="badge">Sophomore Apartments • RAHP A Site</div>
+            <h1>Colvin &amp; Albright</h1>
             <div class="hero-subtitle">Rensselaer Polytechnic Institute</div>
         </div>
     </div>
 
     <div class="image-slider">
         <div class="slides">
-            <img src="path_to_image1.jpg" alt="Warren Hall Exterior">
-            <img src="path_to_image2.jpg" alt="Warren Hall Interior">
-            <img src="path_to_image3.jpg" alt="Warren Hall Room Example">
+            <img src="path_to_image1.jpg" alt="Colvin and Albright Exterior">
+            <img src="path_to_image2.jpg" alt="Colvin and Albright Interior">
+            <img src="path_to_image3.jpg" alt="Colvin and Albright Apartment Example">
         </div>
         <div class="slider-dots">
             <div class="dot active" data-slide="0"></div>
@@ -399,9 +400,9 @@
             <h2>Property Details</h2>
             <div class="card">
                 <ul class="feature-list">
-                    <li>In-room restrooms</li>
-                    <li>No on-floor shared restrooms</li>
-                    <li>Cleaning available once per week</li>
+                    <li>In-apartment restrooms</li>
+                    <li>No shared on-floor restrooms</li>
+                    <li>No regular cleaning service</li>
                     <li>No designated all-gender restroom listed</li>
                 </ul>
             </div>
@@ -420,13 +421,13 @@
                 <tbody>
                     <tr>
                         <td><strong>Single</strong></td>
-                        <td>—</td>
-                        <td><strong>$10,930</strong></td>
+                        <td>96 sq ft</td>
+                        <td><strong>$8,710</strong></td>
                     </tr>
                     <tr>
                         <td><strong>Double</strong></td>
-                        <td>231 sq ft</td>
-                        <td><strong>$9,650</strong></td>
+                        <td>—</td>
+                        <td>—</td>
                     </tr>
                     <tr>
                         <td><strong>Triple</strong></td>
@@ -442,27 +443,22 @@
             <div class="accordion">
                 <div class="accordion-item">
                     <div class="accordion-header">
-                        <span>Building Amenities</span>
+                        <span>Building &amp; Apartment Amenities</span>
                         <span class="accordion-icon">▼</span>
                     </div>
                     <div class="accordion-content">
                         <div class="accordion-content-inner">
                             <ul class="feature-list">
                                 <li>Blinds</li>
-                                <li>Building lounge</li>
                                 <li>Cable TV</li>
-                                <li>Card access required for entry</li>
-                                <li>Carpet (hallways, rooms, common spaces)</li>
+                                <li>Carpet in bedrooms and living rooms</li>
                                 <li>Ethernet and wireless internet</li>
-                                <li>Floor lounges</li>
-                                <li>Indoor bicycle storage</li>
-                                <li>Kitchen/kitchenette (first floor)</li>
-                                <li>Laundry (basement)</li>
-                                <li>Printer in building (first floor study room)</li>
-                                <li>Study rooms</li>
+                                <li>Full kitchen in each apartment</li>
+                                <li>Laundry (Colvin 4 laundry)</li>
                             </ul>
                             <p style="margin-top:16px; color: var(--text-secondary);">
-                                Not available: air conditioning, classroom, elevator.
+                                Not available: air conditioning, building lounge, card access entry, elevator, floor lounges,
+                                indoor bicycle storage, printer in building, dedicated study rooms.
                             </p>
                         </div>
                     </div>
@@ -471,7 +467,7 @@
         </section>
 
         <section id="furniture" class="section">
-            <h2>Room Furniture</h2>
+            <h2>Room &amp; Apartment Furniture</h2>
             <div class="accordion">
                 <div class="accordion-item">
                     <div class="accordion-header">
@@ -482,16 +478,14 @@
                         <div class="accordion-content-inner">
                             <ul class="feature-list">
                                 <li>Wardrobe (36" × 25" × 72")</li>
-                                <li>Built-in closet (68" × 26" × 80")</li>
-                                <li>Loftable/bunkable bed</li>
+                                <li>No built-in closets</li>
+                                <li>Standard (non-loftable) bed</li>
                                 <li>Extra-long twin mattress (36" × 80" × 6")</li>
                                 <li>Typical under-bed height: 30 inches</li>
                                 <li>Desk and chair (48" × 24")</li>
                                 <li>Bookcase above desk (34" × 9" × 26")</li>
+                                <li>Dresser (three drawers, 32" × 19" × 30")</li>
                             </ul>
-                            <p style="margin-top:16px; color: var(--text-secondary);">
-                                Standalone three-drawer dressers are not listed as part of the standard furniture set in Warren Hall.
-                            </p>
                         </div>
                     </div>
                 </div>
@@ -503,7 +497,7 @@
             <div class="info-box">
                 <div>
                     <strong>Nearest Dining Hall</strong>
-                    <p>Commons Dining Hall – primary dining location for Warren Hall residents.</p>
+                    <p>BARH Dining Hall – primary dining location for RAHP A residents.</p>
                 </div>
             </div>
         </section>
@@ -547,10 +541,9 @@
             anchor.addEventListener('click', function(e) {
                 e.preventDefault();
                 const target = document.querySelector(this.getAttribute('href'));
-                if (target) target.scrollIntoView({ behavior: 'smooth', 'block': 'start' });
+                if (target) target.scrollIntoView({ behavior: 'smooth', block: 'start' });
             });
         });
     </script>
 </body>
 </html>
-    

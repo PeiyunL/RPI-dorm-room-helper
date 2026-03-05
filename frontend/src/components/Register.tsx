@@ -22,8 +22,6 @@ import {
     VisibilityOff,
     Email as EmailIcon,
     Lock as LockIcon,
-    Google as GoogleIcon,
-    GitHub as GitHubIcon,
     CheckCircle as CheckCircleIcon,
     Error as ErrorIcon
 } from "@mui/icons-material";
@@ -117,6 +115,10 @@ const Register: React.FC = () => {
         if (!isEmailValid || !isPasswordValid || !isPasswordConfirmValid) {
             return;
         }
+        if (!email.toLowerCase().endsWith('@rpi.edu')) {
+        setError('Access restricted to @rpi.edu email addresses.');
+        return;
+        }
 
         setLoading(true);
         setError('');
@@ -129,12 +131,12 @@ const Register: React.FC = () => {
                 passwordConfirm: passwordConfirm,
                 tokenKey: tokenKey,
             });
-            
-            setSuccessMessage('✅ Registered successfully! Redirecting to login...');
+            await pb.collection('users').requestVerification(email);
+            setSuccessMessage('Account created! Please check your RPI email to verify your account before logging in.');
             
             setTimeout(() => {
                 navigate('/login');
-            }, 1500);
+            }, 3000);
 
         } catch (error: any) {
             console.error('Registration error:', error);
@@ -154,25 +156,25 @@ const Register: React.FC = () => {
         }
     };
 
-    const handleOAuthRegister = async (provider: 'google' | 'github') => {
-        setLoading(true);
-        setError('');
+    // const handleOAuthRegister = async (provider: 'google' | 'github') => {
+    //     setLoading(true);
+    //     setError('');
 
-        try {
-            const authData = await pb.collection('users').authWithOAuth2({ provider });
+    //     try {
+    //         const authData = await pb.collection('users').authWithOAuth2({ provider });
             
-            setSuccessMessage(`Successfully registered with ${provider}!`);
+    //         setSuccessMessage(`Successfully registered with ${provider}!`);
             
-            setTimeout(() => {
-                navigate('/homepage', { replace: true });
-            }, 1000);
-        } catch (error: any) {
-            console.error(`OAuth ${provider} error:`, error);
-            setError(`Failed to register with ${provider}. Please try again.`);
-        } finally {
-            setLoading(false);
-        }
-    };
+    //         setTimeout(() => {
+    //             navigate('/homepage', { replace: true });
+    //         }, 1000);
+    //     } catch (error: any) {
+    //         console.error(`OAuth ${provider} error:`, error);
+    //         setError(`Failed to register with ${provider}. Please try again.`);
+    //     } finally {
+    //         setLoading(false);
+    //     }
+    // };
 
     return (
         <Box 
@@ -224,7 +226,7 @@ const Register: React.FC = () => {
                         Create Account
                     </Typography>
                     <Typography variant="body2" color="text.secondary">
-                        Sign up for your RPI Housing account
+                        Register with your RPI (@rpi.edu) email
                     </Typography>
                 </Box>
 
@@ -271,7 +273,7 @@ const Register: React.FC = () => {
                         }}
                         onBlur={() => validateEmail(email)}
                         error={!!emailError}
-                        helperText={emailError}
+                        helperText={emailError || "Use your @rpi.edu email"}
                         disabled={loading}
                         InputProps={{
                             startAdornment: (
@@ -377,7 +379,7 @@ const Register: React.FC = () => {
                 </Box>
 
                 {/* OAuth Options */}
-                <Divider sx={{ my: 3 }}>
+                {/* <Divider sx={{ my: 3 }}>
                     <Typography variant="body2" color="text.secondary">
                         OR
                     </Typography>
@@ -405,7 +407,7 @@ const Register: React.FC = () => {
                     >
                         Continue with GitHub
                     </Button>
-                </Stack>
+                </Stack> */}
 
                 {/* Login Link */}
                 <Box textAlign="center" mt={3}>

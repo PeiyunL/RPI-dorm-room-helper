@@ -34,6 +34,7 @@ import {
   ListItemText
 } from '@mui/material';
 import {
+  Close as CloseIcon,
   Favorite as FavoriteIcon,
   FavoriteBorder as FavoriteBorderIcon,
   Delete as DeleteIcon,
@@ -52,6 +53,7 @@ import {
 const FAVORITES_COLLECTION = 'favorites';
 const POSTS_COLLECTION = 'posts';
 const LIKES_COLLECTION = 'likes';
+const COMMENTS_COLLECTION = 'comments';
 
 // Define types
 interface Post {
@@ -69,6 +71,15 @@ interface Post {
   isLikedByUser: boolean;
   favoriteRecordId: string;
 }
+
+type PostComment = {
+  id: string;
+  content: string;
+  created: string;
+  userId: string;
+  userName: string;
+  userAvatar?: string;
+};
 
 interface Favorite {
   id: string;
@@ -135,6 +146,15 @@ export default function Favorite() {
     severity: 'success'
   });
 
+  // Post detail (view + comment) dialog state
+  const [postDetailOpen, setPostDetailOpen] = useState(false);
+  const [selectedPostId, setSelectedPostId] = useState<string | null>(null);
+  const [postDetailLoading, setPostDetailLoading] = useState(false);
+  const [detailPost, setDetailPost] = useState<Post | null>(null);
+  const [detailComments, setDetailComments] = useState<PostComment[]>([]);
+  const [newComment, setNewComment] = useState('');
+  const [postingComment, setPostingComment] = useState(false);
+
   const sortOptions: SortOption[] = [
     { value: '-created', label: 'Newest First', icon: <TimeIcon /> },
     { value: 'created', label: 'Oldest First', icon: <TimeIcon /> },
@@ -172,76 +192,70 @@ export default function Favorite() {
   };
 
   // Fetch user's likes
-  const fetchUserLikes = useCallback(async () => {
-    try {
-      const user = pb.authStore.model;
-      if (!user) return;
+const fetchUserLikes = useCallback(async (): Promise<Set<string>> => {
+  const user = pb.authStore.model;
+  if (!user) return new Set();
 
-      const likes = await pb.collection(LIKES_COLLECTION).getFullList({
-        filter: `user = "${user.id}"`,
-        fields: 'post'
+  const likes = await pb.collection(LIKES_COLLECTION).getFullList({
+    filter: `user = "${user.id}"`,
+    fields: "post",
+  });
+
+  return new Set(likes.map((like: any) => like.post));
+}, []);
+
+
+const fetchFavorites = useCallback(async (showLoading = true) => {
+  if (showLoading) setIsLoading(true);
+
+  try {
+    const user = pb.authStore.model;
+    if (!user) {
+      navigate("/login");
+      return;
+    }
+
+    const likesSet = await fetchUserLikes();
+    setUserLikes(likesSet);
+
+    const records = await pb.collection(FAVORITES_COLLECTION).getFullList({
+      filter: `user = "${user.id}"`,
+      sort: "-created",
+      expand: "post,post.author",
+    });
+
+    const formatted = records
+      .filter((r: any) => r.expand?.post)
+      .map((r: any) => {
+        const post = r.expand.post;
+        const author = post.expand?.author;
+
+        return {
+          id: post.id,
+          title: post.title || "Untitled",
+          content: post.content || "",
+          authorId: post.author || "",
+          authorName: author?.name || author?.username || "Unknown",
+          authorAvatar: author ? getAvatarUrl(author) : "",
+          category: post.category || "General",
+          createdAt: post.created || r.created,
+          imageUrl: getPostImageUrl(post),
+          likes: post.likes || 0,
+          comments: post.commentsCount || 0,
+          isLikedByUser: likesSet.has(post.id),   // <-- use likesSet, not state
+          favoriteRecordId: r.id,
+        };
       });
 
-      setUserLikes(new Set(likes.map(like => like.post)));
-    } catch (err: any) {
-      console.error('Error fetching user likes:', err);
-    }
-  }, []);
-
-  // Fetch favorites from PocketBase
-  const fetchFavorites = useCallback(async (showLoading = true) => {
-    if (showLoading) setIsLoading(true);
-    
-    try {
-      const user = pb.authStore.model;
-      if (!user) {
-        navigate('/login');
-        return;
-      }
-
-      // Fetch user's likes first
-      await fetchUserLikes();
-
-      // Fetch all favorite records for current user with expanded post data
-      const records = await pb.collection(FAVORITES_COLLECTION).getFullList<Favorite>({
-        filter: `user = "${user.id}"`,
-        sort: '-created',
-        expand: 'post,post.author',
-      });
-
-      // Map to Post format
-      const formatted: Post[] = records
-        .filter(record => record.expand?.post) // Filter out favorites with deleted posts
-        .map((record) => {
-          const post = record.expand!.post;
-          const author = post.expand?.author;
-          
-          return {
-            id: post.id,
-            title: post.title || 'Untitled',
-            content: post.content || '',
-            authorId: post.author || '',
-            authorName: author?.name || author?.username || 'Unknown',
-            authorAvatar: author ? getAvatarUrl(author) : '',
-            category: post.category || 'General',
-            createdAt: post.created || record.created,
-            imageUrl: getPostImageUrl(post),
-            likes: post.likes || 0,
-            comments: post.commentsCount || 0,
-            isLikedByUser: userLikes.has(post.id),
-            favoriteRecordId: record.id,
-          };
-        });
-
-      setFavorites(formatted);
-      setDisplayedFavorites(formatted);
-    } catch (err: any) {
-      console.error('Error fetching favorites:', err);
-      showSnackbar(`Failed to load favorites: ${err?.message || err}`, 'error');
-    } finally {
-      if (showLoading) setIsLoading(false);
-    }
-  }, [navigate, showSnackbar, fetchUserLikes, userLikes]);
+    setFavorites(formatted);
+    setDisplayedFavorites(formatted);
+  } catch (err: any) {
+    console.error("Error fetching favorites:", err);
+    showSnackbar(`Failed to load favorites: ${err?.message || err}`, "error");
+  } finally {
+    if (showLoading) setIsLoading(false);
+  }
+}, [navigate, showSnackbar, fetchUserLikes]); // <-- IMPORTANT: no userLikes here
 
   // Load favorites on mount
   useEffect(() => {
@@ -433,9 +447,137 @@ export default function Favorite() {
     return text.substring(0, maxLength) + '...';
   };
 
+  // Load post details + comments (for in-page dialog)
+  const loadPostDetail = useCallback(async (postId: string) => {
+    const user = pb.authStore.model;
+    if (!user) {
+      navigate('/login');
+      return;
+    }
+
+    setSelectedPostId(postId);
+    setPostDetailOpen(true);
+    setPostDetailLoading(true);
+
+    try {
+      // Fetch the post with author expanded
+      const p: any = await pb.collection(POSTS_COLLECTION).getOne(postId, {
+        expand: 'author',
+      });
+
+      const author = p.expand?.author;
+      const formattedPost: Post = {
+        id: p.id,
+        title: p.title || 'Untitled',
+        content: p.content || '',
+        authorId: p.author || '',
+        authorName: author?.name || author?.username || 'Unknown',
+        authorAvatar: author ? getAvatarUrl(author) : '',
+        category: p.category || 'General',
+        createdAt: p.created || p.createdAt || p.created_at || '',
+        imageUrl: getPostImageUrl(p),
+        likes: p.likes || 0,
+        comments: p.commentsCount || p.comments || 0,
+        isLikedByUser: userLikes.has(postId),
+        favoriteRecordId: '',
+      };
+
+      setDetailPost(formattedPost);
+
+      // Fetch comments
+      const commentRecords: any[] = await pb.collection(COMMENTS_COLLECTION).getFullList({
+        filter: `post = "${postId}"`,
+        sort: '-created',
+        expand: 'user',
+      });
+
+      const formattedComments: PostComment[] = commentRecords.map((c: any) => {
+        const u = c.expand?.user;
+        const content = c.content ?? c.text ?? c.body ?? '';
+        return {
+          id: c.id,
+          content: String(content),
+          created: c.created || c.createdAt || c.created_at || '',
+          userId: c.user || '',
+          userName: u?.name || u?.username || 'Unknown',
+          userAvatar: u ? getAvatarUrl(u) : '',
+        };
+      });
+
+      setDetailComments(formattedComments);
+    } catch (err: any) {
+      console.error('Failed to load post detail:', err);
+      showSnackbar(`Failed to load post: ${err?.message || err}`, 'error');
+      setPostDetailOpen(false);
+    } finally {
+      setPostDetailLoading(false);
+    }
+  }, [navigate, showSnackbar, getAvatarUrl, getPostImageUrl, userLikes]);
+
+  const handleClosePostDetail = () => {
+    setPostDetailOpen(false);
+    setSelectedPostId(null);
+    setDetailPost(null);
+    setDetailComments([]);
+    setNewComment('');
+  };
+
+  const handleSubmitComment = async () => {
+    const user = pb.authStore.model;
+    if (!user) {
+      showSnackbar('Please log in to comment', 'error');
+      return;
+    }
+    if (!selectedPostId) return;
+
+    const content = newComment.trim();
+    if (!content) return;
+
+    setPostingComment(true);
+    try {
+      await pb.collection(COMMENTS_COLLECTION).create({
+        post: selectedPostId,
+        user: user.id,
+        content,
+      });
+
+      setNewComment('');
+
+      // Reload comments
+      const commentRecords: any[] = await pb.collection(COMMENTS_COLLECTION).getFullList({
+        filter: `post = "${selectedPostId}"`,
+        sort: '-created',
+        expand: 'user',
+      });
+
+      const formattedComments: PostComment[] = commentRecords.map((c: any) => {
+        const u = c.expand?.user;
+        const cText = c.content ?? c.text ?? c.body ?? '';
+        return {
+          id: c.id,
+          content: String(cText),
+          created: c.created || c.createdAt || c.created_at || '',
+          userId: c.user || '',
+          userName: u?.name || u?.username || 'Unknown',
+          userAvatar: u ? getAvatarUrl(u) : '',
+        };
+      });
+      setDetailComments(formattedComments);
+
+      // Update comment count on card list (best-effort)
+      setFavorites(prev => prev.map(p => (p.id === selectedPostId ? { ...p, comments: formattedComments.length } : p)));
+      setDetailPost(prev => (prev ? { ...prev, comments: formattedComments.length } : prev));
+    } catch (err: any) {
+      console.error('Failed to post comment:', err);
+      showSnackbar(`Failed to post comment: ${err?.message || err}`, 'error');
+    } finally {
+      setPostingComment(false);
+    }
+  };
+
   // Handle view post details
   const handleViewPost = (postId: string) => {
-    navigate(`/posts/${postId}`);
+    loadPostDetail(postId);
   };
 
   // Get current sort label
@@ -674,7 +816,7 @@ export default function Favorite() {
                   variant="contained" 
                   color="primary" 
                   size="large"
-                  onClick={() => navigate('/posts')}
+                  onClick={() => navigate('/homepage')}
                   sx={{ mt: 1 }}
                 >
                   Browse Posts
@@ -695,6 +837,121 @@ export default function Favorite() {
         </>
       )}
       
+      {/* Post Detail Dialog (view + comment, no edit) */}
+      <Dialog
+        open={postDetailOpen}
+        onClose={handleClosePostDetail}
+        maxWidth="md"
+        fullWidth
+      >
+        <DialogTitle sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+          <Box>
+            <Typography variant="h6" sx={{ fontWeight: 700 }}>
+              {detailPost?.title || 'Post'}
+            </Typography>
+            {detailPost && (
+              <Box sx={{ display: 'flex', gap: 1, alignItems: 'center', mt: 0.5, flexWrap: 'wrap' }}>
+                <Chip size="small" label={detailPost.category} variant="outlined" />
+                <Typography variant="caption" color="text.secondary" sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}>
+                  <TimeIcon sx={{ fontSize: 16 }} />
+                  {detailPost.createdAt ? formatDate(detailPost.createdAt) : ''}
+                </Typography>
+              </Box>
+            )}
+          </Box>
+          <IconButton onClick={handleClosePostDetail} aria-label="close">
+            <CloseIcon />
+          </IconButton>
+        </DialogTitle>
+
+        <DialogContent dividers>
+          {postDetailLoading ? (
+            <Box sx={{ display: 'flex', justifyContent: 'center', py: 6 }}>
+              <CircularProgress />
+            </Box>
+          ) : (
+            <>
+              {detailPost && (
+                <Box sx={{ mb: 2 }}>
+                  <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 1 }}>
+                    <Avatar sx={{ width: 32, height: 32 }} src={detailPost.authorAvatar}>
+                      {detailPost.authorName?.charAt(0)?.toUpperCase()}
+                    </Avatar>
+                    <Typography variant="body2" sx={{ fontWeight: 600 }}>
+                      {detailPost.authorName}
+                    </Typography>
+                  </Box>
+
+                  <Typography variant="body1" sx={{ whiteSpace: 'pre-wrap', lineHeight: 1.7 }}>
+                    {detailPost.content}
+                  </Typography>
+                </Box>
+              )}
+
+              <Divider sx={{ my: 2 }} />
+
+              <Typography variant="subtitle1" sx={{ fontWeight: 700, mb: 1 }}>
+                Comments ({detailComments.length})
+              </Typography>
+
+              <Box sx={{ display: 'flex', gap: 1, alignItems: 'flex-start', mb: 1 }}>
+                <TextField
+                  fullWidth
+                  multiline
+                  minRows={2}
+                  placeholder="Write a comment..."
+                  value={newComment}
+                  onChange={(e) => setNewComment(e.target.value)}
+                />
+                <Button
+                  variant="contained"
+                  onClick={handleSubmitComment}
+                  disabled={postingComment || !newComment.trim()}
+                  sx={{ height: 40, mt: 0.5 }}
+                >
+                  {postingComment ? 'Posting...' : 'Post'}
+                </Button>
+              </Box>
+
+              <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1 }}>
+                {detailComments.length === 0 ? (
+                  <Typography variant="body2" color="text.secondary">
+                    No comments yet.
+                  </Typography>
+                ) : (
+                  detailComments.map((c) => (
+                    <Paper key={c.id} variant="outlined" sx={{ p: 1.5 }}>
+                      <Box sx={{ display: 'flex', gap: 1, alignItems: 'center', mb: 0.5 }}>
+                        <Avatar sx={{ width: 28, height: 28 }} src={c.userAvatar}>
+                          {c.userName?.charAt(0)?.toUpperCase()}
+                        </Avatar>
+                        <Box sx={{ flex: 1 }}>
+                          <Typography variant="body2" sx={{ fontWeight: 700 }}>
+                            {c.userName}
+                          </Typography>
+                          <Typography variant="caption" color="text.secondary">
+                            {c.created ? formatDate(c.created) : ''}
+                          </Typography>
+                        </Box>
+                      </Box>
+                      <Typography variant="body2" sx={{ whiteSpace: 'pre-wrap' }}>
+                        {c.content}
+                      </Typography>
+                    </Paper>
+                  ))
+                )}
+              </Box>
+            </>
+          )}
+        </DialogContent>
+
+        <DialogActions>
+          <Button onClick={handleClosePostDetail} variant="outlined">
+            Close
+          </Button>
+        </DialogActions>
+      </Dialog>
+
       {/* Delete Confirmation Dialog */}
       <Dialog
         open={deleteDialogOpen}

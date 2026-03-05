@@ -11,7 +11,6 @@ import {
     InputAdornment,
     LinearProgress,
     Paper,
-    Divider,
     Link,
     useTheme,
     useMediaQuery,
@@ -25,8 +24,8 @@ import {
     VisibilityOff,
     Email as EmailIcon,
     Lock as LockIcon,
-    Google as GoogleIcon,
-    GitHub as GitHubIcon,
+    // Google as GoogleIcon,
+    // GitHub as GitHubIcon,
     CheckCircle as CheckCircleIcon,
     Error as ErrorIcon
 } from "@mui/icons-material";
@@ -128,6 +127,13 @@ export default function Login() {
         try {
             // Authenticate with PocketBase
             const authData = await pb.collection('users').authWithPassword(email, password);
+
+            if (!authData.record.verified) {
+                setError('Please verify your email address before logging in. Check your RPI inbox!');
+                pb.authStore.clear(); // Log them out if not verified
+                setLoading(false);
+                return;
+            }
             
             // Store email if remember me is checked
             if (rememberMe) {
@@ -207,26 +213,26 @@ export default function Login() {
         }
     };
 
-    const handleOAuthLogin = async (provider: 'google' | 'github') => {
-        setLoading(true);
-        setError('');
+    // const handleOAuthLogin = async (provider: 'google' | 'github') => {
+    //     setLoading(true);
+    //     setError('');
 
-        try {
-            // OAuth authentication with PocketBase
-            const authData = await pb.collection('users').authWithOAuth2({ provider });
+    //     try {
+    //         // OAuth authentication with PocketBase
+    //         const authData = await pb.collection('users').authWithOAuth2({ provider });
             
-            setSuccessMessage(`Successfully logged in with ${provider}!`);
+    //         setSuccessMessage(`Successfully logged in with ${provider}!`);
             
-            setTimeout(() => {
-                navigate(from, { replace: true });
-            }, 1000);
-        } catch (error: any) {
-            console.error(`OAuth ${provider} error:`, error);
-            setError(`Failed to login with ${provider}. Please try again.`);
-        } finally {
-            setLoading(false);
-        }
-    };
+    //         setTimeout(() => {
+    //             navigate(from, { replace: true });
+    //         }, 1000);
+    //     } catch (error: any) {
+    //         console.error(`OAuth ${provider} error:`, error);
+    //         setError(`Failed to login with ${provider}. Please try again.`);
+    //     } finally {
+    //         setLoading(false);
+    //     }
+    // };
 
     return (
         <Box 
@@ -278,7 +284,7 @@ export default function Login() {
                         Welcome Back
                     </Typography>
                     <Typography variant="body2" color="text.secondary">
-                        Sign in to access your RPI Housing account
+                        Sign in with your verified @rpi.edu email
                     </Typography>
                 </Box>
 
@@ -326,7 +332,7 @@ export default function Login() {
                             }}
                             onBlur={() => validateEmail(email)}
                             error={!!emailError}
-                            helperText={emailError}
+                            helperText={emailError || "Use your @rpi.edu email"}
                             disabled={loading}
                             InputProps={{
                                 startAdornment: (
@@ -441,7 +447,7 @@ export default function Login() {
                             value={resetEmail} 
                             onChange={(e) => setResetEmail(e.target.value)}
                             error={!!emailError}
-                            helperText={emailError}
+                            helperText={emailError || "Use your @rpi.edu email"}
                             disabled={resetLoading || resetSuccess}
                             InputProps={{
                                 startAdornment: (
@@ -477,7 +483,7 @@ export default function Login() {
                     </Box>
                 </Collapse>
 
-                {/* OAuth and Registration */}
+                {/* OAuth and Registration
                 {!showForgotPassword && (
                     <>
                         <Divider sx={{ my: 3 }}>
@@ -533,7 +539,33 @@ export default function Login() {
                         </Box>
                     </>
                 )}
+                    */}
             </Paper>
+
+            {/* Registration Link */}
+            {!showForgotPassword && (
+                <Box textAlign="center" mt={3}>
+                    <Typography variant="body2" color="text.secondary">
+                        Don't have an account?{' '}
+                        <Link
+                            component="button"
+                            variant="body2"
+                            onClick={(e) => {
+                                e.preventDefault();
+                                navigate('/register');
+                            }}
+                            disabled={loading}
+                            sx={{ 
+                                textDecoration: 'none',
+                                fontWeight: 'bold',
+                                color: 'primary.main'
+                            }}
+                        >
+                            Sign up with your RPI email
+                        </Link>
+                    </Typography>
+                </Box>
+            )}
 
             {/* Snackbar for notifications */}
             <Snackbar
