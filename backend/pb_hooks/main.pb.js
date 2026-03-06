@@ -21,3 +21,29 @@ onRecordAfterCreateRequest((e) => {
         console.log("Hook Error: " + err.message);
     }
 }, "reports");
+
+// 1. Enforce @rpi.edu on registration
+onRecordBeforeCreateRequest((e) => {
+    const email = e.record.get("email") || "";
+    if (!email.toLowerCase().endsWith("@rpi.edu")) {
+        throw new BadRequestError("Only @rpi.edu emails are allowed.");
+    }
+}, "users");
+
+// 2. Atomic like count on like created
+onRecordAfterCreateRequest((e) => {
+    const postId = e.record.get("post");
+    const post = $app.dao().findRecordById("posts", postId);
+    const current = post.getInt("likes");
+    post.set("likes", current + 1);
+    $app.dao().saveRecord(post);
+}, "likes");
+
+// 3. Atomic like count on like deleted
+onRecordAfterDeleteRequest((e) => {
+    const postId = e.record.get("post");
+    const post = $app.dao().findRecordById("posts", postId);
+    const current = post.getInt("likes");
+    post.set("likes", Math.max(0, current - 1));
+    $app.dao().saveRecord(post);
+}, "likes");
