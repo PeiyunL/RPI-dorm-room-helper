@@ -1,11 +1,11 @@
 [
   {
     "id": "pbc_1715128331",
-    "listRule": null,
-    "viewRule": null,
-    "createRule": null,
-    "updateRule": null,
-    "deleteRule": null,
+    "listRule": "@request.auth.id != \"\" && id = @request.auth.id",
+    "viewRule": "@request.auth.id != \"\" && id = @request.auth.id",
+    "createRule": "@request.auth.id != \"\"",
+    "updateRule": "@request.auth.id != \"\" && id = @request.auth.id",
+    "deleteRule": "@request.auth.id != \"\" && id = @request.auth.id",
     "name": "RPIUSERS",
     "type": "auth",
     "fields": [
@@ -55,7 +55,9 @@
         "hidden": false,
         "id": "email3885137012",
         "name": "email",
-        "onlyDomains": null,
+        "onlyDomains": [
+          "rpi.edu"
+        ],
         "presentable": false,
         "required": true,
         "system": true,
@@ -399,7 +401,9 @@
         "hidden": false,
         "id": "email3885137012",
         "name": "email",
-        "onlyDomains": null,
+        "onlyDomains": [
+          "rpi.edu"
+        ],
         "presentable": false,
         "required": true,
         "system": true,
@@ -636,7 +640,7 @@
       }
     },
     "authToken": {
-      "duration": 604800
+      "duration": 172800
     },
     "passwordResetToken": {
       "duration": 1800
@@ -1063,9 +1067,9 @@
     "id": "pbc_2195335957",
     "listRule": "",
     "viewRule": "",
-    "createRule": null,
-    "updateRule": null,
-    "deleteRule": null,
+    "createRule": "@request.auth.id != \"\"",
+    "updateRule": "@request.auth.id != \"\" && author = @request.auth.id",
+    "deleteRule": "@request.auth.id != \"\" && author = @request.auth.id",
     "name": "posts",
     "type": "base",
     "fields": [
@@ -1084,20 +1088,6 @@
         "type": "text"
       },
       {
-        "autogeneratePattern": "",
-        "hidden": false,
-        "id": "text3036287351",
-        "max": 0,
-        "min": 0,
-        "name": "contents",
-        "pattern": "",
-        "presentable": false,
-        "primaryKey": false,
-        "required": false,
-        "system": false,
-        "type": "text"
-      },
-      {
         "exceptDomains": null,
         "hidden": false,
         "id": "url3514999064",
@@ -1109,38 +1099,10 @@
         "type": "url"
       },
       {
-        "hidden": false,
-        "id": "file3760176746",
-        "maxSelect": 99,
-        "maxSize": 0,
-        "mimeTypes": [],
-        "name": "images",
-        "presentable": false,
-        "protected": false,
-        "required": false,
-        "system": false,
-        "thumbs": [],
-        "type": "file"
-      },
-      {
-        "hidden": false,
-        "id": "file104153177",
-        "maxSelect": 99,
-        "maxSize": 0,
-        "mimeTypes": [],
-        "name": "files",
-        "presentable": false,
-        "protected": false,
-        "required": false,
-        "system": false,
-        "thumbs": [],
-        "type": "file"
-      },
-      {
         "convertURLs": false,
         "hidden": false,
         "id": "editor4274335913",
-        "maxSize": 0,
+        "maxSize": 50000,
         "name": "content",
         "presentable": false,
         "required": true,
@@ -1151,7 +1113,7 @@
         "autogeneratePattern": "",
         "hidden": false,
         "id": "text724990059",
-        "max": 0,
+        "max": 200,
         "min": 0,
         "name": "title",
         "pattern": "",
@@ -1186,18 +1148,33 @@
         "primaryKey": false,
         "required": true,
         "system": false,
-        "type": "text"
+        "type": "select",
+        "values": [
+          "Roommate Search",
+          "Furniture Exchange",
+          "Dorm Tips",
+          "Events",
+          "Lost & Found",
+          "Housing Questions",
+          "General"
+        ],
+        "maxSelect": 1
       },
       {
         "hidden": false,
         "id": "file3309110367",
         "maxSelect": 1,
-        "maxSize": 0,
-        "mimeTypes": [],
+        "maxSize": 5242880,
+        "mimeTypes": [
+          "image/jpeg",
+          "image/png",
+          "image/gif",
+          "image/webp"
+        ],
         "name": "image",
         "presentable": false,
         "protected": false,
-        "required": true,
+        "required": false,
         "system": false,
         "thumbs": [],
         "type": "file"
