@@ -11,7 +11,6 @@ export async function fetchFacilities(): Promise<CampusFacility[]> {
   return [];
 }
 
-// 🔧 NOTE: accept optional FilterCriteria argument
 export async function fetchRooms(
   _filters?: FilterCriteria
 ): Promise<Room[]> {

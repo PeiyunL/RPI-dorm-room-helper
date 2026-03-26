@@ -1,25 +1,29 @@
-#!/bin/bash
+#!/usr/bin/env bash
+set -euo pipefail
 
-# Step 1: Go into frontend and build
-cd frontend || { echo "❌ Cannot find frontend directory"; exit 1; }
+SERVER_USER="${SERVER_USER:-lip6}"
+SERVER_HOST="${SERVER_HOST:-rpidorms.cs.rpi.edu}"
+SERVER_TMP_DIR="${SERVER_TMP_DIR:-~/dist-temp}"
+SERVER_WEB_ROOT="${SERVER_WEB_ROOT:-/var/www/html}"
 
-echo "🛠️  Building project..."
-npm run build || { echo "❌ Build failed"; exit 1; }
+cd frontend || {
+  echo "Cannot find frontend directory"
+  exit 1
+}
 
-# Step 2: Go back to project root
+echo "Building frontend..."
+npm run build
+
 cd ..
 
-# Step 3: Upload only contents of dist/ to server
-echo "📦  Uploading build to server..."
-scp -r frontend/dist/* lip6@rpidorms.cs.rpi.edu:~/dist-temp || { echo "❌ SCP failed"; exit 1; }
+echo "Uploading dist files..."
+scp -r frontend/dist/* "${SERVER_USER}@${SERVER_HOST}:${SERVER_TMP_DIR}"
 
-# Step 4: SSH and deploy
-echo "🚀  Deploying on server..."
-ssh -tt lip6@rpidorms.cs.rpi.edu <<EOF
-  echo "🔐 Enter your sudo password below:"
-  sudo cp -r ~/dist-temp/* /var/www/html/
-  sudo rm -rf ~/dist-temp
+echo "Deploying on server..."
+ssh -tt "${SERVER_USER}@${SERVER_HOST}" <<EOF
+  sudo cp -r ${SERVER_TMP_DIR}/* ${SERVER_WEB_ROOT}/
+  sudo rm -rf ${SERVER_TMP_DIR}
   sudo systemctl restart apache2
-  echo "✅ Deployment complete and Apache restarted!"
+  echo "Deployment complete."
   exit
 EOF

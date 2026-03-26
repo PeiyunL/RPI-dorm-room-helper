@@ -1,6 +1,7 @@
 // @ts-nocheck
 import React, { useState, useEffect, useCallback } from "react";
 import { useNavigate } from "react-router-dom";
+import filter from "leo-profanity";
 import pb from "../../lib/pocketbase";
 
 import {
@@ -66,6 +67,8 @@ import {
   Send as SendIcon,
 } from "@mui/icons-material";
 
+filter.add(["Israel", "Palestine"]);
+
 const POSTS_COLLECTION = "posts";
 const LIKES_COLLECTION = "likes";
 const FAVORITES_COLLECTION = "favorites";
@@ -103,6 +106,7 @@ interface PostFormData {
   title: string;
   content: string;
   category: string;
+  imageUrl?: string;
 }
 
 interface Notification {
@@ -189,6 +193,7 @@ export default function Record() {
     title: "",
     content: "",
     category: "",
+    imageUrl: "",
   });
   const [creatingPost, setCreatingPost] = useState(false);
 
@@ -238,7 +243,7 @@ export default function Record() {
   };
 
   const getPostImageUrl = (post: any): string => {
-    // If you don't have "image" field in posts, this will just return ""
+    if (post?.links) return post.links;
     if (!post?.image) return "";
     try {
       return pb.files.getUrl(post, post.image, { thumb: "600x400" });
@@ -722,13 +727,13 @@ export default function Record() {
 
   // Create post handlers
   const handleOpenCreatePost = () => {
-    setPostFormData({ title: "", content: "", category: "" });
+    setPostFormData({ title: "", content: "", category: "", imageUrl: "" });
     setCreatePostOpen(true);
   };
 
   const handleCloseCreatePost = () => {
     setCreatePostOpen(false);
-    setPostFormData({ title: "", content: "", category: "" });
+    setPostFormData({ title: "", content: "", category: "", imageUrl: "" });
   };
 
   const handlePostFormChange = (
@@ -745,20 +750,27 @@ export default function Record() {
       return;
     }
 
+    const user = pb.authStore.model;
+    if (!user) {
+      showSnackbarMsg("You must be logged in to create a post", "error");
+      return;
+    }
+
+    if (filter.check(postFormData.title) || filter.check(postFormData.content)) {
+      showSnackbarMsg("Inappropriate language detected. Please keep it RPI-friendly!", "warning");
+      return;
+    }
+
     setCreatingPost(true);
     try {
-      const user = pb.authStore.model;
-      if (!user) {
-        showSnackbarMsg("You must be logged in to create a post", "error");
-        return;
-      }
-
-      // Minimal PB-safe payload (no unknown fields)
       await pb.collection(POSTS_COLLECTION).create({
         title: postFormData.title,
         content: postFormData.content,
         category: postFormData.category,
+        links: postFormData.imageUrl || "",
         author: user.id,
+        likes: 0,
+        commentsCount: 0,
       });
 
       await fetchPosts();
@@ -1242,6 +1254,35 @@ export default function Record() {
         <DialogTitle>Create New Post</DialogTitle>
         <DialogContent>
           <TextField
+            autoFocus
+            margin="dense"
+            name="title"
+            label="Title"
+            type="text"
+            fullWidth
+            variant="outlined"
+            value={postFormData.title}
+            onChange={handlePostFormChange}
+            sx={{ mb: 2 }}
+            required
+          />
+          <FormControl fullWidth sx={{ mb: 2 }}>
+            <InputLabel id="category-label">Category</InputLabel>
+            <Select
+              labelId="category-label"
+              name="category"
+              value={postFormData.category}
+              onChange={handlePostFormChange}
+              label="Category"
+            >
+              {CATEGORIES.map((category) => (
+                <MenuItem key={category} value={category}>
+                  {category}
+                </MenuItem>
+              ))}
+            </Select>
+          </FormControl>
+          <TextField
             margin="dense"
             name="content"
             label="Content"
@@ -1253,37 +1294,18 @@ export default function Record() {
             value={postFormData.content}
             onChange={handlePostFormChange}
             required
+            sx={{ mb: 2 }}
           />
-
-
-          <FormControl fullWidth sx={{ mb: 2 }}>
-            <InputLabel id="category-label">Category *</InputLabel>
-            <Select
-              labelId="category-label"
-              name="category"
-              value={postFormData.category}
-              onChange={handlePostFormChange}
-              label="Category *"
-            >
-              {CATEGORIES.map((category) => (
-                <MenuItem key={category} value={category}>
-                  {category}
-                </MenuItem>
-              ))}
-            </Select>
-          </FormControl>
-
           <TextField
             margin="dense"
-            name="content"
-            label="Content"
-            multiline
-            rows={6}
+            name="imageUrl"
+            label="Image URL (optional)"
+            type="text"
             fullWidth
             variant="outlined"
-            value={postFormData.content}
+            value={postFormData.imageUrl || ""}
             onChange={handlePostFormChange}
-            required
+            helperText="Enter a URL for an image to include with your post"
           />
         </DialogContent>
 

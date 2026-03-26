@@ -2,6 +2,7 @@
 node_modules/
 frontend/node_modules/
 frontend/dist/
+backend/pb_data/
 
 # Mac and Windows junk
 .DS_Store
@@ -10,3 +11,12 @@ Thumbs.db
 # IDE and editor settings
 .vscode/
 *.log
+
+# Environment and local secrets
+.env
+*.env
+!.env.example
+frontend/.env
+
+# Local database/runtime files
+*.db
