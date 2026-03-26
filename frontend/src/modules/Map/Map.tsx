@@ -481,6 +481,7 @@ export default function EnhancedMapComponent() {
   const [snackbarOpen, setSnackbarOpen] = useState(false);
   const [snackbarMessage, setSnackbarMessage] = useState('');
   const [hoveredFeature, setHoveredFeature] = useState<string | null>(null);
+  const handleQuickCompareRef = useRef<(dormName: string) => void>(() => {});
 
   // Snackbar helper
   const showSnackbar = useCallback((message: string) => {
@@ -749,7 +750,7 @@ useEffect(() => {
 
       if (data.action === "compare" && data.dorm) {
         console.log("Compare clicked for", data.dorm);
-        handleQuickCompare(data.dorm);
+        handleQuickCompareRef.current(data.dorm);
       }
     };
 
@@ -842,6 +843,10 @@ useEffect(() => {
     setComparisonOpen(true);
     showSnackbar(`Added ${dormName} to comparison`);
   }, [buildComparisonRoom, comparisonRooms, showSnackbar]);
+
+  useEffect(() => {
+    handleQuickCompareRef.current = handleQuickCompare;
+  }, [handleQuickCompare]);
 
   useEffect(() => {
     localStorage.setItem("rpi_compare_dorms", JSON.stringify(comparisonRooms.map((r) => r.dormName)));
