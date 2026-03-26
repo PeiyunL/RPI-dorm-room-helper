@@ -54,6 +54,7 @@ const FAVORITES_COLLECTION = 'favorites';
 const POSTS_COLLECTION = 'posts';
 const LIKES_COLLECTION = 'likes';
 const COMMENTS_COLLECTION = 'comments';
+const makeLikeKey = (userId: string, postId: string) => `${userId}_${postId}`;
 
 // Define types
 interface Post {
@@ -356,20 +357,26 @@ const fetchFavorites = useCallback(async (showLoading = true) => {
       }
       setUserLikes(newUserLikes);
 
+      const likeKey = makeLikeKey(user.id, postId);
       if (isLiked) {
-        // Unlike - find and delete the like record
-        const existingLikes = await pb.collection(LIKES_COLLECTION).getFullList({
-          filter: `user = "${user.id}" && post = "${postId}"`
-        });
-        
-        if (existingLikes.length > 0) {
-          await pb.collection(LIKES_COLLECTION).delete(existingLikes[0].id);
+        // Unlike: delete by unique key first, fallback to user/post query
+        try {
+          const existing = await pb.collection(LIKES_COLLECTION).getFirstListItem(`key="${likeKey}"`);
+          await pb.collection(LIKES_COLLECTION).delete(existing.id);
+        } catch {
+          const existingLikes = await pb.collection(LIKES_COLLECTION).getFullList({
+            filter: `user = "${user.id}" && post = "${postId}"`,
+          });
+          if (existingLikes.length > 0) {
+            await pb.collection(LIKES_COLLECTION).delete(existingLikes[0].id);
+          }
         }
       } else {
-        // Like - create a like record
+        // Like: include key (required in this project's PB schema)
         await pb.collection(LIKES_COLLECTION).create({
           user: user.id,
           post: postId,
+          key: likeKey,
         });
       }
     } catch (err: any) {

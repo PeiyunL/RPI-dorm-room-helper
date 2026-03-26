@@ -13,6 +13,7 @@ import Setting from './modules/Setting/Setting';
 import AboutUs from './modules/AboutUs/AboutUs';
 import Register from './components/Register';
 import VerifyEmail from "./components/VerifyEmail"; // adjust path as needed
+import ResetPassword from "./components/ResetPassword";
 
 const USERS_COLLECTION = 'users';
 
@@ -165,6 +166,7 @@ function App() {
 
           {/* Standalone public routes */}
           <Route path="/verify-email" element={<VerifyEmail />} />
+          <Route path="/reset-password" element={<ResetPassword />} />
           
           {/* Root path redirect */}
           <Route

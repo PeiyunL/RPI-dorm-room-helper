@@ -96,9 +96,15 @@ function dormNameToHtml(name: string): string | null {
 
   const map: Record<string, string> = {
     "barton hall": "Barton Hall.html",
+    "beman and brinsmade": "Beman and Brinsmade.html",
+    "blitman residence commons (rpi)": "Blitman Residence Commons (RPI).html",
     "cary hall": "Cary Hall.html",
+    "city station west": "City Station West.html",
+    "colonie apartments": "Colonie Apartments.html",
+    "crockett hall": "Crockett Hall.html",
     "davison hall": "Davison.html",
     "davison": "Davison.html",
+    "hall hall": "Hall Hall.html",
     "nason hall": "Nason Hall.html",
     "warren hall": "Warren Hall.html",
     "north hall": "North Hall.html",
@@ -106,7 +112,10 @@ function dormNameToHtml(name: string): string | null {
     "blitman residence commons": "Blitman Residence Commons (RPI).html",
     "bryckwyck": "Bryckwyck.html",
     "bray hall": "Bray Hall.html",
+    "burdett avenue residence hall": "Burdett Avenue Residence_Hall.html",
     "nugent hall": "Nugent Hall.html",
+    "sharp hall": "Sharp Hall.html",
+    "stacwyck apartments": "Stacwyck_Apartments.html",
     "quadrangle complex": "Quadrangle_Complex.html",
 
     // ✅ RAHP variants -> your new filenames
@@ -943,7 +952,7 @@ useEffect(() => {
                       size="small"
                       onClick={() => {
                         const file = dormNameToHtml(r.dormName);
-                        if (file) window.location.href = `pages/${file}`;
+                        if (file) window.location.href = `/pages/${encodeURIComponent(file)}`;
                         else showSnackbar(`No HTML page found for ${r.dormName}`);
                       }}
                     >
