@@ -5,27 +5,34 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>E Complex | RPI Dorm Room Helper</title>
   <style>
+    :root {
+      --rpi-red: #d6001c;
+      --rpi-dark-red: #a50016;
+      --ink: #2e2e2e;
+      --paper: #fff;
+      --bg: #f8f5f4;
+      --line: #e8dcdc;
+    }
     body {
       font-family: Arial, sans-serif;
-      background-color: #f5f4f0;
+      background: radial-gradient(circle at top right, #fff7f7 0%, var(--bg) 55%);
       margin: 0;
-      color: #3c3c3b;
+      color: var(--ink);
     }
-    .container {
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      padding: 36px 20px;
-      border-bottom: 2px solid #e6e6e6;
-      background: #fff;
+    .hero {
+      background: linear-gradient(135deg, var(--rpi-red) 0%, var(--rpi-dark-red) 100%);
+      color: #fff;
+      padding: 44px 20px 34px;
+      border-bottom: 4px solid #fff;
+      box-shadow: 0 4px 14px rgba(165, 0, 22, 0.25);
     }
-    .title-section { text-transform: uppercase; font-size: 14px; color: #737373; letter-spacing: 1px; }
-    .main-title { font-size: 42px; font-weight: 700; margin: 10px 0; }
-    .address { font-size: 14px; text-transform: uppercase; letter-spacing: 1px; color: #5f5f5f; }
+    .title-section { text-transform: uppercase; font-size: 13px; letter-spacing: 1.6px; opacity: 0.9; }
+    .main-title { font-size: 44px; font-weight: 800; margin: 10px 0 8px; }
+    .address { font-size: 14px; text-transform: uppercase; letter-spacing: 1px; opacity: 0.95; }
     .carousel {
       position: relative;
-      max-width: 960px;
-      margin: 24px auto;
+      max-width: 980px;
+      margin: 22px auto;
       text-align: center;
       padding: 0 12px;
     }
@@ -33,29 +40,11 @@
       width: 100%;
       max-height: 520px;
       object-fit: cover;
-      border-radius: 10px;
-      border: 1px solid #ddd;
+      border-radius: 12px;
+      border: 2px solid rgba(214, 0, 28, 0.2);
       background: #fff;
+      box-shadow: 0 10px 22px rgba(0,0,0,0.12);
     }
-    .carousel-thumbnails {
-      display: flex;
-      justify-content: center;
-      gap: 10px;
-      margin-top: 10px;
-      flex-wrap: wrap;
-    }
-    .carousel-thumbnails img {
-      width: 120px;
-      height: 70px;
-      object-fit: cover;
-      cursor: pointer;
-      opacity: 0.65;
-      transition: opacity 0.2s;
-      border-radius: 6px;
-      border: 1px solid #ddd;
-      background: #fff;
-    }
-    .carousel-thumbnails img:hover, .carousel-thumbnails img.active { opacity: 1; }
     .carousel-controls {
       display: flex;
       justify-content: space-between;
@@ -69,14 +58,42 @@
     }
     .carousel-controls button {
       pointer-events: auto;
-      background: rgba(0, 0, 0, 0.55);
+      background: rgba(214,0,28,0.86);
       color: #fff;
       border: none;
-      padding: 8px 10px;
+      padding: 9px 12px;
       border-radius: 999px;
       cursor: pointer;
+      font-size: 16px;
+      font-weight: 700;
     }
-    .carousel-counter { margin-top: 10px; color: #777; font-size: 14px; }
+    .carousel-counter {
+      margin-top: 10px;
+      color: #8a1d2a;
+      font-size: 14px;
+      font-weight: 700;
+    }
+    .carousel-thumbnails {
+      display: flex;
+      justify-content: center;
+      gap: 10px;
+      margin-top: 10px;
+      flex-wrap: wrap;
+    }
+    .carousel-thumbnails img {
+      width: 120px;
+      height: 70px;
+      object-fit: cover;
+      cursor: pointer;
+      opacity: 0.62;
+      border-radius: 7px;
+      border: 2px solid rgba(214, 0, 28, 0.2);
+    }
+    .carousel-thumbnails img.active,
+    .carousel-thumbnails img:hover {
+      opacity: 1;
+      border-color: var(--rpi-red);
+    }
     .navigation-bar {
       display: flex;
       gap: 14px;
@@ -84,34 +101,46 @@
       align-items: center;
       flex-wrap: wrap;
       padding: 12px;
-      border-top: 1px solid #ececec;
-      border-bottom: 1px solid #ececec;
+      border-top: 1px solid var(--line);
+      border-bottom: 1px solid var(--line);
       background: #fff;
       position: sticky;
       top: 0;
-      z-index: 5;
+      z-index: 8;
     }
     .navigation-bar a {
-      color: #3c3c3b;
+      color: #6f101f;
       text-decoration: none;
       font-size: 13px;
-      font-weight: 700;
+      font-weight: 800;
       text-transform: uppercase;
       letter-spacing: 0.4px;
+      padding: 6px 8px;
+      border-radius: 6px;
     }
-    .navigation-bar a:hover { color: #800000; }
+    .navigation-bar a:hover {
+      background: #ffe9ec;
+      color: var(--rpi-red);
+    }
     .section {
-      max-width: 960px;
+      max-width: 980px;
       margin: 0 auto;
-      padding: 24px 14px;
+      padding: 26px 14px;
     }
-    .section h2 { margin: 0 0 12px 0; }
+    .section h2 {
+      margin: 0 0 12px 0;
+      color: #7d0e1f;
+      text-transform: uppercase;
+      letter-spacing: 0.8px;
+      font-size: 24px;
+    }
     .content-box {
-      background: #fff;
-      border: 1px solid #e6e6e6;
-      border-radius: 10px;
+      background: var(--paper);
+      border: 1px solid #efd2d7;
+      border-left: 6px solid var(--rpi-red);
+      border-radius: 12px;
       padding: 20px;
-      box-shadow: 0 2px 6px rgba(0,0,0,0.06);
+      box-shadow: 0 4px 14px rgba(100, 20, 30, 0.08);
     }
     table {
       width: 100%;
@@ -119,68 +148,67 @@
       margin-top: 8px;
     }
     table th, table td {
-      border: 1px solid #e0e0e0;
+      border: 1px solid #ead7da;
       padding: 10px;
       text-align: left;
     }
-    table th { background: #f6f6f6; }
-    .accordion-item { border-top: 1px solid #ececec; }
+    table th { background: #fff2f4; color: #7d0e1f; }
+    .accordion-item { border-top: 1px solid #f0dfe2; }
     .accordion-item:first-child { border-top: none; }
     .accordion-header {
       cursor: pointer;
-      background: #f7f7f7;
+      background: #fff3f5;
+      color: #700f1d;
       padding: 12px 14px;
-      font-weight: 700;
+      font-weight: 800;
     }
     .accordion-header::after {
       content: '?';
       float: right;
-      color: #888;
+      color: #9a2333;
       font-size: 12px;
+      transition: transform 0.2s;
     }
     .accordion-header.active::after {
       transform: rotate(180deg);
       display: inline-block;
     }
-    .accordion-content {
-      display: none;
-      padding: 14px;
-    }
+    .accordion-content { display: none; padding: 14px; }
     .dorm-links {
-      max-width: 960px;
+      max-width: 980px;
       margin: 0 auto 28px;
       padding: 14px;
       background: #fff;
-      border: 1px solid #e6e6e6;
-      border-radius: 10px;
+      border: 1px solid #efd2d7;
+      border-radius: 12px;
       display: flex;
       flex-wrap: wrap;
       gap: 10px 14px;
+      box-shadow: 0 2px 10px rgba(100, 20, 30, 0.06);
     }
     .dorm-links a {
-      color: #800000;
+      color: var(--rpi-red);
       text-decoration: none;
-      font-weight: 600;
+      font-weight: 700;
       font-size: 14px;
     }
+    .dorm-links a:hover { color: var(--rpi-dark-red); text-decoration: underline; }
     .attribution {
-      max-width: 960px;
-      margin: 0 auto 22px;
+      max-width: 980px;
+      margin: 0 auto 24px;
       padding: 0 14px;
-      color: #666;
+      color: #744;
       font-size: 13px;
       line-height: 1.5;
     }
-    .attribution a { color: #5b0000; }
+    .attribution a { color: #8b001a; }
   </style>
 </head>
 <body>
-  <div class="container">
-    <div>
-      <div class="title-section">Dorm</div>
-      <div class="main-title">E Complex</div>
-      <div class="address">Suite Style Housing</div>
-    </div>
+  <div class="hero">
+    <div class="title-section">Dorm</div>
+    <div class="main-title">E Complex</div>
+    <div class="address">Suite Style Housing</div>
   </div>
   <div class="carousel">
     <img id="mainImage" src="https://commons.wikimedia.org/wiki/Special:FilePath/Parking%20Lot%20near%20Burdett%20Avenue%20Resident%20Hall.png" alt="E Complex image" />
@@ -291,18 +319,14 @@
   </div>
   <div class="attribution">
     Images are loaded from Wikimedia Commons (free-use files under licenses shown on each file page).
-    Sources: 
+    Sources:
     <a target="_blank" rel="noopener noreferrer" href="https://commons.wikimedia.org/wiki/Category:Rensselaer_Polytechnic_Institute_Campus">RPI Campus media category</a>,
     <a target="_blank" rel="noopener noreferrer" href="https://commons.wikimedia.org/wiki/File:GreeneBuildingRPI.JPG">GreeneBuildingRPI.JPG</a>,
     <a target="_blank" rel="noopener noreferrer" href="https://commons.wikimedia.org/wiki/File:RPIPano.jpg">RPIPano.jpg</a>.
   </div>
   <script>
     (function () {
-      const images = [
-        "https://commons.wikimedia.org/wiki/Special:FilePath/Parking%20Lot%20near%20Burdett%20Avenue%20Resident%20Hall.png",
-        "https://commons.wikimedia.org/wiki/Special:FilePath/RPIPano.jpg",
-        "https://commons.wikimedia.org/wiki/Special:FilePath/Rpi3.jpg"
-      ];
+      const images = ["https://commons.wikimedia.org/wiki/Special:FilePath/Parking%20Lot%20near%20Burdett%20Avenue%20Resident%20Hall.png", "https://commons.wikimedia.org/wiki/Special:FilePath/RPIPano.jpg", "https://commons.wikimedia.org/wiki/Special:FilePath/Rpi3.jpg"];
       let currentIndex = 0;
       const mainImage = document.getElementById('mainImage');
       const counter = document.getElementById('carouselCounter');
@@ -326,10 +350,7 @@
       thumbs.forEach((thumb) => {
         thumb.addEventListener('click', function () {
           const idx = Number(thumb.getAttribute('data-index'));
-          if (!Number.isNaN(idx)) {
-            currentIndex = idx;
-            render();
-          }
+          if (!Number.isNaN(idx)) { currentIndex = idx; render(); }
         });
       });
       document.querySelectorAll('.accordion-header').forEach((header) => {
