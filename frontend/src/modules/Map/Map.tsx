@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState, useCallback } from "react";
+﻿import { useEffect, useRef, useState, useCallback, useMemo } from "react";
 import { useNavigate } from "react-router-dom";
 import { Grid } from "@mui/material";
 import { 
@@ -20,7 +20,15 @@ import {
   Fab,
   Zoom,
   Alert,
-  Snackbar
+  Snackbar,
+  Stack,
+  Slider,
+  Table,
+  TableBody,
+  TableCell,
+  TableContainer,
+  TableHead,
+  TableRow
 } from "@mui/material";
 import {
   Close as CloseIcon,
@@ -118,7 +126,7 @@ function dormNameToHtml(name: string): string | null {
     "stacwyck apartments": "Stacwyck_Apartments.html",
     "quadrangle complex": "Quadrangle_Complex.html",
 
-    // ✅ RAHP variants -> your new filenames
+    // âœ… RAHP variants -> your new filenames
     "rahp a": "RAHP A Site.html",
     "rahp a site": "RAHP A Site.html",
     "rahp a site (single students)": "RAHP A Site.html",
@@ -129,6 +137,64 @@ function dormNameToHtml(name: string): string | null {
   };
 
   return map[key] ?? null;
+}
+
+type ScoreWeights = {
+  price: number;
+  distance: number;
+  amenities: number;
+};
+
+type DormProfile = {
+  priceEstimate: number;
+  roomTypes: string[];
+  restroom: string;
+  ac: boolean;
+  laundry: boolean;
+  diningHall: string;
+  amenities: string[];
+};
+
+const DEFAULT_PROFILE: DormProfile = {
+  priceEstimate: 9750,
+  roomTypes: ["Single", "Double"],
+  restroom: "Varies",
+  ac: true,
+  laundry: true,
+  diningHall: "Campus Dining",
+  amenities: ["Wireless", "Study room"],
+};
+
+const DORM_PROFILES: Record<string, DormProfile> = {
+  "barton hall": { priceEstimate: 10090, roomTypes: ["Triple"], restroom: "On floor + in room", ac: true, laundry: true, diningHall: "Commons", amenities: ["Wireless", "Kitchenette", "Lounge", "Printer"] },
+  "bray hall": { priceEstimate: 9750, roomTypes: ["Single", "Double", "Triple"], restroom: "On floor + in room", ac: true, laundry: true, diningHall: "Commons", amenities: ["Wireless", "Study room", "Kitchenette"] },
+  "cary hall": { priceEstimate: 9750, roomTypes: ["Single", "Double", "Triple"], restroom: "On floor + in room", ac: true, laundry: true, diningHall: "Commons", amenities: ["Wireless", "Study room", "Kitchenette"] },
+  "crockett hall": { priceEstimate: 9750, roomTypes: ["Single", "Double", "Triple"], restroom: "On floor + in room", ac: true, laundry: true, diningHall: "Commons", amenities: ["Wireless", "Study room", "Kitchenette"] },
+  "nason hall": { priceEstimate: 9750, roomTypes: ["Single", "Double", "Triple"], restroom: "On floor + in room", ac: true, laundry: true, diningHall: "Commons", amenities: ["Wireless", "Study room", "Kitchenette"] },
+  "quadrangle complex": { priceEstimate: 9750, roomTypes: ["Single", "Double", "Triple"], restroom: "On floor + in room", ac: true, laundry: true, diningHall: "Russell Sage", amenities: ["Wireless", "Kitchenette", "Lounge"] },
+  "burdett avenue residence hall": { priceEstimate: 9750, roomTypes: ["Single", "Double"], restroom: "On floor + in room", ac: true, laundry: true, diningHall: "BARH", amenities: ["Wireless", "Lounge", "Kitchenette"] },
+  "blitman residence commons": { priceEstimate: 9750, roomTypes: ["Single", "Double"], restroom: "In suite", ac: true, laundry: true, diningHall: "Blitman", amenities: ["Wireless", "Lounge", "Elevator"] },
+  "north hall": { priceEstimate: 9750, roomTypes: ["Single", "Double"], restroom: "On floor + in room", ac: true, laundry: true, diningHall: "Russell Sage", amenities: ["Wireless", "Lounge"] },
+  "stacwyck apartments": { priceEstimate: 10610, roomTypes: ["Single"], restroom: "In apartment", ac: true, laundry: true, diningHall: "BARH", amenities: ["Wireless", "Kitchen", "Apartment"] },
+  "city station west": { priceEstimate: 10610, roomTypes: ["Single"], restroom: "In apartment", ac: true, laundry: true, diningHall: "Blitman", amenities: ["Wireless", "Kitchen", "In-unit laundry"] },
+  "colonie apartments": { priceEstimate: 9120, roomTypes: ["Double"], restroom: "In suite", ac: true, laundry: true, diningHall: "BARH", amenities: ["Wireless", "Kitchenette", "Lounge"] },
+  "bryckwyck": { priceEstimate: 8800, roomTypes: ["Single"], restroom: "In apartment", ac: true, laundry: true, diningHall: "BARH", amenities: ["Wireless", "Kitchen", "Apartment"] },
+};
+
+function haversineMeters(a: [number, number], b: [number, number]): number {
+  const R = 6371000;
+  const lat1 = (a[0] * Math.PI) / 180;
+  const lat2 = (b[0] * Math.PI) / 180;
+  const dLat = ((b[0] - a[0]) * Math.PI) / 180;
+  const dLon = ((b[1] - a[1]) * Math.PI) / 180;
+  const h =
+    Math.sin(dLat / 2) * Math.sin(dLat / 2) +
+    Math.cos(lat1) * Math.cos(lat2) * Math.sin(dLon / 2) * Math.sin(dLon / 2);
+  return 2 * R * Math.atan2(Math.sqrt(h), Math.sqrt(1 - h));
+}
+
+function toKey(name: string): string {
+  return name.trim().toLowerCase().replace(/\s+/g, " ");
 }
 
 
@@ -366,19 +432,22 @@ interface FilterOptions {
 interface ComparisonRoom {
   id: string;
   dormName: string;
-  roomNumber: string;
-  floor: number;
-  type: 'single' | 'double' | 'triple' | 'suite';
-  size: number;
   price: number;
+  roomTypes: string[];
+  restroom: string;
+  diningHall: string;
+  ac: boolean;
+  laundry: boolean;
   amenities: string[];
-  available: boolean;
   distanceToFacilities?: {
     dining: number;
     library: number;
     academic: number;
     gym: number;
   };
+  averageDistance: number;
+  score?: number;
+  reasons?: string[];
 }
 
 export default function EnhancedMapComponent() {
@@ -401,6 +470,12 @@ export default function EnhancedMapComponent() {
   const [filterDrawerOpen, setFilterDrawerOpen] = useState(false);
   const [comparisonRooms, setComparisonRooms] = useState<ComparisonRoom[]>([]);
   const [comparisonOpen, setComparisonOpen] = useState(false);
+  const [dormCenters, setDormCenters] = useState<Record<string, [number, number]>>({});
+  const [scoreWeights, setScoreWeights] = useState<ScoreWeights>({
+    price: 35,
+    distance: 40,
+    amenities: 25,
+  });
   const [mapLayer, setMapLayer] = useState<'default' | 'satellite'>('default');
   const [facilities, setFacilities] = useState<Facility[]>([]);
   const [snackbarOpen, setSnackbarOpen] = useState(false);
@@ -534,14 +609,14 @@ export default function EnhancedMapComponent() {
   // Initialize map (SINGLE useEffect!)
 useEffect(() => {
   console.log(
-    "🔥 map init effect fired. mapRef =", mapRef.current,
+    "ðŸ”¥ map init effect fired. mapRef =", mapRef.current,
     "containerRef =", mapContainerRef.current
   );
 
-  // already created or container not ready → do nothing
+  // already created or container not ready â†’ do nothing
   if (mapRef.current || !mapContainerRef.current) return;
 
-  console.log("🗺️ Initializing map...");
+  console.log("ðŸ—ºï¸ Initializing map...");
   setLoading(true);
 
   const map = L.map(mapContainerRef.current, {
@@ -551,7 +626,7 @@ useEffect(() => {
     zoomControl: false,
   }).setView([42.730171, -73.6788], 16);
 
-  console.log("✅ Leaflet map created:", map);
+  console.log("âœ… Leaflet map created:", map);
   mapRef.current = map;
 
   L.control.zoom({ position: "topright" }).addTo(map);
@@ -567,12 +642,27 @@ useEffect(() => {
 
   const loadGeoJson = async () => {
     try {
-      console.log("📍 Fetching GeoJSON...");
-      const res = await fetch("assets/map.geojson");  // ← IMPORTANT: no leading "/"
+      console.log("ðŸ“ Fetching GeoJSON...");
+      const res = await fetch("assets/map.geojson");  // â† IMPORTANT: no leading "/"
       if (!res.ok) throw new Error(`HTTP error! status: ${res.status}`);
 
       const data = await res.json();
-      console.log("✅ GeoJSON loaded:", data);
+      console.log("âœ… GeoJSON loaded:", data);
+      const centers: Record<string, [number, number]> = {};
+      for (const feature of data.features || []) {
+        if (feature?.properties?.building !== "dormitory") continue;
+        const name = String(feature?.properties?.name || "").trim();
+        if (!name) continue;
+        try {
+          const temp = L.geoJSON(feature as any);
+          const center = temp.getBounds().getCenter();
+          temp.remove();
+          centers[toKey(name)] = [center.lat, center.lng];
+        } catch {
+          // no-op
+        }
+      }
+      setDormCenters(centers);
 
       const layer = L.geoJSON(data, {
         filter: (feature) =>
@@ -610,7 +700,7 @@ useEffect(() => {
       const academicFacilities = extractAcademicFacilitiesFromGeoJson(data, campus);
 
       console.log(
-        `🏫 Facilities from GeoJSON (campus-only): dining=${diningFacilities.length}, library=${libraryFacilities.length}, gym=${gymFacilities.length}, academic=${academicFacilities.length}`
+        `ðŸ« Facilities from GeoJSON (campus-only): dining=${diningFacilities.length}, library=${libraryFacilities.length}, gym=${gymFacilities.length}, academic=${academicFacilities.length}`
       );
 
       const mergedFacilities = [
@@ -623,7 +713,7 @@ useEffect(() => {
       setFacilities(mergedFacilities);
       addFacilityMarkers(mergedFacilities, map);
     } catch (error) {
-      console.error("❌ Failed to load GeoJSON:", error);
+      console.error("âŒ Failed to load GeoJSON:", error);
       showSnackbar("Failed to load map data. Please check the console.");
     } finally {
       setLoading(false);
@@ -633,11 +723,11 @@ useEffect(() => {
   loadGeoJson();
 
   return () => {
-    console.log("🧹 Cleaning up map");
+    console.log("ðŸ§¹ Cleaning up map");
     map.remove();
     mapRef.current = null;
   };
-  // 👇 IMPORTANT: only run once
+  // ðŸ‘‡ IMPORTANT: only run once
   // eslint-disable-next-line react-hooks/exhaustive-deps
 }, []);
 
@@ -693,44 +783,170 @@ useEffect(() => {
     setComparisonOpen(false);
   }, []);
 
-  const handleQuickCompare = useCallback((dormName: string) => {
-    const id = dormName; // stable id for compare list
+  const buildComparisonRoom = useCallback((dormName: string): ComparisonRoom | null => {
+    const key = toKey(dormName);
+    const center = dormCenters[key];
+    if (!center) return null;
 
-    // prevent duplicates
-    if (comparisonRooms.some(r => r.id === id)) {
+    const nearest = (type: Facility["type"]) => {
+      const group = facilities.filter((f) => f.type === type);
+      if (!group.length) return Number.POSITIVE_INFINITY;
+      return Math.min(...group.map((f) => haversineMeters(center, f.coordinates)));
+    };
+
+    const distanceToFacilities = {
+      dining: nearest("dining"),
+      library: nearest("library"),
+      academic: nearest("academic"),
+      gym: nearest("gym"),
+    };
+
+    const finite = Object.values(distanceToFacilities).filter((d) => Number.isFinite(d));
+    const averageDistance = finite.length ? finite.reduce((a, b) => a + b, 0) / finite.length : 9999;
+    const profile = DORM_PROFILES[key] || DORM_PROFILES[key.replace(" (rpi)", "")] || DEFAULT_PROFILE;
+
+    return {
+      id: dormName,
+      dormName,
+      price: profile.priceEstimate,
+      roomTypes: profile.roomTypes,
+      restroom: profile.restroom,
+      diningHall: profile.diningHall,
+      ac: profile.ac,
+      laundry: profile.laundry,
+      amenities: profile.amenities,
+      distanceToFacilities,
+      averageDistance,
+    };
+  }, [dormCenters, facilities]);
+
+  const handleQuickCompare = useCallback((dormName: string) => {
+    if (comparisonRooms.some((r) => r.id === dormName)) {
       showSnackbar(`${dormName} is already in comparison`);
       setComparisonOpen(true);
       return;
     }
 
-    const mockRoom: ComparisonRoom = {
-      id,
-      dormName,
-      roomNumber: "—",
-      floor: 0,
-      type: "double",
-      size: 0,
-      price: 0,
-      amenities: [],
-      available: true,
-      distanceToFacilities: {
-        dining: Math.floor(Math.random() * 500) + 100,
-        library: Math.floor(Math.random() * 800) + 200,
-        academic: Math.floor(Math.random() * 600) + 150,
-        gym: Math.floor(Math.random() * 1000) + 300,
-      }
+    if (comparisonRooms.length >= 4) {
+      showSnackbar("Maximum 4 dorms can be compared at once");
+      return;
+    }
+
+    const room = buildComparisonRoom(dormName);
+    if (!room) {
+      showSnackbar(`Could not compute comparison data for ${dormName} yet`);
+      return;
+    }
+
+    setComparisonRooms((prev) => [...prev, room]);
+    setComparisonOpen(true);
+    showSnackbar(`Added ${dormName} to comparison`);
+  }, [buildComparisonRoom, comparisonRooms, showSnackbar]);
+
+  useEffect(() => {
+    localStorage.setItem("rpi_compare_dorms", JSON.stringify(comparisonRooms.map((r) => r.dormName)));
+  }, [comparisonRooms]);
+
+  useEffect(() => {
+    const saved = localStorage.getItem("rpi_compare_dorms");
+    if (!saved || !Object.keys(dormCenters).length || !facilities.length || comparisonRooms.length) return;
+    try {
+      const names: string[] = JSON.parse(saved);
+      const restored = names.map((n) => buildComparisonRoom(n)).filter(Boolean) as ComparisonRoom[];
+      if (restored.length) setComparisonRooms(restored.slice(0, 4));
+    } catch {
+      // ignore malformed storage
+    }
+  }, [buildComparisonRoom, comparisonRooms.length, dormCenters, facilities.length]);
+
+  useEffect(() => {
+    if (!Object.keys(dormCenters).length || !facilities.length || comparisonRooms.length) return;
+    const param = new URLSearchParams(window.location.search).get("compare");
+    if (!param) return;
+    const names = param.split("|").map((s) => s.trim()).filter(Boolean).slice(0, 4);
+    const restored = names.map((n) => buildComparisonRoom(n)).filter(Boolean) as ComparisonRoom[];
+    if (restored.length) setComparisonRooms(restored);
+  }, [buildComparisonRoom, comparisonRooms.length, dormCenters, facilities.length]);
+
+  const scoredRooms = useMemo(() => {
+    if (!comparisonRooms.length) return [];
+
+    const min = (arr: number[]) => Math.min(...arr);
+    const max = (arr: number[]) => Math.max(...arr);
+    const scale = (v: number, lo: number, hi: number, invert = false) => {
+      if (lo === hi) return 1;
+      const x = (v - lo) / (hi - lo);
+      return invert ? 1 - x : x;
     };
 
-    if (comparisonRooms.length < 4) {
-      setComparisonRooms(prev => [...prev, mockRoom]);
-      setComparisonOpen(true);
-      showSnackbar(`Added ${dormName} to comparison`);
-    } else {
-      showSnackbar("Maximum 4 dorms can be compared at once");
-    }
+    const prices = comparisonRooms.map((r) => r.price);
+    const dists = comparisonRooms.map((r) => r.averageDistance);
+    const amenCounts = comparisonRooms.map((r) => r.amenities.length);
+
+    return [...comparisonRooms]
+      .map((r) => {
+        const priceScore = scale(r.price, min(prices), max(prices), true);
+        const distanceScore = scale(r.averageDistance, min(dists), max(dists), true);
+        const amenityScore = scale(r.amenities.length, min(amenCounts), max(amenCounts), false);
+        const weightTotal = scoreWeights.price + scoreWeights.distance + scoreWeights.amenities;
+
+        const score =
+          (priceScore * scoreWeights.price +
+            distanceScore * scoreWeights.distance +
+            amenityScore * scoreWeights.amenities) /
+          weightTotal;
+
+        const reasons: string[] = [];
+        if (priceScore > 0.66) reasons.push("Lower price");
+        if (distanceScore > 0.66) reasons.push("Closer to facilities");
+        if (amenityScore > 0.66) reasons.push("More amenities");
+
+        return { ...r, score, reasons };
+      })
+      .sort((a, b) => (b.score || 0) - (a.score || 0));
+  }, [comparisonRooms, scoreWeights]);
+
+  const exportComparisonCsv = useCallback(() => {
+    if (!scoredRooms.length) return;
+
+    const header =
+      "Rank,Dorm,Score,Price,AvgDistanceM,DiningM,LibraryM,AcademicM,GymM,RoomTypes,AC,Laundry,Restroom,DiningHall,Amenities\\n";
+
+    const rows = scoredRooms.map((r, idx) =>
+      [
+        idx + 1,
+        `"${r.dormName}"`,
+        (r.score || 0).toFixed(3),
+        r.price,
+        Math.round(r.averageDistance),
+        Math.round(r.distanceToFacilities?.dining || 0),
+        Math.round(r.distanceToFacilities?.library || 0),
+        Math.round(r.distanceToFacilities?.academic || 0),
+        Math.round(r.distanceToFacilities?.gym || 0),
+        `"${r.roomTypes.join("/")}"`,
+        r.ac ? "Yes" : "No",
+        r.laundry ? "Yes" : "No",
+        `"${r.restroom}"`,
+        `"${r.diningHall}"`,
+        `"${r.amenities.join("; ")}"`,
+      ].join(",")
+    );
+
+    const blob = new Blob([header + rows.join("\\n")], { type: "text/csv;charset=utf-8;" });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = "rpi-dorm-compare.csv";
+    a.click();
+    URL.revokeObjectURL(url);
+  }, [scoredRooms]);
+
+  const copyShareLink = useCallback(async () => {
+    const url = new URL(window.location.href);
+    url.searchParams.set("compare", comparisonRooms.map((r) => r.dormName).join("|"));
+    await navigator.clipboard.writeText(url.toString());
+    showSnackbar("Share link copied");
   }, [comparisonRooms, showSnackbar]);
-
-
   // Layer toggle
   const handleLayerChange = useCallback((event: React.MouseEvent<HTMLElement>, newLayer: 'default' | 'satellite' | null) => {
     if (!newLayer || !mapRef.current) return;
@@ -918,51 +1134,115 @@ useEffect(() => {
       <DialogContent dividers>
         {comparisonRooms.length === 0 ? (
           <Typography color="text.secondary">
-            No dorms selected. Click a dorm on the map and press “Compare”.
+            No dorms selected. Click a dorm on the map and press Compare.
           </Typography>
         ) : (
-          <Grid container spacing={2}>
-            {comparisonRooms.map((r) => (
-              <Grid item xs={12} md={6} key={r.id}>
-                <Paper sx={{ p: 2 }}>
-                  <Box sx={{ display: "flex", justifyContent: "space-between", alignItems: "start", gap: 1 }}>
-                    <Box>
-                      <Typography variant="subtitle1" sx={{ fontWeight: 700, color: "#800000" }}>
-                        {r.dormName}
-                      </Typography>
-                      <Typography variant="body2" color="text.secondary">
-                        Distances (approx.)
-                      </Typography>
+          <Box>
+            <Paper sx={{ p: 2, mb: 2 }}>
+              <Typography variant="subtitle2" sx={{ mb: 1 }}>Scoring Weights</Typography>
+              <Stack spacing={1.5}>
+                <Box>
+                  <Typography variant="caption">Price ({scoreWeights.price})</Typography>
+                  <Slider size="small" value={scoreWeights.price} min={5} max={80} onChange={(_, v) => setScoreWeights((w) => ({ ...w, price: v as number }))} />
+                </Box>
+                <Box>
+                  <Typography variant="caption">Distance ({scoreWeights.distance})</Typography>
+                  <Slider size="small" value={scoreWeights.distance} min={5} max={80} onChange={(_, v) => setScoreWeights((w) => ({ ...w, distance: v as number }))} />
+                </Box>
+                <Box>
+                  <Typography variant="caption">Amenities ({scoreWeights.amenities})</Typography>
+                  <Slider size="small" value={scoreWeights.amenities} min={5} max={80} onChange={(_, v) => setScoreWeights((w) => ({ ...w, amenities: v as number }))} />
+                </Box>
+              </Stack>
+              <Box sx={{ display: "flex", gap: 1, mt: 1 }}>
+                <Button size="small" variant="outlined" onClick={exportComparisonCsv}>Export CSV</Button>
+                <Button size="small" variant="outlined" onClick={copyShareLink}>Copy Share Link</Button>
+              </Box>
+            </Paper>
+
+            <Grid container spacing={2}>
+              {scoredRooms.map((r, idx) => (
+                <Grid item xs={12} md={6} key={r.id}>
+                  <Paper sx={{ p: 2 }}>
+                    <Box sx={{ display: "flex", justifyContent: "space-between", alignItems: "start", gap: 1 }}>
+                      <Box>
+                        <Typography variant="subtitle1" sx={{ fontWeight: 700, color: "#800000" }}>
+                          {r.dormName}
+                        </Typography>
+                        <Typography variant="body2" color="text.secondary">
+                          Rank #{idx + 1} · Score {(r.score || 0).toFixed(3)}
+                        </Typography>
+                      </Box>
+                      <IconButton size="small" onClick={() => removeFromCompare(r.id)}>
+                        <CloseIcon fontSize="small" />
+                      </IconButton>
                     </Box>
-                    <IconButton size="small" onClick={() => removeFromCompare(r.id)}>
-                      <CloseIcon fontSize="small" />
-                    </IconButton>
-                  </Box>
 
-                  <Box sx={{ mt: 1, display: "flex", flexWrap: "wrap", gap: 1 }}>
-                    <Chip size="small" icon={<RestaurantIcon />} label={`${r.distanceToFacilities?.dining ?? "—"} m`} />
-                    <Chip size="small" icon={<LibraryIcon />} label={`${r.distanceToFacilities?.library ?? "—"} m`} />
-                    <Chip size="small" icon={<SchoolIcon />} label={`${r.distanceToFacilities?.academic ?? "—"} m`} />
-                    <Chip size="small" icon={<GymIcon />} label={`${r.distanceToFacilities?.gym ?? "—"} m`} />
-                  </Box>
+                    <Box sx={{ mt: 1, display: "flex", flexWrap: "wrap", gap: 1 }}>
+                      <Chip size="small" icon={<RestaurantIcon />} label={`${Math.round(r.distanceToFacilities?.dining || 0)} m`} />
+                      <Chip size="small" icon={<LibraryIcon />} label={`${Math.round(r.distanceToFacilities?.library || 0)} m`} />
+                      <Chip size="small" icon={<SchoolIcon />} label={`${Math.round(r.distanceToFacilities?.academic || 0)} m`} />
+                      <Chip size="small" icon={<GymIcon />} label={`${Math.round(r.distanceToFacilities?.gym || 0)} m`} />
+                      <Chip size="small" label={`$${r.price}`} />
+                      <Chip size="small" label={`Avg ${Math.round(r.averageDistance)}m`} />
+                      <Chip size="small" label={r.ac ? "AC" : "No AC"} />
+                      <Chip size="small" label={r.laundry ? "Laundry" : "No Laundry"} />
+                      {r.reasons?.map((reason) => (
+                        <Chip key={reason} size="small" color="success" variant="outlined" label={reason} />
+                      ))}
+                    </Box>
 
-                  <Box sx={{ mt: 2, display: "flex", gap: 1 }}>
-                    <Button
-                      variant="contained"
-                      size="small"
-                      onClick={() => {
-                        const file = dormNameToHtml(r.dormName);
-                        if (file) window.location.href = `/pages/${encodeURIComponent(file)}`;
-                        else showSnackbar(`No HTML page found for ${r.dormName}`);
-                      }}
-                    >
-                      Open Info Page
-                    </Button>
-                  </Box>
-                </Paper>
-              </Grid>
-            ))}
-          </Grid>
+                    <Box sx={{ mt: 2, display: "flex", gap: 1 }}>
+                      <Button
+                        variant="contained"
+                        size="small"
+                        onClick={() => {
+                          const file = dormNameToHtml(r.dormName);
+                          if (file) window.location.href = `/pages/${encodeURIComponent(file)}`;
+                          else showSnackbar(`No HTML page found for ${r.dormName}`);
+                        }}
+                      >
+                        Open Info Page
+                      </Button>
+                    </Box>
+                  </Paper>
+                </Grid>
+              ))}
+            </Grid>
+
+            <TableContainer component={Paper} sx={{ mt: 2 }}>
+              <Table size="small">
+                <TableHead>
+                  <TableRow>
+                    <TableCell>Metric</TableCell>
+                    {scoredRooms.map((r) => <TableCell key={r.id}>{r.dormName}</TableCell>)}
+                  </TableRow>
+                </TableHead>
+                <TableBody>
+                  <TableRow>
+                    <TableCell>Price</TableCell>
+                    {scoredRooms.map((r) => <TableCell key={`${r.id}-p`}>${r.price}</TableCell>)}
+                  </TableRow>
+                  <TableRow>
+                    <TableCell>Avg Distance</TableCell>
+                    {scoredRooms.map((r) => <TableCell key={`${r.id}-d`}>{Math.round(r.averageDistance)} m</TableCell>)}
+                  </TableRow>
+                  <TableRow>
+                    <TableCell>Amenities</TableCell>
+                    {scoredRooms.map((r) => <TableCell key={`${r.id}-a`}>{r.amenities.length}</TableCell>)}
+                  </TableRow>
+                  <TableRow>
+                    <TableCell>Room Types</TableCell>
+                    {scoredRooms.map((r) => <TableCell key={`${r.id}-rt`}>{r.roomTypes.join(", ")}</TableCell>)}
+                  </TableRow>
+                  <TableRow>
+                    <TableCell>Restroom</TableCell>
+                    {scoredRooms.map((r) => <TableCell key={`${r.id}-rr`}>{r.restroom}</TableCell>)}
+                  </TableRow>
+                </TableBody>
+              </Table>
+            </TableContainer>
+          </Box>
         )}
       </DialogContent>
 
@@ -991,3 +1271,6 @@ useEffect(() => {
     </Box>
   );
 }
+
+
+
